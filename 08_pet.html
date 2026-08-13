@@ -1,0 +1,3030 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>몽글이 키우기</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+:root{
+  --pink:#ff83b2;
+  --pinkDark:#e6538a;
+  --yellow:#ffd95c;
+  --mint:#80dfc4;
+  --blue:#8ed9ff;
+  --purple:#b79cff;
+  --brown:#684b42;
+  --cream:#fff7dc;
+}
+
+body{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+  font-family:"Arial Rounded MT Bold","Noto Sans KR",sans-serif;
+  background:linear-gradient(135deg,#8edaff,#f3c7ff,#ffe6a1);
+}
+
+button,input{
+  font-family:inherit;
+}
+
+#game{
+  position:relative;
+  width:min(100vw,760px);
+  height:min(100vh,980px);
+  min-height:650px;
+  overflow:hidden;
+  background:linear-gradient(#bcecff 0 32%,#fff7dc 32% 100%);
+  box-shadow:0 0 40px rgba(0,0,0,.22);
+}
+
+/* =========================================================
+   상단 상태창
+========================================================= */
+#topHud{
+  position:absolute;
+  z-index:50;
+  top:0;
+  left:0;
+  width:100%;
+  padding:9px;
+  background:rgba(255,255,255,.8);
+  backdrop-filter:blur(8px);
+  box-shadow:0 5px 15px rgba(0,0,0,.1);
+}
+
+.hudTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:7px;
+  margin-bottom:7px;
+}
+
+.nameBox,
+.coinBox,
+.ageBox{
+  background:white;
+  border:3px solid #e7b3cf;
+  border-radius:14px;
+  padding:6px 9px;
+  font-weight:1000;
+  color:#604457;
+  font-size:clamp(12px,2.8vw,17px);
+  box-shadow:0 3px 0 rgba(0,0,0,.08);
+}
+
+.coinBox{
+  color:#b27300;
+}
+
+#stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:5px 10px;
+}
+
+.stat{
+  display:grid;
+  grid-template-columns:78px 1fr 34px;
+  align-items:center;
+  gap:4px;
+  font-size:12px;
+  font-weight:900;
+  color:#514555;
+}
+
+.bar{
+  height:12px;
+  background:#dfdbe1;
+  border-radius:20px;
+  overflow:hidden;
+  border:1px solid rgba(0,0,0,.08);
+}
+
+.fill{
+  height:100%;
+  width:50%;
+  border-radius:20px;
+  transition:width .35s;
+}
+
+#hungerFill{background:linear-gradient(90deg,#ff8a65,#ffcb65)}
+#happyFill{background:linear-gradient(90deg,#ff77b7,#ffb9d6)}
+#cleanFill{background:linear-gradient(90deg,#55c7ee,#a6efff)}
+#energyFill{background:linear-gradient(90deg,#79d678,#c1ee79)}
+#xpFill{background:linear-gradient(90deg,#ae85ff,#e2a8ff)}
+
+/* =========================================================
+   방
+========================================================= */
+#room{
+  position:absolute;
+  z-index:2;
+  top:132px;
+  left:0;
+  width:100%;
+  bottom:180px;
+  overflow:hidden;
+  transition:background .5s;
+}
+
+#wall{
+  position:absolute;
+  inset:0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,.25) 0 3px,
+      transparent 3px 72px
+    ),
+    linear-gradient(#fff2d2 0 65%,#e8c998 65%);
+}
+
+#room.level3 #wall{
+  background:
+    radial-gradient(circle at 15% 18%,rgba(255,255,255,.8) 0 4px,transparent 5px),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,.2) 0 3px,
+      transparent 3px 65px
+    ),
+    linear-gradient(#e4f8ff 0 65%,#d6bf97 65%);
+}
+
+#room.level5 #wall{
+  background:
+    radial-gradient(circle at 15% 15%,#fff 0 3px,transparent 4px),
+    radial-gradient(circle at 80% 22%,#fff 0 3px,transparent 4px),
+    linear-gradient(#e7dcff 0 65%,#d8b581 65%);
+  background-size:60px 60px,80px 80px,auto;
+}
+
+#room.level8 #wall{
+  background:
+    radial-gradient(circle at 20% 20%,rgba(255,255,255,.7),transparent 8%),
+    linear-gradient(135deg,#dff7ff,#ffe4f1 45%,#fff0be 65%,#d3b077 65%);
+}
+
+/* 창문 */
+#window{
+  position:absolute;
+  left:7%;
+  top:9%;
+  width:24%;
+  height:25%;
+  border:9px solid #fff;
+  border-radius:18px;
+  background:linear-gradient(#78d7ff,#d8f5ff 62%,#96d96e 63%);
+  box-shadow:0 5px 0 rgba(0,0,0,.08);
+}
+
+#window::before{
+  content:"";
+  position:absolute;
+  left:47%;
+  top:0;
+  height:100%;
+  width:6px;
+  background:#fff;
+}
+
+#window::after{
+  content:"☀️";
+  position:absolute;
+  right:10%;
+  top:7%;
+  font-size:28px;
+}
+
+/* 침대 */
+#bed{
+  position:absolute;
+  right:5%;
+  bottom:11%;
+  width:30%;
+  height:22%;
+}
+
+.bedFrame{
+  position:absolute;
+  bottom:0;
+  width:100%;
+  height:48%;
+  background:#e59ec0;
+  border:5px solid #aa5b83;
+  border-radius:15px 15px 8px 8px;
+}
+
+.pillow{
+  position:absolute;
+  right:7%;
+  bottom:38%;
+  width:42%;
+  height:31%;
+  border-radius:50%;
+  background:#fff;
+  border:3px solid #e4dce1;
+}
+
+.blanket{
+  position:absolute;
+  left:4%;
+  bottom:14%;
+  width:73%;
+  height:43%;
+  border-radius:13px;
+  background:linear-gradient(135deg,#a9dcff,#dbb8ff);
+}
+
+/* 식탁 */
+#table{
+  position:absolute;
+  left:5%;
+  bottom:12%;
+  width:25%;
+  height:18%;
+}
+
+.tableTop{
+  position:absolute;
+  top:0;
+  width:100%;
+  height:25%;
+  border-radius:50%;
+  background:#ba7c49;
+  border:4px solid #85512d;
+}
+
+.tableLeg{
+  position:absolute;
+  left:45%;
+  top:20%;
+  width:10%;
+  height:70%;
+  background:#8b572e;
+}
+
+/* 장난감 상자 */
+#toyBox{
+  position:absolute;
+  right:35%;
+  bottom:7%;
+  width:18%;
+  height:13%;
+  background:#ffbd52;
+  border:5px solid #c77e20;
+  border-radius:10px;
+  text-align:center;
+  padding-top:17px;
+  font-size:27px;
+}
+
+/* 러그 */
+#rug{
+  position:absolute;
+  left:23%;
+  bottom:5%;
+  width:48%;
+  height:14%;
+  border-radius:50%;
+  background:rgba(255,153,190,.33);
+  transform:rotateX(60deg);
+}
+
+/* =========================================================
+   캐릭터
+========================================================= */
+#petArea{
+  position:absolute;
+  z-index:20;
+  left:50%;
+  top:49%;
+  transform:translate(-50%,-50%);
+  width:230px;
+  height:260px;
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+}
+
+#pet{
+  position:relative;
+  width:125px;
+  height:155px;
+  transform-origin:50% 100%;
+  transition:.4s;
+  animation:idle 2s ease-in-out infinite;
+}
+
+@keyframes idle{
+  0%,100%{transform:translateY(0) rotate(-1deg)}
+  50%{transform:translateY(-6px) rotate(1deg)}
+}
+
+#pet.jump{
+  animation:jump .55s ease;
+}
+
+@keyframes jump{
+  0%,100%{transform:translateY(0) scale(1)}
+  45%{transform:translateY(-45px) scale(1.06,.94)}
+}
+
+#pet.shake{
+  animation:shake .12s 6 alternate;
+}
+
+@keyframes shake{
+  from{transform:rotate(-7deg)}
+  to{transform:rotate(7deg)}
+}
+
+/* 몸 */
+.petBody{
+  position:absolute;
+  left:17%;
+  bottom:0;
+  width:66%;
+  height:63%;
+  border-radius:52% 52% 42% 42%;
+  background:linear-gradient(145deg,#95e1b8,#4fc18a);
+  border:5px solid #368364;
+  box-shadow:
+    inset 9px 10px 0 rgba(255,255,255,.18),
+    inset -8px -10px 0 rgba(0,0,0,.08);
+}
+
+.petHead{
+  position:absolute;
+  left:7%;
+  top:0;
+  width:86%;
+  height:67%;
+  border-radius:48% 48% 45% 45%;
+  background:linear-gradient(145deg,#a8ebc6,#59c995);
+  border:5px solid #368364;
+  box-shadow:
+    inset 10px 10px 0 rgba(255,255,255,.2),
+    inset -9px -8px 0 rgba(0,0,0,.08);
+}
+
+/* 귀 */
+.petEar{
+  position:absolute;
+  top:-8%;
+  width:29%;
+  height:32%;
+  background:#76d6a8;
+  border:5px solid #368364;
+  border-radius:60% 60% 30% 60%;
+}
+
+.petEar.left{
+  left:4%;
+  transform:rotate(-25deg);
+}
+
+.petEar.right{
+  right:4%;
+  transform:scaleX(-1) rotate(-25deg);
+}
+
+/* 눈 */
+.petEye{
+  position:absolute;
+  z-index:8;
+  top:40%;
+  width:12%;
+  height:16%;
+  border-radius:50%;
+  background:#3b4140;
+}
+
+.petEye.left{left:29%}
+.petEye.right{right:29%}
+
+.petEye::after{
+  content:"";
+  position:absolute;
+  width:32%;
+  height:32%;
+  left:18%;
+  top:13%;
+  border-radius:50%;
+  background:white;
+}
+
+/* 입 */
+#petMouth{
+  position:absolute;
+  z-index:8;
+  left:43%;
+  top:62%;
+  width:15%;
+  height:10%;
+  border-bottom:4px solid #5e5b57;
+  border-radius:50%;
+}
+
+/* 볼 */
+.petCheek{
+  position:absolute;
+  z-index:7;
+  top:58%;
+  width:17%;
+  height:9%;
+  border-radius:50%;
+  background:rgba(255,132,159,.45);
+}
+
+.petCheek.left{left:12%}
+.petCheek.right{right:12%}
+
+/* 발 */
+.petFoot{
+  position:absolute;
+  z-index:4;
+  bottom:-5%;
+  width:31%;
+  height:19%;
+  border-radius:50%;
+  background:#66c99b;
+  border:4px solid #368364;
+}
+
+.petFoot.left{left:14%}
+.petFoot.right{right:14%}
+
+/* 성장 */
+#pet.stageChild{
+  transform:scale(1.12);
+}
+
+#pet.stageTeen{
+  transform:scale(1.25);
+}
+
+#pet.stageAdult{
+  transform:scale(1.4);
+}
+
+#pet.stageChild .petEar{
+  height:37%;
+}
+
+#pet.stageTeen .petEar{
+  top:-13%;
+  height:42%;
+}
+
+#pet.stageAdult .petEar{
+  top:-17%;
+  height:48%;
+}
+
+/* 잠 */
+#pet.sleep .petEye{
+  height:4px;
+  top:47%;
+  border-radius:0;
+}
+
+#pet.sleep .petEye::after{
+  display:none;
+}
+
+/* 더러움 */
+.dirt{
+  position:absolute;
+  z-index:20;
+  font-size:18px;
+  display:none;
+}
+
+#pet.dirty .dirt{
+  display:block;
+}
+
+.d1{left:12%;top:47%}
+.d2{right:8%;top:62%}
+.d3{left:45%;top:23%}
+
+/* 말풍선 */
+#speech{
+  position:absolute;
+  z-index:35;
+  top:-16px;
+  left:50%;
+  transform:translateX(-50%);
+  min-width:120px;
+  max-width:210px;
+  padding:10px 13px;
+  background:white;
+  border:4px solid #68ab8d;
+  border-radius:18px;
+  text-align:center;
+  color:#4f5553;
+  font-weight:1000;
+  font-size:14px;
+  opacity:0;
+  pointer-events:none;
+  transition:.2s;
+}
+
+#speech::after{
+  content:"";
+  position:absolute;
+  bottom:-12px;
+  left:50%;
+  transform:translateX(-50%);
+  border-left:10px solid transparent;
+  border-right:10px solid transparent;
+  border-top:12px solid #68ab8d;
+}
+
+#speech.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(-5px);
+}
+
+/* 장식 */
+#hat{
+  position:absolute;
+  z-index:22;
+  left:50%;
+  top:-20px;
+  transform:translateX(-50%);
+  font-size:44px;
+  display:none;
+}
+
+#glasses{
+  position:absolute;
+  z-index:22;
+  left:50%;
+  top:52px;
+  transform:translateX(-50%);
+  font-size:40px;
+  display:none;
+}
+
+#ribbon{
+  position:absolute;
+  z-index:22;
+  right:5px;
+  top:25px;
+  font-size:36px;
+  display:none;
+}
+
+#pet.wearHat #hat{display:block}
+#pet.wearGlasses #glasses{display:block}
+#pet.wearRibbon #ribbon{display:block}
+
+/* 거품 */
+.bubble{
+  position:absolute;
+  z-index:40;
+  border-radius:50%;
+  border:3px solid rgba(80,182,225,.65);
+  background:rgba(219,248,255,.68);
+  pointer-events:none;
+  animation:bubbleFloat 1.4s forwards;
+}
+
+@keyframes bubbleFloat{
+  0%{
+    opacity:0;
+    transform:translateY(20px) scale(.4);
+  }
+  25%{opacity:1}
+  100%{
+    opacity:0;
+    transform:translateY(-100px) scale(1.2);
+  }
+}
+
+/* Zzz */
+#zzz{
+  position:absolute;
+  z-index:50;
+  right:10px;
+  top:30px;
+  font-size:28px;
+  opacity:0;
+}
+
+#zzz.active{
+  animation:zzz 1.4s infinite;
+}
+
+@keyframes zzz{
+  0%{opacity:0;transform:translate(0,20px) scale(.7)}
+  45%{opacity:1}
+  100%{opacity:0;transform:translate(35px,-50px) scale(1.25)}
+}
+
+/* =========================================================
+   하단 버튼
+========================================================= */
+#actions{
+  position:absolute;
+  z-index:80;
+  bottom:0;
+  left:0;
+  width:100%;
+  height:180px;
+  padding:8px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:7px;
+  background:rgba(255,255,255,.93);
+  border-top:4px solid #edbdd1;
+}
+
+.actionBtn{
+  border:3px solid rgba(124,74,104,.25);
+  border-radius:17px;
+  background:linear-gradient(#fff,#ffe5ef);
+  color:#664859;
+  font-weight:1000;
+  font-size:clamp(12px,3vw,17px);
+  cursor:pointer;
+  box-shadow:0 5px 0 #d49bad;
+  touch-action:manipulation;
+}
+
+.actionBtn:active{
+  transform:translateY(4px);
+  box-shadow:0 1px 0 #d49bad;
+}
+
+.actionBtn span{
+  display:block;
+  font-size:clamp(24px,6vw,38px);
+  margin-bottom:2px;
+}
+
+#resetBtn{
+  background:linear-gradient(#fff,#eee);
+}
+
+/* =========================================================
+   모달 공통
+========================================================= */
+.modal{
+  position:absolute;
+  z-index:300;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+  background:rgba(62,49,75,.65);
+  backdrop-filter:blur(6px);
+}
+
+.modal.hidden{
+  display:none;
+}
+
+.modalCard{
+  width:min(94%,520px);
+  max-height:88%;
+  overflow:auto;
+  background:#fffdf7;
+  border:5px solid #efafc8;
+  border-radius:28px;
+  padding:20px;
+  text-align:center;
+  box-shadow:0 15px 35px rgba(0,0,0,.28);
+}
+
+.modalTitle{
+  font-size:clamp(25px,6vw,37px);
+  font-weight:1000;
+  color:#d25286;
+  margin-bottom:14px;
+}
+
+.closeBtn,
+.confirmBtn{
+  border:0;
+  border-radius:18px;
+  padding:11px 20px;
+  margin-top:13px;
+  background:linear-gradient(#ffdb73,#ffaf40);
+  color:#6f3f00;
+  font-weight:1000;
+  font-size:17px;
+  cursor:pointer;
+  box-shadow:0 5px 0 #c46e14;
+}
+
+.closeBtn:active,
+.confirmBtn:active{
+  transform:translateY(4px);
+  box-shadow:0 1px 0 #c46e14;
+}
+
+/* =========================================================
+   먹이
+========================================================= */
+.foodGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+
+.foodBtn{
+  border:3px solid #e9c0cf;
+  border-radius:18px;
+  background:#fff;
+  padding:13px 5px;
+  cursor:pointer;
+  font-size:14px;
+  font-weight:900;
+  color:#674c57;
+}
+
+.foodBtn .emoji{
+  display:block;
+  font-size:45px;
+  margin-bottom:5px;
+}
+
+/* =========================================================
+   상점
+========================================================= */
+.shopGrid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+}
+
+.shopItem{
+  border:3px solid #e4bfd0;
+  border-radius:17px;
+  padding:10px;
+  background:white;
+  min-height:130px;
+}
+
+.shopEmoji{
+  font-size:40px;
+}
+
+.shopName{
+  font-weight:1000;
+  color:#604457;
+  margin:5px 0;
+}
+
+.buyBtn{
+  border:0;
+  border-radius:12px;
+  padding:7px 10px;
+  background:#86dabf;
+  color:#285c4d;
+  font-weight:1000;
+  cursor:pointer;
+}
+
+.buyBtn.owned{
+  background:#ddd;
+  color:#555;
+}
+
+/* =========================================================
+   미니게임
+========================================================= */
+#miniGameModal .modalCard{
+  height:min(80vh,600px);
+  display:flex;
+  flex-direction:column;
+}
+
+#miniHud{
+  display:flex;
+  justify-content:space-between;
+  font-weight:1000;
+  color:#6f4c61;
+  margin-bottom:8px;
+}
+
+#starField{
+  position:relative;
+  flex:1;
+  min-height:320px;
+  overflow:hidden;
+  border-radius:20px;
+  background:
+    radial-gradient(circle at 20% 20%,#fff 0 3px,transparent 4px),
+    radial-gradient(circle at 75% 30%,#fff 0 2px,transparent 3px),
+    linear-gradient(#765bd3,#5540a6);
+  background-size:50px 50px,70px 70px,auto;
+}
+
+.star{
+  position:absolute;
+  border:0;
+  background:transparent;
+  font-size:48px;
+  cursor:pointer;
+  animation:starPulse .5s infinite alternate;
+}
+
+@keyframes starPulse{
+  from{transform:scale(.9) rotate(-8deg)}
+  to{transform:scale(1.15) rotate(8deg)}
+}
+
+/* =========================================================
+   알 시작 화면
+========================================================= */
+#eggScreen{
+  position:absolute;
+  z-index:500;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  background:
+    radial-gradient(circle at 25% 15%,rgba(255,255,255,.65),transparent 15%),
+    linear-gradient(#b9ecff,#fff4cf);
+  text-align:center;
+  padding:20px;
+}
+
+#eggScreen.hidden{
+  display:none;
+}
+
+#eggTitle{
+  font-size:clamp(31px,8vw,56px);
+  color:#6f5573;
+  font-weight:1000;
+  margin-bottom:10px;
+}
+
+#eggText{
+  color:#735c67;
+  font-weight:900;
+  margin-bottom:25px;
+}
+
+#egg{
+  position:relative;
+  width:150px;
+  height:190px;
+  border-radius:50% 50% 47% 47%;
+  background:
+    radial-gradient(circle at 35% 25%,white 0 8%,transparent 9%),
+    linear-gradient(135deg,#fff5df,#ffd6ef);
+  border:7px solid #ce9eb8;
+  box-shadow:
+    inset -12px -12px 0 rgba(160,94,135,.1),
+    0 16px 20px rgba(0,0,0,.17);
+  cursor:pointer;
+  animation:eggBounce 1.4s ease-in-out infinite;
+}
+
+@keyframes eggBounce{
+  0%,100%{transform:translateY(0) rotate(-2deg)}
+  50%{transform:translateY(-8px) rotate(2deg)}
+}
+
+#egg.crack1::after{
+  content:"⚡";
+  position:absolute;
+  left:48%;
+  top:36%;
+  font-size:45px;
+  color:#a7788d;
+  transform:rotate(15deg);
+}
+
+#egg.crack2::after{
+  content:"⚡";
+  position:absolute;
+  left:35%;
+  top:29%;
+  font-size:70px;
+  color:#9e6f84;
+  transform:rotate(5deg);
+}
+
+#egg.hatch{
+  animation:hatch .7s forwards;
+}
+
+@keyframes hatch{
+  0%{transform:scale(1)}
+  35%{transform:scale(1.18) rotate(-8deg)}
+  60%{transform:scale(1.22) rotate(9deg)}
+  100%{
+    transform:scale(.1);
+    opacity:0;
+  }
+}
+
+/* 이름 입력 */
+#nameEntry{
+  display:none;
+  width:min(90%,400px);
+  margin-top:20px;
+}
+
+#nameEntry.show{
+  display:block;
+}
+
+#nameInput{
+  width:100%;
+  padding:13px;
+  border:4px solid #efb6d0;
+  border-radius:16px;
+  outline:none;
+  text-align:center;
+  font-size:20px;
+  margin-bottom:10px;
+}
+
+/* =========================================================
+   메시지
+========================================================= */
+#bigMessage{
+  position:absolute;
+  z-index:250;
+  left:50%;
+  top:42%;
+  transform:translate(-50%,-50%);
+  width:90%;
+  text-align:center;
+  color:white;
+  font-size:clamp(28px,7vw,51px);
+  font-weight:1000;
+  text-shadow:
+    0 4px 0 #a64b74,
+    0 0 12px #ffdc66;
+  opacity:0;
+  pointer-events:none;
+}
+
+#bigMessage.show{
+  animation:message .95s ease forwards;
+}
+
+@keyframes message{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}
+  22%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}
+  60%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-70%) scale(.95)}
+}
+
+/* =========================================================
+   모바일
+========================================================= */
+@media(max-width:560px){
+  #topHud{
+    padding:6px;
+  }
+
+  #stats{
+    gap:3px 5px;
+  }
+
+  .stat{
+    grid-template-columns:62px 1fr 28px;
+    font-size:10px;
+  }
+
+  #room{
+    top:120px;
+    bottom:170px;
+  }
+
+  #actions{
+    height:170px;
+    grid-template-columns:repeat(4,1fr);
+    padding:6px;
+  }
+
+  #petArea{
+    transform:translate(-50%,-50%) scale(.9);
+  }
+
+  .actionBtn{
+    font-size:11px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+  <!-- =====================================================
+       상태창
+  ====================================================== -->
+  <div id="topHud">
+
+    <div class="hudTop">
+      <div class="nameBox">
+        🐾 <span id="petNameDisplay">몽글이</span>
+        · Lv.<span id="levelDisplay">1</span>
+      </div>
+
+      <div class="coinBox">
+        🪙 <span id="coinDisplay">20</span>
+      </div>
+
+      <div class="ageBox">
+        🎂 <span id="ageDisplay">0</span>일
+      </div>
+    </div>
+
+    <div id="stats">
+
+      <div class="stat">
+        <span>🍎 배고픔</span>
+        <div class="bar">
+          <div id="hungerFill" class="fill"></div>
+        </div>
+        <span id="hungerText">80</span>
+      </div>
+
+      <div class="stat">
+        <span>😄 행복도</span>
+        <div class="bar">
+          <div id="happyFill" class="fill"></div>
+        </div>
+        <span id="happyText">80</span>
+      </div>
+
+      <div class="stat">
+        <span>🫧 청결도</span>
+        <div class="bar">
+          <div id="cleanFill" class="fill"></div>
+        </div>
+        <span id="cleanText">80</span>
+      </div>
+
+      <div class="stat">
+        <span>⚡ 체력</span>
+        <div class="bar">
+          <div id="energyFill" class="fill"></div>
+        </div>
+        <span id="energyText">80</span>
+      </div>
+
+      <div class="stat" style="grid-column:1 / -1;">
+        <span>⭐ 경험치</span>
+        <div class="bar">
+          <div id="xpFill" class="fill"></div>
+        </div>
+        <span id="xpText">0</span>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       방
+  ====================================================== -->
+  <div id="room">
+
+    <div id="wall"></div>
+
+    <div id="window"></div>
+
+    <div id="rug"></div>
+
+    <div id="table">
+      <div class="tableTop"></div>
+      <div class="tableLeg"></div>
+    </div>
+
+    <div id="bed">
+      <div class="bedFrame"></div>
+      <div class="blanket"></div>
+      <div class="pillow"></div>
+    </div>
+
+    <div id="toyBox">
+      🧸
+    </div>
+
+
+    <!-- 캐릭터 -->
+    <div id="petArea">
+
+      <div id="speech">
+        안녕!
+      </div>
+
+      <div id="pet">
+
+        <div id="hat">🎩</div>
+        <div id="glasses">👓</div>
+        <div id="ribbon">🎀</div>
+
+        <div class="petEar left"></div>
+        <div class="petEar right"></div>
+
+        <div class="petBody"></div>
+        <div class="petHead"></div>
+
+        <div class="petEye left"></div>
+        <div class="petEye right"></div>
+
+        <div class="petCheek left"></div>
+        <div class="petCheek right"></div>
+
+        <div id="petMouth"></div>
+
+        <div class="petFoot left"></div>
+        <div class="petFoot right"></div>
+
+        <div class="dirt d1">✦</div>
+        <div class="dirt d2">●</div>
+        <div class="dirt d3">✦</div>
+
+        <div id="zzz">💤</div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       하단 메뉴
+  ====================================================== -->
+  <div id="actions">
+
+    <button class="actionBtn" id="feedBtn">
+      <span>🍎</span>
+      먹이 주기
+    </button>
+
+    <button class="actionBtn" id="playBtn">
+      <span>⭐</span>
+      놀아주기
+    </button>
+
+    <button class="actionBtn" id="washBtn">
+      <span>🫧</span>
+      씻기기
+    </button>
+
+    <button class="actionBtn" id="sleepBtn">
+      <span>🛏️</span>
+      재우기
+    </button>
+
+    <button class="actionBtn" id="shopBtn">
+      <span>🛍️</span>
+      상점
+    </button>
+
+    <button class="actionBtn" id="dressBtn">
+      <span>👒</span>
+      꾸미기
+    </button>
+
+    <button class="actionBtn" id="toyBtn">
+      <span>🧸</span>
+      장난감
+    </button>
+
+    <button class="actionBtn" id="resetBtn">
+      <span>🔄</span>
+      초기화
+    </button>
+
+  </div>
+
+
+  <div id="bigMessage"></div>
+
+
+  <!-- =====================================================
+       알 부화 화면
+  ====================================================== -->
+  <div id="eggScreen">
+
+    <div id="eggTitle">
+      🥚 새로운 친구가 찾아왔어요!
+    </div>
+
+    <div id="eggText">
+      알을 여러 번 클릭하거나 터치해 보세요!
+    </div>
+
+    <div id="egg"></div>
+
+    <div id="nameEntry">
+
+      <div style="font-weight:900;color:#745d6c;margin-bottom:9px;">
+        🎉 탄생했어요! 이름을 지어주세요.
+      </div>
+
+      <input
+        id="nameInput"
+        maxlength="10"
+        placeholder="이름 입력"
+        autocomplete="off"
+      >
+
+      <button id="nameConfirm" class="confirmBtn">
+        💖 이 이름으로 키우기
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       먹이 선택
+  ====================================================== -->
+  <div id="foodModal" class="modal hidden">
+
+    <div class="modalCard">
+
+      <div class="modalTitle">
+        🍴 무엇을 먹을까?
+      </div>
+
+      <div class="foodGrid">
+
+        <button class="foodBtn" data-food="apple">
+          <span class="emoji">🍎</span>
+          사과<br>
+          무료<br>
+          +15
+        </button>
+
+        <button class="foodBtn" data-food="burger">
+          <span class="emoji">🍔</span>
+          햄버거<br>
+          🪙 2<br>
+          +30
+        </button>
+
+        <button class="foodBtn" data-food="cake">
+          <span class="emoji">🍰</span>
+          케이크<br>
+          🪙 3<br>
+          +20 / 행복 +10
+        </button>
+
+      </div>
+
+      <button class="closeBtn" data-close="foodModal">
+        닫기
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       상점
+  ====================================================== -->
+  <div id="shopModal" class="modal hidden">
+
+    <div class="modalCard">
+
+      <div class="modalTitle">
+        🛍️ 몽글 상점
+      </div>
+
+      <div class="shopGrid">
+
+        <div class="shopItem">
+          <div class="shopEmoji">🍓</div>
+          <div class="shopName">특별 딸기</div>
+          <div>배고픔 +35<br>행복 +5</div>
+          <button class="buyBtn" data-item="berry" data-price="4">
+            🪙 4 구매
+          </button>
+        </div>
+
+        <div class="shopItem">
+          <div class="shopEmoji">🎩</div>
+          <div class="shopName">멋진 모자</div>
+          <div>착용 가능</div>
+          <button class="buyBtn" data-item="hat" data-price="8">
+            🪙 8 구매
+          </button>
+        </div>
+
+        <div class="shopItem">
+          <div class="shopEmoji">👓</div>
+          <div class="shopName">동글 안경</div>
+          <div>착용 가능</div>
+          <button class="buyBtn" data-item="glasses" data-price="7">
+            🪙 7 구매
+          </button>
+        </div>
+
+        <div class="shopItem">
+          <div class="shopEmoji">🎀</div>
+          <div class="shopName">분홍 리본</div>
+          <div>착용 가능</div>
+          <button class="buyBtn" data-item="ribbon" data-price="6">
+            🪙 6 구매
+          </button>
+        </div>
+
+        <div class="shopItem">
+          <div class="shopEmoji">🧸</div>
+          <div class="shopName">곰 장난감</div>
+          <div>행복 +25</div>
+          <button class="buyBtn" data-item="toy" data-price="5">
+            🪙 5 구매
+          </button>
+        </div>
+
+      </div>
+
+      <button class="closeBtn" data-close="shopModal">
+        닫기
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       꾸미기
+  ====================================================== -->
+  <div id="dressModal" class="modal hidden">
+
+    <div class="modalCard">
+
+      <div class="modalTitle">
+        👒 꾸미기
+      </div>
+
+      <div id="dressContent">
+        아직 가지고 있는 장식이 없어요!
+      </div>
+
+      <button class="closeBtn" data-close="dressModal">
+        닫기
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       미니게임
+  ====================================================== -->
+  <div id="miniGameModal" class="modal hidden">
+
+    <div class="modalCard">
+
+      <div class="modalTitle">
+        ⭐ 별을 잡아라!
+      </div>
+
+      <div id="miniHud">
+        <span>
+          ⭐ 잡은 별 :
+          <b id="starScore">0</b>
+        </span>
+
+        <span>
+          ⏰
+          <b id="miniTime">10</b>초
+        </span>
+      </div>
+
+      <div id="starField"></div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+/* =========================================================
+   1. 게임 데이터
+========================================================= */
+
+const SAVE_KEY = "monglePetSaveV1";
+
+const defaultData = {
+  born:false,
+  name:"몽글이",
+
+  hunger:80,
+  happiness:80,
+  cleanliness:80,
+  energy:80,
+
+  age:0,
+  level:1,
+  xp:0,
+  coins:20,
+
+  owned:{
+    hat:false,
+    glasses:false,
+    ribbon:false,
+    toy:false
+  },
+
+  wearing:{
+    hat:false,
+    glasses:false,
+    ribbon:false
+  },
+
+  lastSave:Date.now(),
+  birthTime:Date.now()
+};
+
+let data = structuredClone(defaultData);
+
+let sleeping = false;
+let sleepTimer = null;
+let decayTimer = null;
+let speechTimer = null;
+
+let eggClicks = 0;
+
+
+/* =========================================================
+   2. DOM
+========================================================= */
+
+const eggScreen = document.getElementById("eggScreen");
+const egg = document.getElementById("egg");
+
+const nameEntry = document.getElementById("nameEntry");
+const nameInput = document.getElementById("nameInput");
+const nameConfirm = document.getElementById("nameConfirm");
+
+const pet = document.getElementById("pet");
+const speech = document.getElementById("speech");
+const room = document.getElementById("room");
+
+const petMouth = document.getElementById("petMouth");
+const zzz = document.getElementById("zzz");
+
+const hungerFill = document.getElementById("hungerFill");
+const happyFill = document.getElementById("happyFill");
+const cleanFill = document.getElementById("cleanFill");
+const energyFill = document.getElementById("energyFill");
+const xpFill = document.getElementById("xpFill");
+
+const hungerText = document.getElementById("hungerText");
+const happyText = document.getElementById("happyText");
+const cleanText = document.getElementById("cleanText");
+const energyText = document.getElementById("energyText");
+const xpText = document.getElementById("xpText");
+
+const levelDisplay = document.getElementById("levelDisplay");
+const ageDisplay = document.getElementById("ageDisplay");
+const coinDisplay = document.getElementById("coinDisplay");
+const petNameDisplay = document.getElementById("petNameDisplay");
+
+const feedBtn = document.getElementById("feedBtn");
+const playBtn = document.getElementById("playBtn");
+const washBtn = document.getElementById("washBtn");
+const sleepBtn = document.getElementById("sleepBtn");
+const shopBtn = document.getElementById("shopBtn");
+const dressBtn = document.getElementById("dressBtn");
+const toyBtn = document.getElementById("toyBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+const bigMessage = document.getElementById("bigMessage");
+
+const foodModal = document.getElementById("foodModal");
+const shopModal = document.getElementById("shopModal");
+const dressModal = document.getElementById("dressModal");
+
+const miniGameModal = document.getElementById("miniGameModal");
+const starField = document.getElementById("starField");
+const starScoreEl = document.getElementById("starScore");
+const miniTimeEl = document.getElementById("miniTime");
+
+const dressContent = document.getElementById("dressContent");
+
+
+/* =========================================================
+   3. 저장 / 불러오기
+========================================================= */
+
+function loadGame(){
+
+  const saved = localStorage.getItem(SAVE_KEY);
+
+  if(saved){
+
+    try{
+      const parsed = JSON.parse(saved);
+
+      data = {
+        ...structuredClone(defaultData),
+        ...parsed,
+        owned:{
+          ...defaultData.owned,
+          ...(parsed.owned || {})
+        },
+        wearing:{
+          ...defaultData.wearing,
+          ...(parsed.wearing || {})
+        }
+      };
+
+      applyOfflineDecay();
+
+    }catch(e){
+      data = structuredClone(defaultData);
+    }
+  }
+
+
+  if(data.born){
+    eggScreen.classList.add("hidden");
+  }
+
+  updateUI();
+}
+
+
+function saveGame(){
+
+  data.lastSave = Date.now();
+
+  localStorage.setItem(
+    SAVE_KEY,
+    JSON.stringify(data)
+  );
+}
+
+
+/*
+   게임을 껐다가 다시 켠 사이의 시간도
+   아주 조금 상태에 반영한다.
+*/
+function applyOfflineDecay(){
+
+  const now = Date.now();
+
+  const elapsedMinutes =
+    Math.min(
+      240,
+      Math.max(
+        0,
+        (now - (data.lastSave || now)) / 60000
+      )
+    );
+
+  data.hunger =
+    clamp(
+      data.hunger - elapsedMinutes*.18,
+      0,
+      100
+    );
+
+  data.happiness =
+    clamp(
+      data.happiness - elapsedMinutes*.10,
+      0,
+      100
+    );
+
+  data.cleanliness =
+    clamp(
+      data.cleanliness - elapsedMinutes*.12,
+      0,
+      100
+    );
+
+  data.energy =
+    clamp(
+      data.energy - elapsedMinutes*.08,
+      0,
+      100
+    );
+}
+
+
+/* =========================================================
+   4. 알 부화
+========================================================= */
+
+egg.addEventListener("pointerdown",()=>{
+
+  if(data.born) return;
+
+  eggClicks++;
+
+  petJump();
+
+  if(eggClicks === 2){
+    egg.classList.add("crack1");
+  }
+
+  if(eggClicks === 4){
+    egg.classList.remove("crack1");
+    egg.classList.add("crack2");
+  }
+
+  if(eggClicks >= 6){
+
+    egg.classList.add("hatch");
+
+    showBigMessage("🐣 뿅!");
+
+    setTimeout(()=>{
+
+      egg.style.display = "none";
+
+      document.getElementById("eggText").textContent =
+        "새로운 친구가 태어났어요!";
+
+      nameEntry.classList.add("show");
+
+      nameInput.focus();
+
+    },650);
+  }
+});
+
+
+nameConfirm.addEventListener("click",finishBirth);
+
+nameInput.addEventListener("keydown",e=>{
+
+  if(e.key === "Enter"){
+    finishBirth();
+  }
+});
+
+
+function finishBirth(){
+
+  const name =
+    nameInput.value.trim() || "몽글이";
+
+  data = structuredClone(defaultData);
+
+  data.born = true;
+  data.name = name;
+  data.birthTime = Date.now();
+  data.lastSave = Date.now();
+
+  eggScreen.classList.add("hidden");
+
+  saveGame();
+  updateUI();
+
+  showBigMessage(
+    `🎉 ${name} 탄생!`
+  );
+
+  speak(
+    `안녕! 나는 ${name}이야! 💕`
+  );
+
+  petJump();
+}
+
+
+/* =========================================================
+   5. 상태 감소
+========================================================= */
+
+decayTimer = setInterval(()=>{
+
+  if(!data.born) return;
+
+
+  if(sleeping){
+
+    data.energy =
+      clamp(
+        data.energy + 2,
+        0,
+        100
+      );
+
+  }else{
+
+    data.hunger =
+      clamp(
+        data.hunger - .55,
+        0,
+        100
+      );
+
+    data.happiness =
+      clamp(
+        data.happiness - .30,
+        0,
+        100
+      );
+
+    data.cleanliness =
+      clamp(
+        data.cleanliness - .25,
+        0,
+        100
+      );
+
+    data.energy =
+      clamp(
+        data.energy - .20,
+        0,
+        100
+      );
+  }
+
+
+  updateAge();
+  updateUI();
+  randomSpeech();
+  saveGame();
+
+},5000);
+
+
+/* =========================================================
+   6. 나이
+========================================================= */
+
+function updateAge(){
+
+  /*
+     실제 플레이에서 변화를 보기 쉽도록
+     10분 = 게임 속 1일
+  */
+
+  const milliseconds =
+    Date.now() -
+    data.birthTime;
+
+  data.age =
+    Math.floor(
+      milliseconds /
+      (10*60*1000)
+    );
+}
+
+
+/* =========================================================
+   7. UI
+========================================================= */
+
+function updateUI(){
+
+  data.hunger = clamp(data.hunger,0,100);
+  data.happiness = clamp(data.happiness,0,100);
+  data.cleanliness = clamp(data.cleanliness,0,100);
+  data.energy = clamp(data.energy,0,100);
+
+  petNameDisplay.textContent = data.name;
+  levelDisplay.textContent = data.level;
+  ageDisplay.textContent = data.age;
+  coinDisplay.textContent = Math.floor(data.coins);
+
+  setBar(
+    hungerFill,
+    hungerText,
+    data.hunger
+  );
+
+  setBar(
+    happyFill,
+    happyText,
+    data.happiness
+  );
+
+  setBar(
+    cleanFill,
+    cleanText,
+    data.cleanliness
+  );
+
+  setBar(
+    energyFill,
+    energyText,
+    data.energy
+  );
+
+
+  const needed =
+    xpNeeded();
+
+  xpFill.style.width =
+    Math.min(
+      100,
+      data.xp/needed*100
+    ) + "%";
+
+  xpText.textContent =
+    `${Math.floor(data.xp)}/${needed}`;
+
+
+  updateEmotion();
+  updateGrowth();
+  updateAccessories();
+  updateShopButtons();
+}
+
+
+function setBar(fill,text,value){
+
+  fill.style.width =
+    value + "%";
+
+  text.textContent =
+    Math.round(value);
+}
+
+
+/* =========================================================
+   8. 감정 표현
+========================================================= */
+
+function updateEmotion(){
+
+  pet.classList.toggle(
+    "dirty",
+    data.cleanliness < 35
+  );
+
+
+  if(sleeping){
+    return;
+  }
+
+
+  /*
+     표정 우선순위
+  */
+
+  if(data.hunger < 25){
+
+    petMouth.style.borderBottom =
+      "0";
+
+    petMouth.style.borderTop =
+      "4px solid #655";
+
+    petMouth.style.borderRadius =
+      "50%";
+
+  }
+  else if(data.cleanliness < 30){
+
+    petMouth.style.borderTop =
+      "3px solid #655";
+
+    petMouth.style.borderBottom =
+      "3px solid #655";
+
+  }
+  else if(data.happiness < 30){
+
+    petMouth.style.borderBottom =
+      "0";
+
+    petMouth.style.borderTop =
+      "4px solid #655";
+
+  }
+  else{
+
+    petMouth.style.borderTop =
+      "0";
+
+    petMouth.style.borderBottom =
+      "4px solid #5e5b57";
+  }
+}
+
+
+/* =========================================================
+   9. 성장
+========================================================= */
+
+function xpNeeded(){
+  return 80 + (data.level-1)*40;
+}
+
+
+function addXP(amount){
+
+  data.xp += amount;
+
+  let needed =
+    xpNeeded();
+
+  while(data.xp >= needed){
+
+    data.xp -= needed;
+    data.level++;
+
+    showBigMessage(
+      `✨ LEVEL ${data.level}!`
+    );
+
+    petJump();
+
+    needed =
+      xpNeeded();
+  }
+
+  updateGrowth();
+  saveGame();
+}
+
+
+function updateGrowth(){
+
+  pet.classList.remove(
+    "stageChild",
+    "stageTeen",
+    "stageAdult"
+  );
+
+
+  room.classList.remove(
+    "level3",
+    "level5",
+    "level8"
+  );
+
+
+  if(data.level >= 8){
+
+    pet.classList.add(
+      "stageAdult"
+    );
+
+    room.classList.add(
+      "level8"
+    );
+
+  }else if(data.level >= 5){
+
+    pet.classList.add(
+      "stageTeen"
+    );
+
+    room.classList.add(
+      "level5"
+    );
+
+  }else if(data.level >= 3){
+
+    pet.classList.add(
+      "stageChild"
+    );
+
+    room.classList.add(
+      "level3"
+    );
+  }
+}
+
+
+/* =========================================================
+   10. 먹이
+========================================================= */
+
+feedBtn.addEventListener("click",()=>{
+
+  if(sleeping){
+    speak("쿨쿨... 자고 있어 💤");
+    return;
+  }
+
+  openModal(foodModal);
+});
+
+
+document.querySelectorAll(".foodBtn")
+.forEach(btn=>{
+
+  btn.addEventListener("click",()=>{
+
+    const food =
+      btn.dataset.food;
+
+    if(food === "apple"){
+
+      data.hunger += 15;
+
+      eatAnimation("🍎");
+
+    }
+
+    if(food === "burger"){
+
+      if(!spendCoins(2)){
+        return;
+      }
+
+      data.hunger += 30;
+
+      eatAnimation("🍔");
+    }
+
+    if(food === "cake"){
+
+      if(!spendCoins(3)){
+        return;
+      }
+
+      data.hunger += 20;
+      data.happiness += 10;
+
+      eatAnimation("🍰");
+    }
+
+
+    data.cleanliness -= 3;
+
+    data.hunger =
+      clamp(
+        data.hunger,
+        0,
+        100
+      );
+
+    closeModal(foodModal);
+
+    addXP(5);
+
+    updateUI();
+    saveGame();
+  });
+});
+
+
+function eatAnimation(emoji){
+
+  showBigMessage(
+    `${emoji} 냠냠!`
+  );
+
+  petJump();
+
+  speak(
+    randomFrom([
+      "맛있다! 😋",
+      "냠냠냠!",
+      "또 먹고 싶어!",
+      "배부르다~ 💕"
+    ])
+  );
+}
+
+
+/* =========================================================
+   11. 씻기기
+========================================================= */
+
+washBtn.addEventListener("click",()=>{
+
+  if(sleeping){
+    speak("자고 있는데 씻으면 깜짝 놀라! 😴");
+    return;
+  }
+
+  data.cleanliness =
+    clamp(
+      data.cleanliness + 45,
+      0,
+      100
+    );
+
+  data.happiness =
+    clamp(
+      data.happiness + 3,
+      0,
+      100
+    );
+
+  createBubbles();
+
+  pet.classList.add("shake");
+
+  setTimeout(()=>{
+    pet.classList.remove("shake");
+  },800);
+
+  speak("뽀득뽀득! 기분 좋아~ 🫧");
+
+  addXP(4);
+
+  updateUI();
+  saveGame();
+});
+
+
+function createBubbles(){
+
+  const area =
+    document.getElementById("petArea");
+
+  for(let i=0;i<18;i++){
+
+    const bubble =
+      document.createElement("div");
+
+    bubble.className =
+      "bubble";
+
+    const size =
+      random(13,35);
+
+    bubble.style.width =
+      size+"px";
+
+    bubble.style.height =
+      size+"px";
+
+    bubble.style.left =
+      random(10,85)+"%";
+
+    bubble.style.top =
+      random(30,85)+"%";
+
+    bubble.style.animationDelay =
+      random(0,.4)+"s";
+
+    area.appendChild(bubble);
+
+    setTimeout(
+      ()=>bubble.remove(),
+      1800
+    );
+  }
+}
+
+
+/* =========================================================
+   12. 재우기
+========================================================= */
+
+sleepBtn.addEventListener("click",()=>{
+
+  if(sleeping){
+
+    wakeUp();
+
+  }else{
+
+    goSleep();
+  }
+});
+
+
+function goSleep(){
+
+  sleeping = true;
+
+  pet.id = "sleep";
+
+  /*
+     기존 ID를 바꾸면 문제가 되므로
+     sleep class 방식으로 바로 수정
+  */
+
+  pet.id = "pet";
+  pet.classList.add("sleeping");
+
+  document
+    .querySelectorAll(".petEye")
+    .forEach(eye=>{
+      eye.style.height="4px";
+      eye.style.top="47%";
+    });
+
+  zzz.classList.add("active");
+
+  sleepBtn.innerHTML =
+    "<span>☀️</span>깨우기";
+
+  speak("잘 자~ 💤");
+
+  sleepTimer =
+    setInterval(()=>{
+
+      data.energy =
+        clamp(
+          data.energy + 3,
+          0,
+          100
+        );
+
+      updateUI();
+
+      if(data.energy >= 100){
+        wakeUp();
+      }
+
+    },1500);
+}
+
+
+function wakeUp(){
+
+  sleeping = false;
+
+  clearInterval(sleepTimer);
+
+  document
+    .querySelectorAll(".petEye")
+    .forEach(eye=>{
+      eye.style.height="16%";
+      eye.style.top="40%";
+    });
+
+  zzz.classList.remove("active");
+
+  sleepBtn.innerHTML =
+    "<span>🛏️</span>재우기";
+
+  speak("잘 잤다! ☀️");
+
+  petJump();
+
+  saveGame();
+}
+
+
+/* =========================================================
+   13. 미니게임
+========================================================= */
+
+let miniRunning = false;
+let miniScore = 0;
+let miniTime = 10;
+let miniTimer;
+let starTimer;
+
+
+playBtn.addEventListener("click",()=>{
+
+  if(sleeping){
+    speak("지금은 자는 중이야... 💤");
+    return;
+  }
+
+  startMiniGame();
+});
+
+
+function startMiniGame(){
+
+  miniRunning = true;
+  miniScore = 0;
+  miniTime = 10;
+
+  starScoreEl.textContent = "0";
+  miniTimeEl.textContent = "10";
+
+  starField.innerHTML = "";
+
+  openModal(miniGameModal);
+
+  spawnStar();
+
+  starTimer =
+    setInterval(
+      spawnStar,
+      650
+    );
+
+  miniTimer =
+    setInterval(()=>{
+
+      miniTime--;
+
+      miniTimeEl.textContent =
+        miniTime;
+
+      if(miniTime <= 0){
+        endMiniGame();
+      }
+
+    },1000);
+}
+
+
+function spawnStar(){
+
+  if(!miniRunning) return;
+
+  const star =
+    document.createElement("button");
+
+  star.className =
+    "star";
+
+  star.textContent =
+    randomFrom([
+      "⭐","🌟","✨"
+    ]);
+
+  star.style.left =
+    random(5,85)+"%";
+
+  star.style.top =
+    random(5,80)+"%";
+
+
+  star.addEventListener(
+    "pointerdown",
+    e=>{
+
+      e.preventDefault();
+
+      if(!miniRunning) return;
+
+      miniScore++;
+
+      starScoreEl.textContent =
+        miniScore;
+
+      star.remove();
+    }
+  );
+
+
+  starField.appendChild(star);
+
+  setTimeout(()=>{
+
+    if(star.isConnected){
+      star.remove();
+    }
+
+  },1300);
+}
+
+
+function endMiniGame(){
+
+  miniRunning = false;
+
+  clearInterval(miniTimer);
+  clearInterval(starTimer);
+
+  starField.innerHTML = "";
+
+  closeModal(miniGameModal);
+
+
+  const happinessGain =
+    Math.min(
+      35,
+      miniScore*3
+    );
+
+  const xpGain =
+    miniScore*4;
+
+  const coinGain =
+    Math.max(
+      1,
+      Math.floor(miniScore/2)
+    );
+
+
+  data.happiness =
+    clamp(
+      data.happiness +
+      happinessGain,
+      0,
+      100
+    );
+
+  data.energy =
+    clamp(
+      data.energy - 8,
+      0,
+      100
+    );
+
+  data.coins +=
+    coinGain;
+
+
+  addXP(xpGain);
+
+
+  showBigMessage(
+    `⭐ ${miniScore}개! 🪙 +${coinGain}`
+  );
+
+  speak(
+    "신나게 놀았다! 😆"
+  );
+
+  petJump();
+
+  updateUI();
+  saveGame();
+}
+
+
+/* =========================================================
+   14. 상점
+========================================================= */
+
+shopBtn.addEventListener("click",()=>{
+
+  openModal(shopModal);
+
+  updateShopButtons();
+});
+
+
+document.querySelectorAll(".buyBtn")
+.forEach(btn=>{
+
+  btn.addEventListener("click",()=>{
+
+    const item =
+      btn.dataset.item;
+
+    const price =
+      Number(
+        btn.dataset.price
+      );
+
+
+    if(item === "berry"){
+
+      if(!spendCoins(price)){
+        return;
+      }
+
+      data.hunger =
+        clamp(
+          data.hunger + 35,
+          0,
+          100
+        );
+
+      data.happiness =
+        clamp(
+          data.happiness + 5,
+          0,
+          100
+        );
+
+      showBigMessage(
+        "🍓 특별 딸기!"
+      );
+
+      petJump();
+
+      saveGame();
+      updateUI();
+
+      return;
+    }
+
+
+    if(data.owned[item]){
+
+      showBigMessage(
+        "이미 가지고 있어요!"
+      );
+
+      return;
+    }
+
+
+    if(!spendCoins(price)){
+      return;
+    }
+
+
+    data.owned[item] =
+      true;
+
+
+    showBigMessage(
+      "🎁 구매 완료!"
+    );
+
+    saveGame();
+    updateUI();
+    updateDressMenu();
+  });
+});
+
+
+function spendCoins(amount){
+
+  if(data.coins < amount){
+
+    showBigMessage(
+      "🪙 코인이 부족해!"
+    );
+
+    return false;
+  }
+
+  data.coins -= amount;
+
+  return true;
+}
+
+
+function updateShopButtons(){
+
+  document.querySelectorAll(".buyBtn")
+  .forEach(btn=>{
+
+    const item =
+      btn.dataset.item;
+
+    if(item === "berry"){
+      return;
+    }
+
+    if(data.owned[item]){
+
+      btn.textContent =
+        "✅ 보유 중";
+
+      btn.classList.add(
+        "owned"
+      );
+
+    }else{
+
+      btn.textContent =
+        `🪙 ${btn.dataset.price} 구매`;
+
+      btn.classList.remove(
+        "owned"
+      );
+    }
+  });
+}
+
+
+/* =========================================================
+   15. 꾸미기
+========================================================= */
+
+dressBtn.addEventListener("click",()=>{
+
+  updateDressMenu();
+  openModal(dressModal);
+});
+
+
+function updateDressMenu(){
+
+  const accessoryItems = [
+    {
+      key:"hat",
+      label:"🎩 모자"
+    },
+    {
+      key:"glasses",
+      label:"👓 안경"
+    },
+    {
+      key:"ribbon",
+      label:"🎀 리본"
+    }
+  ];
+
+
+  let html = "";
+
+
+  accessoryItems.forEach(item=>{
+
+    if(data.owned[item.key]){
+
+      const wearing =
+        data.wearing[item.key];
+
+      html += `
+        <button
+          class="foodBtn dressToggle"
+          data-wear="${item.key}"
+          style="margin:6px;"
+        >
+          ${item.label}<br>
+          ${wearing ? "✅ 착용 중" : "착용하기"}
+        </button>
+      `;
+    }
+  });
+
+
+  if(!html){
+
+    html =
+      "아직 가지고 있는 장식이 없어요.<br>상점에서 구입해 보세요!";
+  }
+
+
+  dressContent.innerHTML =
+    html;
+
+
+  document.querySelectorAll(".dressToggle")
+  .forEach(btn=>{
+
+    btn.addEventListener("click",()=>{
+
+      const key =
+        btn.dataset.wear;
+
+      data.wearing[key] =
+        !data.wearing[key];
+
+      updateAccessories();
+      updateDressMenu();
+      saveGame();
+
+      petJump();
+    });
+  });
+}
+
+
+function updateAccessories(){
+
+  pet.classList.toggle(
+    "wearHat",
+    data.wearing.hat
+  );
+
+  pet.classList.toggle(
+    "wearGlasses",
+    data.wearing.glasses
+  );
+
+  pet.classList.toggle(
+    "wearRibbon",
+    data.wearing.ribbon
+  );
+}
+
+
+/* =========================================================
+   16. 장난감
+========================================================= */
+
+toyBtn.addEventListener("click",()=>{
+
+  if(sleeping){
+    speak("쿨쿨... 나중에 놀자 💤");
+    return;
+  }
+
+  if(!data.owned.toy){
+
+    speak(
+      "상점에서 장난감을 사줘! 🧸"
+    );
+
+    showBigMessage(
+      "🛍️ 장난감이 없어요!"
+    );
+
+    return;
+  }
+
+
+  data.happiness =
+    clamp(
+      data.happiness + 25,
+      0,
+      100
+    );
+
+  data.energy =
+    clamp(
+      data.energy - 4,
+      0,
+      100
+    );
+
+  addXP(7);
+
+  showBigMessage(
+    "🧸 장난감 놀이!"
+  );
+
+  speak(
+    "내 곰 인형 최고야! 😆"
+  );
+
+  petJump();
+
+  updateUI();
+  saveGame();
+});
+
+
+/* =========================================================
+   17. 말풍선
+========================================================= */
+
+function speak(text){
+
+  clearTimeout(
+    speechTimer
+  );
+
+  speech.textContent =
+    text;
+
+  speech.classList.add(
+    "show"
+  );
+
+  speechTimer =
+    setTimeout(()=>{
+
+      speech.classList.remove(
+        "show"
+      );
+
+    },2400);
+}
+
+
+function randomSpeech(){
+
+  if(
+    !data.born ||
+    sleeping ||
+    Math.random() > .32
+  ){
+    return;
+  }
+
+
+  let text;
+
+
+  if(data.hunger < 30){
+
+    text =
+      "배고파! 🍎";
+
+  }else if(data.cleanliness < 30){
+
+    text =
+      "씻고 싶어! 🫧";
+
+  }else if(data.energy < 25){
+
+    text =
+      "졸려… 💤";
+
+  }else if(data.happiness < 30){
+
+    text =
+      "같이 놀자! ⭐";
+
+  }else if(
+    data.hunger > 70 &&
+    data.happiness > 70 &&
+    data.cleanliness > 70
+  ){
+
+    text =
+      "기분 최고! 💕";
+
+  }else{
+
+    text =
+      randomFrom([
+        "오늘 뭐 하고 놀까?",
+        "나 잘 크고 있지? 😆",
+        "같이 있어줘서 좋아!",
+        "히히~ 💕"
+      ]);
+  }
+
+
+  speak(text);
+}
+
+
+/* =========================================================
+   18. 작은 애니메이션
+========================================================= */
+
+function petJump(){
+
+  pet.classList.remove(
+    "jump"
+  );
+
+  void pet.offsetWidth;
+
+  pet.classList.add(
+    "jump"
+  );
+
+  setTimeout(()=>{
+
+    pet.classList.remove(
+      "jump"
+    );
+
+  },600);
+}
+
+
+function showBigMessage(text){
+
+  bigMessage.classList.remove(
+    "show"
+  );
+
+  void bigMessage.offsetWidth;
+
+  bigMessage.textContent =
+    text;
+
+  bigMessage.classList.add(
+    "show"
+  );
+}
+
+
+/* =========================================================
+   19. 모달
+========================================================= */
+
+function openModal(modal){
+
+  modal.classList.remove(
+    "hidden"
+  );
+}
+
+
+function closeModal(modal){
+
+  modal.classList.add(
+    "hidden"
+  );
+}
+
+
+document.querySelectorAll("[data-close]")
+.forEach(btn=>{
+
+  btn.addEventListener("click",()=>{
+
+    const id =
+      btn.dataset.close;
+
+    closeModal(
+      document.getElementById(id)
+    );
+  });
+});
+
+
+/* =========================================================
+   20. 초기화
+========================================================= */
+
+resetBtn.addEventListener("click",()=>{
+
+  const first =
+    confirm(
+      "정말 처음부터 다시 키울까요?\n현재 캐릭터와 기록이 모두 사라집니다."
+    );
+
+  if(!first){
+    return;
+  }
+
+
+  const second =
+    confirm(
+      "한 번 삭제하면 되돌릴 수 없어요.\n그래도 초기화할까요?"
+    );
+
+  if(!second){
+    return;
+  }
+
+
+  localStorage.removeItem(
+    SAVE_KEY
+  );
+
+  location.reload();
+});
+
+
+/* =========================================================
+   21. 유틸
+========================================================= */
+
+function clamp(value,min,max){
+
+  return Math.max(
+    min,
+    Math.min(
+      max,
+      value
+    )
+  );
+}
+
+
+function random(min,max){
+
+  return Math.random() *
+    (max-min) + min;
+}
+
+
+function randomFrom(array){
+
+  return array[
+    Math.floor(
+      Math.random() *
+      array.length
+    )
+  ];
+}
+
+
+/* =========================================================
+   22. 페이지 닫기 전 자동 저장
+========================================================= */
+
+window.addEventListener(
+  "beforeunload",
+  saveGame
+);
+
+
+document.addEventListener(
+  "visibilitychange",
+  ()=>{
+
+    if(document.hidden){
+      saveGame();
+    }
+  }
+);
+
+
+/* =========================================================
+   23. 시작
+========================================================= */
+
+loadGame();
+
+</script>
+
+</body>
+</html>

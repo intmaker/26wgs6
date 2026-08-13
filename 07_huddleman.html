@@ -1,0 +1,3097 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Stickman Hurdle Run</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  font-family:"Arial Rounded MT Bold","Noto Sans KR",sans-serif;
+  background:#15233c;
+}
+
+body{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+#gameWrap{
+  position:relative;
+  width:min(100vw,1100px);
+  height:min(100vh,700px);
+  min-height:520px;
+  overflow:hidden;
+  background:#79d9ff;
+  box-shadow:0 0 40px rgba(0,0,0,.45);
+}
+
+canvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+/* =========================
+   상단 정보
+========================= */
+
+#hud{
+  position:absolute;
+  z-index:30;
+  left:0;
+  top:0;
+  width:100%;
+  padding:12px;
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  pointer-events:none;
+}
+
+.hudBox{
+  min-width:150px;
+  padding:9px 13px;
+  border-radius:15px;
+  background:rgba(17,38,70,.78);
+  border:2px solid rgba(255,255,255,.45);
+  color:white;
+  text-align:center;
+  font-weight:1000;
+  font-size:clamp(12px,2.5vw,18px);
+  text-shadow:0 2px 0 rgba(0,0,0,.5);
+  box-shadow:0 5px 0 rgba(0,0,0,.18);
+}
+
+#scoreHud{
+  color:#ffe75f;
+}
+
+#distanceHud{
+  color:#b5f3ff;
+}
+
+#bestHud{
+  color:#ffc5df;
+}
+
+/* 콤보 */
+#combo{
+  position:absolute;
+  z-index:35;
+  right:18px;
+  top:78px;
+  color:#ffdc43;
+  font-size:clamp(22px,5vw,42px);
+  font-weight:1000;
+  text-shadow:
+    0 4px 0 #a84800,
+    0 0 12px #ff9b00;
+  transform:rotate(-4deg);
+  pointer-events:none;
+}
+
+/* 보호막 */
+#shieldStatus{
+  position:absolute;
+  z-index:35;
+  left:15px;
+  top:78px;
+  padding:7px 11px;
+  border-radius:12px;
+  color:white;
+  background:rgba(0,76,115,.68);
+  font-weight:1000;
+  display:none;
+}
+
+/* 메시지 */
+#message{
+  position:absolute;
+  z-index:50;
+  left:50%;
+  top:30%;
+  width:95%;
+  transform:translate(-50%,-50%) scale(.7);
+  text-align:center;
+  color:white;
+  font-size:clamp(32px,8vw,68px);
+  font-weight:1000;
+  text-shadow:
+    0 5px 0 #234274,
+    0 0 15px #fff;
+  pointer-events:none;
+  opacity:0;
+}
+
+#message.show{
+  animation:messagePop 1.1s ease-out forwards;
+}
+
+@keyframes messagePop{
+  0%{
+    opacity:0;
+    transform:translate(-50%,-50%) scale(.3);
+  }
+  18%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.2);
+  }
+  45%{
+    transform:translate(-50%,-50%) scale(1);
+  }
+  75%{
+    opacity:1;
+  }
+  100%{
+    opacity:0;
+    transform:translate(-50%,-70%) scale(.95);
+  }
+}
+
+/* 카운트다운 */
+#countdown{
+  position:absolute;
+  z-index:80;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  pointer-events:none;
+  color:white;
+  font-size:clamp(80px,18vw,170px);
+  font-weight:1000;
+  text-shadow:
+    0 8px 0 #1b3764,
+    0 0 22px #fff;
+  opacity:0;
+}
+
+/* =========================
+   모바일 조작
+========================= */
+
+#controls{
+  position:absolute;
+  z-index:70;
+  left:0;
+  bottom:10px;
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  padding:0 18px;
+  pointer-events:none;
+}
+
+.mobileBtn{
+  pointer-events:auto;
+  width:clamp(110px,26vw,180px);
+  height:clamp(70px,15vw,95px);
+  border:4px solid rgba(255,255,255,.8);
+  border-radius:22px;
+  color:white;
+  font-size:clamp(22px,5vw,34px);
+  font-weight:1000;
+  text-shadow:0 3px 0 rgba(0,0,0,.35);
+  box-shadow:
+    0 8px 0 rgba(0,0,0,.25),
+    0 12px 20px rgba(0,0,0,.25);
+  cursor:pointer;
+  touch-action:none;
+}
+
+#jumpBtn{
+  background:linear-gradient(#ffbc50,#f36c2d);
+}
+
+#duckBtn{
+  background:linear-gradient(#67ccff,#3675d7);
+}
+
+.mobileBtn:active,
+.mobileBtn.active{
+  transform:translateY(5px);
+  box-shadow:0 3px 0 rgba(0,0,0,.25);
+}
+
+/* =========================
+   시작 / 게임오버
+========================= */
+
+.overlay{
+  position:absolute;
+  z-index:200;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  color:white;
+  padding:25px;
+  background:
+    radial-gradient(circle at 50% 30%,rgba(255,255,255,.17),transparent 33%),
+    linear-gradient(rgba(23,53,103,.88),rgba(19,32,69,.95));
+}
+
+.overlay.hidden{
+  display:none;
+}
+
+.gameTitle{
+  font-size:clamp(40px,10vw,82px);
+  font-weight:1000;
+  line-height:1.05;
+  color:white;
+  text-shadow:
+    0 6px 0 #1f3d70,
+    0 0 20px #7ce6ff;
+  animation:titleFloat 1.6s ease-in-out infinite;
+}
+
+@keyframes titleFloat{
+  0%,100%{transform:translateY(0) rotate(-1deg)}
+  50%{transform:translateY(-8px) rotate(1deg)}
+}
+
+.subtitle{
+  margin:18px 0 20px;
+  color:#fff7a9;
+  font-size:clamp(16px,4vw,24px);
+  font-weight:900;
+}
+
+.guide{
+  width:min(95%,500px);
+  padding:14px 18px;
+  margin-bottom:20px;
+  border:3px solid rgba(255,255,255,.3);
+  border-radius:20px;
+  background:rgba(0,0,0,.22);
+  font-size:clamp(14px,3.4vw,18px);
+  line-height:1.7;
+}
+
+.mainBtn{
+  border:0;
+  border-radius:24px;
+  padding:16px 30px;
+  background:linear-gradient(#ffe66e,#ff9f37);
+  color:#613700;
+  font-size:clamp(23px,5vw,34px);
+  font-weight:1000;
+  cursor:pointer;
+  box-shadow:
+    0 8px 0 #b65e13,
+    0 12px 20px rgba(0,0,0,.35);
+}
+
+.mainBtn:active{
+  transform:translateY(5px);
+  box-shadow:0 3px 0 #b65e13;
+}
+
+.resultBox{
+  width:min(94%,450px);
+  padding:17px;
+  margin:20px 0;
+  border-radius:20px;
+  border:3px solid rgba(255,255,255,.35);
+  background:rgba(0,0,0,.25);
+  font-size:clamp(17px,4vw,23px);
+  line-height:1.8;
+}
+
+.gameOverTitle{
+  color:#ff776b;
+  font-size:clamp(45px,11vw,88px);
+  font-weight:1000;
+  text-shadow:
+    0 6px 0 #7d1f1b,
+    0 0 20px #ff3535;
+}
+
+/* 화면 흔들림 */
+#gameWrap.shake{
+  animation:screenShake .08s 7 alternate;
+}
+
+@keyframes screenShake{
+  from{transform:translate(-6px,3px)}
+  to{transform:translate(6px,-4px)}
+}
+
+@media(min-width:900px){
+  #controls{
+    opacity:.55;
+  }
+}
+
+@media(max-width:620px){
+  #hud{
+    padding:6px;
+    gap:4px;
+  }
+
+  .hudBox{
+    min-width:0;
+    flex:1;
+    padding:7px 4px;
+  }
+
+  #combo{
+    top:65px;
+  }
+
+  #shieldStatus{
+    top:65px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div id="gameWrap">
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="hud">
+    <div class="hudBox" id="scoreHud">⭐ SCORE : 0000</div>
+    <div class="hudBox" id="distanceHud">🏃 DISTANCE : 0m</div>
+    <div class="hudBox" id="bestHud">🏆 BEST : 0000</div>
+  </div>
+
+  <div id="shieldStatus">🛡️ SHIELD</div>
+
+  <div id="combo"></div>
+
+  <div id="message"></div>
+
+  <div id="countdown"></div>
+
+  <div id="controls">
+    <button class="mobileBtn" id="jumpBtn">
+      🦘 JUMP
+    </button>
+
+    <button class="mobileBtn" id="duckBtn">
+      ⬇ DUCK
+    </button>
+  </div>
+
+  <!-- 시작 화면 -->
+  <div id="startScreen" class="overlay">
+
+    <div class="gameTitle">
+      🏃 STICKMAN<br>
+      HURDLE RUN! 🚧
+    </div>
+
+    <div class="subtitle">
+      점프하고 몸을 낮춰 최대한 멀리 달려보세요!
+    </div>
+
+    <div class="guide">
+      💻 <b>SPACE / ↑</b> : 점프<br>
+      💻 <b>↓</b> : 몸 낮추기<br>
+      📱 모바일 : JUMP / DUCK 버튼<br><br>
+      ⭐ 아이템을 먹고 콤보 기록에 도전하세요!
+    </div>
+
+    <button id="startBtn" class="mainBtn">
+      🎮 경기 시작
+    </button>
+
+  </div>
+
+  <!-- 게임 오버 -->
+  <div id="gameOverScreen" class="overlay hidden">
+
+    <div class="gameOverTitle">
+      GAME OVER
+    </div>
+
+    <div class="resultBox">
+
+      ⭐ SCORE :
+      <b id="finalScore">0</b><br>
+
+      🏃 DISTANCE :
+      <b id="finalDistance">0</b>m<br>
+
+      🔥 BEST COMBO :
+      <b id="finalCombo">0</b><br>
+
+      🏆 BEST SCORE :
+      <b id="finalBest">0</b>
+
+    </div>
+
+    <button id="restartBtn" class="mainBtn">
+      🔄 다시 시작
+    </button>
+
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   1. 기본 설정
+========================================================= */
+
+const canvas =
+  document.getElementById("gameCanvas");
+
+const ctx =
+  canvas.getContext("2d");
+
+const gameWrap =
+  document.getElementById("gameWrap");
+
+const scoreHud =
+  document.getElementById("scoreHud");
+
+const distanceHud =
+  document.getElementById("distanceHud");
+
+const bestHud =
+  document.getElementById("bestHud");
+
+const comboDisplay =
+  document.getElementById("combo");
+
+const shieldStatus =
+  document.getElementById("shieldStatus");
+
+const message =
+  document.getElementById("message");
+
+const countdown =
+  document.getElementById("countdown");
+
+const startScreen =
+  document.getElementById("startScreen");
+
+const gameOverScreen =
+  document.getElementById("gameOverScreen");
+
+const startBtn =
+  document.getElementById("startBtn");
+
+const restartBtn =
+  document.getElementById("restartBtn");
+
+const jumpBtn =
+  document.getElementById("jumpBtn");
+
+const duckBtn =
+  document.getElementById("duckBtn");
+
+const finalScore =
+  document.getElementById("finalScore");
+
+const finalDistance =
+  document.getElementById("finalDistance");
+
+const finalCombo =
+  document.getElementById("finalCombo");
+
+const finalBest =
+  document.getElementById("finalBest");
+
+
+let W = 1000;
+let H = 650;
+
+function resizeCanvas(){
+
+  const rect =
+    gameWrap.getBoundingClientRect();
+
+  const dpr =
+    Math.min(
+      window.devicePixelRatio || 1,
+      2
+    );
+
+  canvas.width =
+    rect.width * dpr;
+
+  canvas.height =
+    rect.height * dpr;
+
+  canvas.style.width =
+    rect.width + "px";
+
+  canvas.style.height =
+    rect.height + "px";
+
+  ctx.setTransform(
+    dpr,0,0,dpr,0,0
+  );
+
+  W = rect.width;
+  H = rect.height;
+
+  groundY =
+    H * .76;
+
+  player.x =
+    W * .18;
+
+  if(!player.inAir){
+    player.y = groundY;
+  }
+}
+
+window.addEventListener(
+  "resize",
+  resizeCanvas
+);
+
+
+/* =========================================================
+   2. 게임 데이터
+========================================================= */
+
+let gameRunning = false;
+let countdownActive = false;
+
+let score = 0;
+let distance = 0;
+
+let combo = 0;
+let bestCombo = 0;
+
+let shield = false;
+let doubleScoreTimer = 0;
+
+let gameTime = 0;
+let worldSpeed = 310;
+let groundY = 480;
+
+let lastTime =
+  performance.now();
+
+let obstacleTimer = 0;
+let itemTimer = 0;
+
+let obstacles = [];
+let items = [];
+let particles = [];
+
+let bgFar = 0;
+let bgMid = 0;
+let trackOffset = 0;
+
+let milestone100 = false;
+let milestone500 = false;
+let milestone1000 = false;
+
+let bestScore =
+  Number(
+    localStorage.getItem(
+      "stickHurdleBest"
+    )
+  ) || 0;
+
+
+/* =========================================================
+   3. 플레이어
+========================================================= */
+
+const player = {
+
+  x:170,
+  y:450,
+
+  vy:0,
+
+  width:38,
+  standHeight:92,
+  duckHeight:52,
+
+  inAir:false,
+  ducking:false,
+
+  gravity:1850,
+  jumpPower:-720,
+
+  runTime:0,
+
+  falling:false,
+  invincible:0
+};
+
+
+/* =========================================================
+   4. 유틸
+========================================================= */
+
+function clamp(v,min,max){
+  return Math.max(
+    min,
+    Math.min(max,v)
+  );
+}
+
+function random(min,max){
+  return Math.random() *
+    (max-min) + min;
+}
+
+function randomFrom(arr){
+  return arr[
+    Math.floor(
+      Math.random() *
+      arr.length
+    )
+  ];
+}
+
+
+/* =========================================================
+   5. 키보드 입력
+========================================================= */
+
+document.addEventListener(
+  "keydown",
+  e=>{
+
+    if(
+      e.code === "Space" ||
+      e.code === "ArrowUp"
+    ){
+
+      e.preventDefault();
+
+      jump();
+    }
+
+    if(e.code === "ArrowDown"){
+
+      e.preventDefault();
+
+      startDuck();
+    }
+  }
+);
+
+
+document.addEventListener(
+  "keyup",
+  e=>{
+
+    if(e.code === "ArrowDown"){
+
+      e.preventDefault();
+
+      stopDuck();
+    }
+  }
+);
+
+
+/* =========================================================
+   6. 모바일 입력
+========================================================= */
+
+jumpBtn.addEventListener(
+  "pointerdown",
+  e=>{
+
+    e.preventDefault();
+
+    jump();
+
+    jumpBtn.classList.add(
+      "active"
+    );
+  }
+);
+
+jumpBtn.addEventListener(
+  "pointerup",
+  ()=>{
+
+    jumpBtn.classList.remove(
+      "active"
+    );
+  }
+);
+
+jumpBtn.addEventListener(
+  "pointercancel",
+  ()=>{
+
+    jumpBtn.classList.remove(
+      "active"
+    );
+  }
+);
+
+
+duckBtn.addEventListener(
+  "pointerdown",
+  e=>{
+
+    e.preventDefault();
+
+    startDuck();
+
+    duckBtn.classList.add(
+      "active"
+    );
+  }
+);
+
+function endDuckButton(){
+
+  stopDuck();
+
+  duckBtn.classList.remove(
+    "active"
+  );
+}
+
+duckBtn.addEventListener(
+  "pointerup",
+  endDuckButton
+);
+
+duckBtn.addEventListener(
+  "pointercancel",
+  endDuckButton
+);
+
+duckBtn.addEventListener(
+  "pointerleave",
+  endDuckButton
+);
+
+
+/* =========================================================
+   7. 점프 / 숙이기
+========================================================= */
+
+function jump(){
+
+  if(
+    !gameRunning ||
+    countdownActive ||
+    player.falling
+  ){
+    return;
+  }
+
+  /*
+     땅에 있을 때만 점프 가능
+  */
+  if(!player.inAir){
+
+    player.inAir = true;
+    player.ducking = false;
+
+    player.vy =
+      player.jumpPower;
+
+    createDust(
+      player.x,
+      groundY
+    );
+  }
+}
+
+
+function startDuck(){
+
+  if(
+    !gameRunning ||
+    countdownActive ||
+    player.falling
+  ){
+    return;
+  }
+
+  if(!player.inAir){
+    player.ducking = true;
+  }
+}
+
+
+function stopDuck(){
+
+  player.ducking = false;
+}
+
+
+/* =========================================================
+   8. 플레이어 업데이트
+========================================================= */
+
+function updatePlayer(dt){
+
+  player.runTime +=
+    dt * 11;
+
+
+  if(player.inAir){
+
+    player.vy +=
+      player.gravity * dt;
+
+    player.y +=
+      player.vy * dt;
+
+
+    if(player.y >= groundY){
+
+      player.y =
+        groundY;
+
+      player.vy = 0;
+
+      player.inAir = false;
+
+      createDust(
+        player.x,
+        groundY
+      );
+    }
+  }
+
+
+  if(player.invincible > 0){
+    player.invincible -= dt;
+  }
+}
+
+
+/* =========================================================
+   9. 장애물 생성
+========================================================= */
+
+function spawnObstacle(){
+
+  /*
+     진행 시간에 따라
+     등장 가능한 장애물 종류 증가
+  */
+
+  let type = "low";
+
+  const t =
+    gameTime;
+
+  const r =
+    Math.random();
+
+
+  if(t > 32 && r < .20){
+
+    type = "flying";
+
+  }else if(t > 22 && r < .36){
+
+    type = "small";
+
+  }else if(t > 14 && r < .58){
+
+    type = "high";
+
+  }else{
+
+    type = "low";
+  }
+
+
+  let obstacle = {
+
+    x:W + 50,
+    y:groundY,
+
+    width:35,
+    height:52,
+
+    type,
+
+    passed:false,
+
+    scoreValue:10
+  };
+
+
+  if(type === "high"){
+
+    obstacle.width = 42;
+    obstacle.height = 80;
+    obstacle.scoreValue = 20;
+  }
+
+
+  if(type === "small"){
+
+    obstacle.width = 38;
+    obstacle.height = 27;
+    obstacle.scoreValue = 10;
+  }
+
+
+  /*
+     위에서 날아오는 장애물은
+     점프가 아니라 DUCK으로 피한다.
+  */
+  if(type === "flying"){
+
+    obstacle.width = 62;
+    obstacle.height = 30;
+
+    obstacle.y =
+      groundY - 72;
+
+    obstacle.scoreValue =
+      25;
+  }
+
+
+  obstacles.push(
+    obstacle
+  );
+
+
+  /*
+     연속 허들
+     충분히 플레이한 뒤 가끔 등장
+  */
+  if(
+    t > 28 &&
+    Math.random() < .16 &&
+    type !== "flying"
+  ){
+
+    const second = {
+      ...obstacle,
+      x:W + 50 + 155,
+      passed:false,
+      scoreValue:15
+    };
+
+    obstacles.push(second);
+  }
+}
+
+
+/* =========================================================
+   10. 아이템 생성
+========================================================= */
+
+function spawnItem(){
+
+  const types =
+    ["star","shield","speed"];
+
+  const type =
+    randomFrom(types);
+
+
+  /*
+     현재 장애물 근처가 아닌 곳에 생성
+  */
+
+  const itemX =
+    W + 80;
+
+  const overlap =
+    obstacles.some(o=>
+      Math.abs(
+        o.x - itemX
+      ) < 120
+    );
+
+  if(overlap){
+    return;
+  }
+
+
+  items.push({
+
+    x:itemX,
+
+    y:
+      type === "star"
+      ? groundY - 105
+      : groundY - 70,
+
+    radius:18,
+
+    type,
+
+    rotation:0
+  });
+}
+
+
+/* =========================================================
+   11. 난이도 증가
+========================================================= */
+
+function updateDifficulty(){
+
+  /*
+     처음은 310px/s,
+     시간이 지나며 조금씩 빨라지지만
+     최대 650으로 제한
+  */
+
+  worldSpeed =
+    Math.min(
+      650,
+      310 +
+      gameTime * 5.2
+    );
+}
+
+
+/* =========================================================
+   12. 장애물 업데이트
+========================================================= */
+
+function updateObstacles(dt){
+
+  const hitbox =
+    getPlayerHitbox();
+
+
+  for(
+    let i=
+      obstacles.length-1;
+
+    i>=0;
+    i--
+  ){
+
+    const o =
+      obstacles[i];
+
+
+    o.x -=
+      worldSpeed * dt;
+
+
+    const box =
+      getObstacleHitbox(o);
+
+
+    if(
+      player.invincible <= 0 &&
+      rectCollision(
+        hitbox,
+        box
+      )
+    ){
+
+      handleCollision(o);
+
+      /*
+         보호막으로 막았을 경우
+         해당 장애물만 제거
+      */
+      obstacles.splice(i,1);
+
+      continue;
+    }
+
+
+    /*
+       플레이어를 완전히 통과한 경우
+       성공 판정
+    */
+    if(
+      !o.passed &&
+      o.x + o.width <
+      player.x - 10
+    ){
+
+      o.passed = true;
+
+      hurdlePassed(o);
+    }
+
+
+    if(
+      o.x + o.width <
+      -80
+    ){
+
+      obstacles.splice(i,1);
+    }
+  }
+}
+
+
+/* =========================================================
+   13. 아이템 업데이트
+========================================================= */
+
+function updateItems(dt){
+
+  const pbox =
+    getPlayerHitbox();
+
+
+  for(
+    let i=
+      items.length-1;
+
+    i>=0;
+    i--
+  ){
+
+    const item =
+      items[i];
+
+    item.x -=
+      worldSpeed * dt;
+
+    item.rotation +=
+      dt * 4;
+
+
+    const ibox = {
+
+      x:item.x -
+        item.radius,
+
+      y:item.y -
+        item.radius,
+
+      width:
+        item.radius*2,
+
+      height:
+        item.radius*2
+    };
+
+
+    if(
+      rectCollision(
+        pbox,
+        ibox
+      )
+    ){
+
+      activateItem(item);
+
+      items.splice(i,1);
+
+      continue;
+    }
+
+
+    if(
+      item.x <
+      -50
+    ){
+
+      items.splice(i,1);
+    }
+  }
+}
+
+
+/* =========================================================
+   14. 충돌 판정
+========================================================= */
+
+function getPlayerHitbox(){
+
+  /*
+     스틱맨의 실제 그림보다
+     판정 박스를 조금 작게 만들어
+     억울한 충돌을 줄인다.
+  */
+
+  const h =
+    player.ducking
+    ? player.duckHeight
+    : player.standHeight;
+
+
+  return {
+
+    x:
+      player.x - 14,
+
+    y:
+      player.y - h + 8,
+
+    width:28,
+
+    height:
+      h - 10
+  };
+}
+
+
+function getObstacleHitbox(o){
+
+  if(o.type === "flying"){
+
+    return {
+
+      x:o.x + 4,
+      y:o.y - o.height + 4,
+      width:o.width - 8,
+      height:o.height - 8
+    };
+  }
+
+
+  return {
+
+    x:o.x + 4,
+
+    y:
+      o.y -
+      o.height + 4,
+
+    width:
+      o.width - 8,
+
+    height:
+      o.height - 4
+  };
+}
+
+
+function rectCollision(a,b){
+
+  return (
+    a.x <
+    b.x+b.width &&
+
+    a.x+a.width >
+    b.x &&
+
+    a.y <
+    b.y+b.height &&
+
+    a.y+a.height >
+    b.y
+  );
+}
+
+
+/* =========================================================
+   15. 장애물 성공
+========================================================= */
+
+function hurdlePassed(o){
+
+  combo++;
+
+  bestCombo =
+    Math.max(
+      bestCombo,
+      combo
+    );
+
+
+  let multiplier =
+    1 +
+    Math.floor(
+      combo/5
+    ) * .25;
+
+
+  const bonus =
+    Math.round(
+      o.scoreValue *
+      multiplier
+    );
+
+
+  score +=
+    doubleScoreTimer > 0
+    ? bonus*2
+    : bonus;
+
+
+  const rating =
+    combo >= 10
+    ? "PERFECT!"
+    : combo >= 5
+    ? "GREAT!"
+    : "NICE!";
+
+
+  showMessage(
+    `${rating} +${bonus}`
+  );
+}
+
+
+/* =========================================================
+   16. 충돌
+========================================================= */
+
+function handleCollision(){
+
+  combo = 0;
+
+
+  if(shield){
+
+    shield = false;
+
+    shieldStatus.style.display =
+      "none";
+
+    player.invincible =
+      1;
+
+    showMessage(
+      "🛡️ BLOCK!"
+    );
+
+    createBurst(
+      player.x,
+      player.y-45,
+      "#82eaff"
+    );
+
+    return;
+  }
+
+
+  player.falling = true;
+
+  gameRunning = false;
+
+  gameWrap.classList.add(
+    "shake"
+  );
+
+
+  createBurst(
+    player.x,
+    player.y-35,
+    "#ff795f"
+  );
+
+
+  setTimeout(
+    endGame,
+    800
+  );
+}
+
+
+/* =========================================================
+   17. 아이템 효과
+========================================================= */
+
+function activateItem(item){
+
+  createBurst(
+    item.x,
+    item.y,
+    "#ffe854"
+  );
+
+
+  if(item.type === "star"){
+
+    score +=
+      doubleScoreTimer > 0
+      ? 100
+      : 50;
+
+    showMessage(
+      "⭐ +50"
+    );
+  }
+
+
+  if(item.type === "shield"){
+
+    shield = true;
+
+    shieldStatus.style.display =
+      "block";
+
+    showMessage(
+      "🛡️ SHIELD!"
+    );
+  }
+
+
+  if(item.type === "speed"){
+
+    /*
+       이름은 스피드 아이템이지만
+       난이도가 갑자기 올라가지 않도록
+       점수 2배 효과로 구현
+    */
+
+    doubleScoreTimer =
+      7;
+
+    showMessage(
+      "⚡ SCORE x2!"
+    );
+  }
+}
+
+
+/* =========================================================
+   18. 파티클
+========================================================= */
+
+function createDust(x,y){
+
+  for(let i=0;i<7;i++){
+
+    particles.push({
+
+      x:x+random(-10,10),
+      y:y-random(0,6),
+
+      vx:random(-60,-10),
+      vy:random(-80,-15),
+
+      size:random(3,8),
+
+      life:random(.25,.55),
+
+      color:
+        "rgba(225,205,178,.8)"
+    });
+  }
+}
+
+
+function createBurst(x,y,color){
+
+  for(let i=0;i<18;i++){
+
+    particles.push({
+
+      x,
+      y,
+
+      vx:random(-180,180),
+      vy:random(-190,100),
+
+      size:random(3,8),
+
+      life:random(.4,.8),
+
+      color
+    });
+  }
+}
+
+
+function updateParticles(dt){
+
+  for(
+    let i=
+      particles.length-1;
+
+    i>=0;
+    i--
+  ){
+
+    const p =
+      particles[i];
+
+    p.life -= dt;
+
+    p.x +=
+      p.vx * dt;
+
+    p.y +=
+      p.vy * dt;
+
+    p.vy +=
+      260 * dt;
+
+
+    if(p.life <= 0){
+
+      particles.splice(i,1);
+    }
+  }
+}
+
+
+function drawParticles(){
+
+  ctx.save();
+
+  for(const p of particles){
+
+    ctx.globalAlpha =
+      Math.min(
+        1,
+        p.life*2
+      );
+
+    ctx.fillStyle =
+      p.color;
+
+    ctx.beginPath();
+
+    ctx.arc(
+      p.x,
+      p.y,
+      p.size,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+
+/* =========================================================
+   19. 배경
+========================================================= */
+
+function drawBackground(dt){
+
+  bgFar +=
+    worldSpeed * .08 * dt;
+
+  bgMid +=
+    worldSpeed * .23 * dt;
+
+  trackOffset +=
+    worldSpeed * dt;
+
+
+  /* 하늘 */
+  const sky =
+    ctx.createLinearGradient(
+      0,0,0,H
+    );
+
+  sky.addColorStop(
+    0,
+    "#78d7ff"
+  );
+
+  sky.addColorStop(
+    .63,
+    "#d8f4ff"
+  );
+
+  sky.addColorStop(
+    .64,
+    "#7fc96b"
+  );
+
+  sky.addColorStop(
+    1,
+    "#4e9d4f"
+  );
+
+  ctx.fillStyle =
+    sky;
+
+  ctx.fillRect(
+    0,0,W,H
+  );
+
+
+  drawClouds();
+
+  drawStadium();
+
+  drawTrack();
+}
+
+
+/* 구름 */
+function drawClouds(){
+
+  for(let i=0;i<6;i++){
+
+    const spacing =
+      260;
+
+    const x =
+      (
+        i*spacing -
+        bgFar
+      ) %
+      (W+spacing);
+
+    const xx =
+      x < -150
+      ? x + W + spacing
+      : x;
+
+    const y =
+      80 +
+      (i%3)*45;
+
+    ctx.fillStyle =
+      "rgba(255,255,255,.8)";
+
+    ctx.beginPath();
+
+    ctx.arc(
+      xx,y,25,
+      0,Math.PI*2
+    );
+
+    ctx.arc(
+      xx+30,y-10,34,
+      0,Math.PI*2
+    );
+
+    ctx.arc(
+      xx+62,y+1,25,
+      0,Math.PI*2
+    );
+
+    ctx.fill();
+  }
+}
+
+
+/* 관중석 */
+function drawStadium(){
+
+  const stadiumTop =
+    groundY - 190;
+
+
+  ctx.fillStyle =
+    "#455c81";
+
+  ctx.fillRect(
+    0,
+    stadiumTop,
+    W,
+    150
+  );
+
+
+  ctx.fillStyle =
+    "#637ba0";
+
+  ctx.fillRect(
+    0,
+    stadiumTop+18,
+    W,
+    115
+  );
+
+
+  /*
+     작은 관중들을 반복해서 그림
+     중간 속도로 이동해서 패럴랙스 표현
+  */
+
+  const colors = [
+    "#ff5f5f",
+    "#ffe25d",
+    "#69e0ff",
+    "#9d7cff",
+    "#79dc78"
+  ];
+
+
+  const spacing =
+    34;
+
+  const offset =
+    bgMid % spacing;
+
+
+  for(let row=0;row<4;row++){
+
+    for(
+      let x=
+        -spacing-offset;
+
+      x<W+spacing;
+
+      x+=spacing
+    ){
+
+      ctx.fillStyle =
+        colors[
+          (
+            Math.floor(
+              x/spacing
+            ) +
+            row +
+            20
+          ) %
+          colors.length
+        ];
+
+
+      ctx.beginPath();
+
+      ctx.arc(
+        x,
+        stadiumTop+
+        33+
+        row*26,
+        5,
+        0,
+        Math.PI*2
+      );
+
+      ctx.fill();
+
+
+      ctx.strokeStyle =
+        "#202a39";
+
+      ctx.lineWidth = 2;
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        x,
+        stadiumTop+
+        38+
+        row*26
+      );
+
+      ctx.lineTo(
+        x,
+        stadiumTop+
+        48+
+        row*26
+      );
+
+      ctx.stroke();
+    }
+  }
+
+
+  /* 경기장 광고판 */
+  ctx.fillStyle =
+    "#f4fbff";
+
+  ctx.fillRect(
+    0,
+    groundY-54,
+    W,
+    38
+  );
+
+
+  ctx.fillStyle =
+    "#375986";
+
+  ctx.font =
+    "bold 17px Arial";
+
+  ctx.textAlign =
+    "left";
+
+  const adOffset =
+    (
+      bgMid*1.4
+    ) %
+    280;
+
+  for(
+    let x=
+      -adOffset;
+
+    x<W+280;
+
+    x+=280
+  ){
+
+    ctx.fillText(
+      "⚡ RUN FAST!",
+      x+40,
+      groundY-29
+    );
+  }
+}
+
+
+/* 트랙 */
+function drawTrack(){
+
+  ctx.fillStyle =
+    "#c84e40";
+
+  ctx.fillRect(
+    0,
+    groundY-15,
+    W,
+    H-groundY+15
+  );
+
+
+  /* 트랙 라인 */
+  ctx.strokeStyle =
+    "rgba(255,255,255,.9)";
+
+  ctx.lineWidth =
+    3;
+
+  for(let i=0;i<4;i++){
+
+    const y =
+      groundY +
+      30 +
+      i*32;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,y
+    );
+
+    ctx.lineTo(
+      W,y
+    );
+
+    ctx.stroke();
+  }
+
+
+  /* 빠르게 지나가는 바닥 표시 */
+  const spacing =
+    110;
+
+  const offset =
+    trackOffset %
+    spacing;
+
+
+  ctx.fillStyle =
+    "rgba(255,255,255,.48)";
+
+  for(
+    let x=
+      -spacing-offset;
+
+    x<W+spacing;
+
+    x+=spacing
+  ){
+
+    ctx.fillRect(
+      x,
+      groundY+12,
+      55,
+      5
+    );
+  }
+}
+
+
+/* =========================================================
+   20. 스틱맨 그리기
+========================================================= */
+
+function drawPlayer(){
+
+  ctx.save();
+
+  /*
+     충돌 후 쓰러지는 애니메이션
+  */
+  let fallRotation = 0;
+
+  if(player.falling){
+
+    fallRotation =
+      Math.PI*.42;
+  }
+
+
+  ctx.translate(
+    player.x,
+    player.y
+  );
+
+  ctx.rotate(
+    fallRotation
+  );
+
+
+  /*
+     점프 / 숙이기 / 달리기에 따라
+     자세를 다르게 그림
+  */
+
+  const run =
+    Math.sin(
+      player.runTime
+    );
+
+
+  let bodyTop =
+    -63;
+
+  let headY =
+    -78;
+
+
+  if(player.ducking){
+
+    bodyTop =
+      -35;
+
+    headY =
+      -47;
+
+    ctx.translate(
+      0,
+      5
+    );
+  }
+
+
+  /* 머리 */
+  ctx.strokeStyle =
+    "#151515";
+
+  ctx.fillStyle =
+    "#151515";
+
+  ctx.lineWidth =
+    6;
+
+  ctx.lineCap =
+    "round";
+
+
+  ctx.beginPath();
+
+  ctx.arc(
+    0,
+    headY,
+    11,
+    0,
+    Math.PI*2
+  );
+
+  ctx.stroke();
+
+
+  /*
+     몸통
+  */
+  ctx.beginPath();
+
+  ctx.moveTo(
+    0,
+    headY+11
+  );
+
+  ctx.lineTo(
+    0,
+    bodyTop+35
+  );
+
+  ctx.stroke();
+
+
+  if(player.inAir){
+
+    /*
+       점프 자세:
+       양팔을 앞뒤로,
+       무릎을 접은 형태
+    */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      headY+24
+    );
+
+    ctx.lineTo(
+      20,
+      headY+15
+    );
+
+    ctx.stroke();
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      headY+25
+    );
+
+    ctx.lineTo(
+      -18,
+      headY+38
+    );
+
+    ctx.stroke();
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      bodyTop+35
+    );
+
+    ctx.lineTo(
+      18,
+      bodyTop+43
+    );
+
+    ctx.lineTo(
+      28,
+      bodyTop+33
+    );
+
+    ctx.stroke();
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      bodyTop+35
+    );
+
+    ctx.lineTo(
+      -17,
+      bodyTop+45
+    );
+
+    ctx.lineTo(
+      -29,
+      bodyTop+40
+    );
+
+    ctx.stroke();
+
+  }
+  else if(player.ducking){
+
+    /*
+       숙이기 자세
+    */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      headY+23
+    );
+
+    ctx.lineTo(
+      22,
+      headY+30
+    );
+
+    ctx.stroke();
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      headY+23
+    );
+
+    ctx.lineTo(
+      -18,
+      headY+32
+    );
+
+    ctx.stroke();
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      bodyTop+35
+    );
+
+    ctx.lineTo(
+      20,
+      -8
+    );
+
+    ctx.stroke();
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      bodyTop+35
+    );
+
+    ctx.lineTo(
+      -18,
+      -7
+    );
+
+    ctx.stroke();
+
+  }
+  else{
+
+    /*
+       달리기 애니메이션
+    */
+
+    const arm =
+      run * 19;
+
+    const leg =
+      run * 23;
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      headY+24
+    );
+
+    ctx.lineTo(
+      arm,
+      headY+40
+    );
+
+    ctx.stroke();
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      headY+24
+    );
+
+    ctx.lineTo(
+      -arm,
+      headY+41
+    );
+
+    ctx.stroke();
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      bodyTop+35
+    );
+
+    ctx.lineTo(
+      leg,
+      -12
+    );
+
+    ctx.lineTo(
+      leg+12,
+      0
+    );
+
+    ctx.stroke();
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      bodyTop+35
+    );
+
+    ctx.lineTo(
+      -leg,
+      -10
+    );
+
+    ctx.lineTo(
+      -leg-10,
+      0
+    );
+
+    ctx.stroke();
+  }
+
+
+  /* 머리띠 */
+  ctx.strokeStyle =
+    "#2989ff";
+
+  ctx.lineWidth =
+    3;
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    -10,
+    headY-3
+  );
+
+  ctx.lineTo(
+    11,
+    headY-3
+  );
+
+  ctx.stroke();
+
+
+  ctx.restore();
+}
+
+
+/* =========================================================
+   21. 장애물 그리기
+========================================================= */
+
+function drawObstacle(o){
+
+  ctx.save();
+
+
+  if(o.type === "flying"){
+
+    /*
+       날아오는 장애물:
+       장난감 드론 같은 느낌
+    */
+
+    ctx.translate(
+      o.x,
+      o.y
+    );
+
+    ctx.fillStyle =
+      "#663bc1";
+
+    ctx.fillRect(
+      8,
+      -o.height,
+      44,
+      18
+    );
+
+
+    ctx.strokeStyle =
+      "#2d1d5c";
+
+    ctx.lineWidth = 4;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      10,-o.height
+    );
+
+    ctx.lineTo(
+      -8,-o.height-10
+    );
+
+    ctx.moveTo(
+      50,-o.height
+    );
+
+    ctx.lineTo(
+      68,-o.height-10
+    );
+
+    ctx.stroke();
+
+
+    ctx.fillStyle =
+      "#ffce43";
+
+    ctx.beginPath();
+
+    ctx.arc(
+      30,
+      -o.height+9,
+      7,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.restore();
+
+    return;
+  }
+
+
+  /*
+     작은 바닥 장애물
+  */
+  if(o.type === "small"){
+
+    ctx.fillStyle =
+      "#654b3c";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      o.x,
+      o.y
+    );
+
+    ctx.lineTo(
+      o.x+o.width*.35,
+      o.y-o.height
+    );
+
+    ctx.lineTo(
+      o.x+o.width,
+      o.y
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+    return;
+  }
+
+
+  /*
+     허들
+  */
+
+  const color =
+    o.type === "high"
+    ? "#e54c4c"
+    : "#f2f2f2";
+
+
+  ctx.strokeStyle =
+    "#343b45";
+
+  ctx.lineWidth =
+    5;
+
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    o.x+6,
+    o.y
+  );
+
+  ctx.lineTo(
+    o.x+8,
+    o.y-o.height
+  );
+
+  ctx.moveTo(
+    o.x+o.width-6,
+    o.y
+  );
+
+  ctx.lineTo(
+    o.x+o.width-8,
+    o.y-o.height
+  );
+
+  ctx.stroke();
+
+
+  ctx.fillStyle =
+    color;
+
+  ctx.fillRect(
+    o.x,
+    o.y-o.height,
+    o.width,
+    11
+  );
+
+
+  ctx.fillStyle =
+    o.type === "high"
+    ? "#ffcf4a"
+    : "#3b9cff";
+
+  ctx.fillRect(
+    o.x,
+    o.y-o.height+3,
+    o.width,
+    4
+  );
+}
+
+
+/* =========================================================
+   22. 아이템 그리기
+========================================================= */
+
+function drawItem(item){
+
+  ctx.save();
+
+  ctx.translate(
+    item.x,
+    item.y
+  );
+
+  const pulse =
+    1 +
+    Math.sin(
+      performance.now()/120
+    ) * .08;
+
+  ctx.scale(
+    pulse,
+    pulse
+  );
+
+  ctx.shadowBlur =
+    14;
+
+
+  let emoji = "⭐";
+
+  if(item.type === "shield"){
+    emoji = "🛡️";
+    ctx.shadowColor =
+      "#53dcff";
+  }
+  else if(item.type === "speed"){
+    emoji = "⚡";
+    ctx.shadowColor =
+      "#ffe342";
+  }
+  else{
+    ctx.shadowColor =
+      "#ffe94a";
+  }
+
+
+  ctx.font =
+    "36px Arial";
+
+  ctx.textAlign =
+    "center";
+
+  ctx.textBaseline =
+    "middle";
+
+  ctx.fillText(
+    emoji,
+    0,
+    0
+  );
+
+  ctx.restore();
+}
+
+
+/* =========================================================
+   23. 메시지
+========================================================= */
+
+let messageTimer;
+
+function showMessage(text){
+
+  clearTimeout(
+    messageTimer
+  );
+
+  message.classList.remove(
+    "show"
+  );
+
+  void message.offsetWidth;
+
+  message.textContent =
+    text;
+
+  message.classList.add(
+    "show"
+  );
+
+
+  messageTimer =
+    setTimeout(()=>{
+
+      message.classList.remove(
+        "show"
+      );
+
+    },1100);
+}
+
+
+/* =========================================================
+   24. HUD
+========================================================= */
+
+function updateHUD(){
+
+  scoreHud.textContent =
+    "⭐ SCORE : " +
+    Math.floor(score)
+    .toString()
+    .padStart(4,"0");
+
+
+  distanceHud.textContent =
+    "🏃 DISTANCE : " +
+    Math.floor(distance) +
+    "m";
+
+
+  bestHud.textContent =
+    "🏆 BEST : " +
+    Math.max(
+      bestScore,
+      Math.floor(score)
+    )
+    .toString()
+    .padStart(4,"0");
+
+
+  if(combo >= 2){
+
+    comboDisplay.textContent =
+      "🔥 COMBO x" +
+      combo;
+
+  }else{
+
+    comboDisplay.textContent =
+      "";
+  }
+}
+
+
+/* =========================================================
+   25. 특정 거리 메시지
+========================================================= */
+
+function checkMilestones(){
+
+  if(
+    distance >= 100 &&
+    !milestone100
+  ){
+
+    milestone100 = true;
+
+    showMessage(
+      "🎉 100m!"
+    );
+  }
+
+
+  if(
+    distance >= 500 &&
+    !milestone500
+  ){
+
+    milestone500 = true;
+
+    showMessage(
+      "🔥 500m 돌파!"
+    );
+  }
+
+
+  if(
+    distance >= 1000 &&
+    !milestone1000
+  ){
+
+    milestone1000 = true;
+
+    showMessage(
+      "🏆 1000m AMAZING!"
+    );
+  }
+}
+
+
+/* =========================================================
+   26. 생성 관리
+========================================================= */
+
+function updateSpawning(dt){
+
+  obstacleTimer -= dt;
+  itemTimer -= dt;
+
+
+  if(obstacleTimer <= 0){
+
+    spawnObstacle();
+
+
+    /*
+       시간이 지나면서 생성 간격은 짧아지지만
+       최소 간격을 두어 넘을 수 없게 되는 것을 방지
+    */
+
+    const base =
+      Math.max(
+        .95,
+        1.65 -
+        gameTime*.012
+      );
+
+
+    obstacleTimer =
+      random(
+        base,
+        base + .65
+      );
+  }
+
+
+  if(itemTimer <= 0){
+
+    if(
+      Math.random() < .78
+    ){
+      spawnItem();
+    }
+
+    itemTimer =
+      random(
+        5.5,
+        9
+      );
+  }
+}
+
+
+/* =========================================================
+   27. 게임 업데이트
+========================================================= */
+
+function update(dt){
+
+  if(!gameRunning){
+    return;
+  }
+
+
+  gameTime += dt;
+
+  updateDifficulty();
+
+
+  /*
+     거리 증가
+  */
+
+  distance +=
+    worldSpeed *
+    dt *
+    .022;
+
+
+  /*
+     살아 있을 때 기본 점수
+  */
+
+  const baseScore =
+    12 * dt;
+
+  score +=
+    doubleScoreTimer > 0
+    ? baseScore*2
+    : baseScore;
+
+
+  if(doubleScoreTimer > 0){
+
+    doubleScoreTimer -= dt;
+  }
+
+
+  updatePlayer(dt);
+
+  updateSpawning(dt);
+
+  updateObstacles(dt);
+
+  updateItems(dt);
+
+  updateParticles(dt);
+
+  checkMilestones();
+
+  updateHUD();
+}
+
+
+/* =========================================================
+   28. 그리기
+========================================================= */
+
+function draw(dt){
+
+  ctx.clearRect(
+    0,0,W,H
+  );
+
+
+  drawBackground(dt);
+
+
+  /*
+     속도선
+     후반으로 갈수록 조금 더 많이 그림
+  */
+
+  if(worldSpeed > 430){
+
+    ctx.save();
+
+    ctx.strokeStyle =
+      "rgba(255,255,255,.22)";
+
+    ctx.lineWidth =
+      2;
+
+    const amount =
+      Math.floor(
+        (worldSpeed-400)/35
+      );
+
+
+    for(let i=0;i<amount;i++){
+
+      const y =
+        random(
+          100,
+          groundY-80
+        );
+
+      const x =
+        random(
+          0,W
+        );
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        x,
+        y
+      );
+
+      ctx.lineTo(
+        x+random(50,130),
+        y
+      );
+
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+
+  for(const item of items){
+    drawItem(item);
+  }
+
+
+  for(const o of obstacles){
+    drawObstacle(o);
+  }
+
+
+  drawPlayer();
+
+  drawParticles();
+}
+
+
+/* =========================================================
+   29. 메인 루프
+========================================================= */
+
+function loop(now){
+
+  const dt =
+    Math.min(
+      (now-lastTime)/1000,
+      .035
+    );
+
+  lastTime = now;
+
+
+  update(dt);
+
+  draw(dt);
+
+
+  requestAnimationFrame(
+    loop
+  );
+}
+
+requestAnimationFrame(
+  loop
+);
+
+
+/* =========================================================
+   30. 카운트다운
+========================================================= */
+
+async function startCountdown(){
+
+  countdownActive = true;
+
+  countdown.style.opacity = 1;
+
+
+  const values =
+    ["3","2","1","GO!"];
+
+
+  for(const text of values){
+
+    countdown.textContent =
+      text;
+
+    countdown.style.transform =
+      "scale(.5)";
+
+    countdown.style.transition =
+      "none";
+
+    void countdown.offsetWidth;
+
+    countdown.style.transition =
+      "transform .4s ease, opacity .4s";
+
+    countdown.style.transform =
+      "scale(1.25)";
+
+
+    await wait(
+      text === "GO!"
+      ? 650
+      : 700
+    );
+  }
+
+
+  countdown.style.opacity =
+    0;
+
+  countdownActive = false;
+
+  gameRunning = true;
+
+  lastTime =
+    performance.now();
+}
+
+
+/* =========================================================
+   31. 게임 초기화
+========================================================= */
+
+function resetGame(){
+
+  score = 0;
+  distance = 0;
+
+  combo = 0;
+  bestCombo = 0;
+
+  shield = false;
+  doubleScoreTimer = 0;
+
+  gameTime = 0;
+  worldSpeed = 310;
+
+  obstacleTimer = 1.3;
+  itemTimer = 5;
+
+  obstacles = [];
+  items = [];
+  particles = [];
+
+  milestone100 = false;
+  milestone500 = false;
+  milestone1000 = false;
+
+  bgFar = 0;
+  bgMid = 0;
+  trackOffset = 0;
+
+  player.y =
+    groundY;
+
+  player.vy = 0;
+
+  player.inAir = false;
+  player.ducking = false;
+
+  player.falling = false;
+  player.invincible = 0;
+
+  shieldStatus.style.display =
+    "none";
+
+  comboDisplay.textContent =
+    "";
+
+  gameWrap.classList.remove(
+    "shake"
+  );
+
+  updateHUD();
+}
+
+
+/* =========================================================
+   32. 게임 시작
+========================================================= */
+
+function startGame(){
+
+  resetGame();
+
+  startScreen.classList.add(
+    "hidden"
+  );
+
+  gameOverScreen.classList.add(
+    "hidden"
+  );
+
+  gameRunning = false;
+
+  startCountdown();
+}
+
+
+/* =========================================================
+   33. 게임 오버
+========================================================= */
+
+function endGame(){
+
+  gameRunning = false;
+
+
+  score =
+    Math.floor(score);
+
+  distance =
+    Math.floor(distance);
+
+
+  if(score > bestScore){
+
+    bestScore =
+      score;
+
+    localStorage.setItem(
+      "stickHurdleBest",
+      bestScore
+    );
+  }
+
+
+  finalScore.textContent =
+    score;
+
+  finalDistance.textContent =
+    distance;
+
+  finalCombo.textContent =
+    bestCombo;
+
+  finalBest.textContent =
+    bestScore;
+
+
+  updateHUD();
+
+
+  gameOverScreen.classList.remove(
+    "hidden"
+  );
+}
+
+
+/* =========================================================
+   34. 기타
+========================================================= */
+
+function wait(ms){
+
+  return new Promise(
+    resolve=>
+      setTimeout(
+        resolve,
+        ms
+      )
+  );
+}
+
+
+/* 시작 버튼 */
+startBtn.addEventListener(
+  "click",
+  startGame
+);
+
+restartBtn.addEventListener(
+  "click",
+  startGame
+);
+
+
+/* 초기 화면 */
+resizeCanvas();
+updateHUD();
+
+</script>
+</body>
+</html>
