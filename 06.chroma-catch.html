@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>크로마 캐치</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Noto+Sans+KR:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --violet-bg: #1A1033;
+    --violet-deep: #120B24;
+    --pink: #FF3D8A;
+    --blue: #3D5AFF;
+    --yellow: #FFC93D;
+    --mint: #3DFFB0;
+    --white: #FFFFFF;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: radial-gradient(circle at 50% 0%, #2A1B4D 0%, var(--violet-bg) 55%, var(--violet-deep) 100%);
+    font-family: 'Noto Sans KR', sans-serif;
+    overflow: hidden;
+    height: 100%;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .title {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 800;
+    font-size: 40px;
+    color: var(--white);
+    letter-spacing: 1px;
+    margin: 0 0 4px 0;
+    text-shadow: 0 4px 0 rgba(0,0,0,0.25);
+  }
+  .title span { color: var(--pink); }
+  .subtitle {
+    color: rgba(255,255,255,0.55);
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 18px;
+  }
+  #stage-wrap {
+    position: relative;
+    width: 460px;
+    max-width: 92vw;
+  }
+  #hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 0 4px;
+  }
+  .hud-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 64px;
+  }
+  .hud-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.45);
+  }
+  .hud-value {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--white);
+  }
+  #target-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #target-swatch {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 3px solid rgba(255,255,255,0.85);
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.08);
+    transition: transform 0.15s ease;
+  }
+  #target-swatch.pulse { transform: scale(1.25); }
+  #combo-value {
+    color: var(--yellow);
+  }
+  #canvas-holder {
+    position: relative;
+    width: 100%;
+    height: 560px;
+    max-height: 70vh;
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+    border: 2px solid rgba(255,255,255,0.08);
+    overflow: hidden;
+    cursor: none;
+  }
+  canvas { display: block; width: 100%; height: 100%; }
+  #overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(18, 11, 36, 0.85);
+    backdrop-filter: blur(2px);
+    padding: 24px;
+  }
+  #overlay.hidden { display: none; }
+  #overlay h2 {
+    font-family: 'Baloo 2', sans-serif;
+    color: var(--white);
+    font-size: 28px;
+    margin: 0 0 6px 0;
+  }
+  #overlay p {
+    color: rgba(255,255,255,0.65);
+    font-weight: 600;
+    font-size: 14px;
+    max-width: 320px;
+    margin: 0 0 20px 0;
+    line-height: 1.6;
+  }
+  .big-score {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 52px;
+    color: var(--mint);
+    margin: -8px 0 20px 0;
+  }
+  button#start-btn {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--violet-deep);
+    background: var(--mint);
+    border: none;
+    padding: 14px 36px;
+    border-radius: 100px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #1FA97A;
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+  }
+  button#start-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #1FA97A;
+  }
+  #hint {
+    margin-top: 16px;
+    color: rgba(255,255,255,0.35);
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+  }
+  #lives-wrap { display: flex; gap: 4px; margin-top: 2px; }
+  .heart { font-size: 16px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1 class="title">크로마<span> 캐치</span></h1>
+  <p class="subtitle">목표 색과 같은 공만 잡으세요. 나머지는 피하세요.</p>
+
+  <div id="stage-wrap">
+    <div id="hud">
+      <div class="hud-block">
+        <div class="hud-label">점수</div>
+        <div class="hud-value" id="score-value">0</div>
+      </div>
+      <div id="target-wrap">
+        <div class="hud-label">목표 색</div>
+        <div id="target-swatch"></div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-label">콤보</div>
+        <div class="hud-value" id="combo-value">x1</div>
+      </div>
+    </div>
+
+    <div id="canvas-holder">
+      <canvas id="game"></canvas>
+      <div id="overlay">
+        <h2 id="overlay-title">시작할 준비 되셨나요?</h2>
+        <p id="overlay-text">마우스(또는 터치)를 움직이거나 방향키(← →)로 바구니를 조작하세요. 위에 표시된 목표 색과 같은 공을 잡으면 점수를 얻어요. 잘못된 색을 잡거나 목표 색 공을 놓치면 목숨을 하나 잃습니다.</p>
+        <div id="lives-wrap" style="display:none;"></div>
+        <button id="start-btn">게임 시작</button>
+      </div>
+    </div>
+    <p id="hint">마우스 / 터치 드래그, 또는 ← → 방향키</p>
+  </div>
+</div>
+
+<script>
+(function() {
+  var COLORS = [
+    { name: 'pink',   hex: '#FF3D8A' },
+    { name: 'blue',   hex: '#3D5AFF' },
+    { name: 'yellow', hex: '#FFC93D' },
+    { name: 'mint',   hex: '#3DFFB0' },
+  ];
+
+  var canvas = document.getElementById('game');
+  var ctx = canvas.getContext('2d');
+  var holder = document.getElementById('canvas-holder');
+  var overlay = document.getElementById('overlay');
+  var overlayTitle = document.getElementById('overlay-title');
+  var overlayText = document.getElementById('overlay-text');
+  var startBtn = document.getElementById('start-btn');
+  var scoreEl = document.getElementById('score-value');
+  var comboEl = document.getElementById('combo-value');
+  var targetSwatch = document.getElementById('target-swatch');
+  var livesWrap = document.getElementById('lives-wrap');
+
+  var DEFAULT_HINT = "마우스(또는 터치)를 움직이거나 방향키(← →)로 바구니를 조작하세요. 위에 표시된 목표 색과 같은 공을 잡으면 점수를 얻어요. 잘못된 색을 잡거나 목표 색 공을 놓치면 목숨을 하나 잃습니다.";
+
+  var W, H, DPR;
+  function resize() {
+    var rect = holder.getBoundingClientRect();
+    DPR = window.devicePixelRatio || 1;
+    W = rect.width; H = rect.height;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  var state = 'idle';
+  var score = 0, lives = 3, combo = 1, streak = 0;
+  var targetColor = COLORS[0];
+  var orbs = [];
+  var particles = [];
+  var basket = { w: 84, h: 22, x: 0 };
+  var spawnTimer = 0, spawnInterval = 850;
+  var elapsed = 0;
+  var lastTime = 0;
+  var mouseX = null;
+  var keyLeft = false, keyRight = false;
+
+  function pickTarget() {
+    var next;
+    do { next = COLORS[Math.floor(Math.random() * COLORS.length)]; }
+    while (next === targetColor && COLORS.length > 1);
+    targetColor = next;
+    targetSwatch.style.background = targetColor.hex;
+    targetSwatch.classList.remove('pulse');
+    void targetSwatch.offsetWidth;
+    targetSwatch.classList.add('pulse');
+  }
+
+  function renderLives() {
+    livesWrap.innerHTML = '';
+    for (var i = 0; i < 3; i++) {
+      var s = document.createElement('span');
+      s.className = 'heart';
+      s.textContent = i < lives ? '❤' : '🖤';
+      livesWrap.appendChild(s);
+    }
+  }
+
+  function spawnOrb() {
+    var r = 16 + Math.random() * 8;
+    var c = COLORS[Math.floor(Math.random() * COLORS.length)];
+    var speed = 1.6 + Math.random() * 1.2 + Math.min(elapsed / 20000, 2.2);
+    orbs.push({
+      x: r + Math.random() * (W - r * 2),
+      y: -r,
+      r: r, color: c, speed: speed,
+      wobble: Math.random() * Math.PI * 2,
+    });
+  }
+
+  function burst(x, y, hex, n) {
+    for (var i = 0; i < n; i++) {
+      var angle = Math.random() * Math.PI * 2;
+      var spd = 1.5 + Math.random() * 3;
+      particles.push({
+        x: x, y: y, vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd - 1,
+        life: 1, hex: hex, size: 2 + Math.random() * 3,
+      });
+    }
+  }
+
+  function startGame() {
+    var existingBig = overlay.querySelector('.big-score');
+    if (existingBig) existingBig.remove();
+    overlayTitle.textContent = '시작할 준비 되셨나요?';
+    overlayText.textContent = DEFAULT_HINT;
+    startBtn.textContent = '게임 시작';
+
+    score = 0; lives = 3; combo = 1; streak = 0; elapsed = 0;
+    orbs = []; particles = [];
+    spawnTimer = 0; spawnInterval = 850;
+    basket.x = W / 2 - basket.w / 2;
+    pickTarget();
+    scoreEl.textContent = '0';
+    comboEl.textContent = 'x1';
+    renderLives();
+    livesWrap.style.display = 'flex';
+    overlay.classList.add('hidden');
+    state = 'playing';
+    lastTime = performance.now();
+    requestAnimationFrame(loop);
+  }
+
+  function endGame() {
+    state = 'over';
+    overlayTitle.textContent = '게임 종료';
+    overlayText.textContent = '멋진 플레이였어요! 최종 점수를 확인하세요.';
+    var big = document.createElement('div');
+    big.className = 'big-score';
+    big.textContent = score;
+    overlayText.after(big);
+    startBtn.textContent = '다시 하기';
+    overlay.classList.remove('hidden');
+  }
+
+  startBtn.addEventListener('click', startGame);
+
+  holder.addEventListener('mousemove', function(e) {
+    var rect = holder.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+  });
+  holder.addEventListener('touchmove', function(e) {
+    var rect = holder.getBoundingClientRect();
+    mouseX = e.touches[0].clientX - rect.left;
+    e.preventDefault();
+  }, { passive: false });
+
+  window.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowLeft') keyLeft = true;
+    if (e.key === 'ArrowRight') keyRight = true;
+  });
+  window.addEventListener('keyup', function(e) {
+    if (e.key === 'ArrowLeft') keyLeft = false;
+    if (e.key === 'ArrowRight') keyRight = false;
+  });
+
+  function update(dt) {
+    elapsed += dt;
+    spawnInterval = Math.max(340, 850 - elapsed / 60);
+    spawnTimer += dt;
+    if (spawnTimer > spawnInterval) {
+      spawnTimer = 0;
+      spawnOrb();
+    }
+
+    if (mouseX !== null) {
+      basket.x += ((mouseX - basket.w / 2) - basket.x) * 0.35;
+    }
+    if (keyLeft) basket.x -= 7;
+    if (keyRight) basket.x += 7;
+    basket.x = Math.max(0, Math.min(W - basket.w, basket.x));
+
+    var basketY = H - 34;
+    for (var i = orbs.length - 1; i >= 0; i--) {
+      var o = orbs[i];
+      o.y += o.speed * (dt / 16.6);
+      o.wobble += 0.05;
+      o.x += Math.sin(o.wobble) * 0.4;
+
+      var caughtY = o.y + o.r >= basketY && o.y - o.r <= basketY + basket.h;
+      var caughtX = o.x + o.r >= basket.x && o.x - o.r <= basket.x + basket.w;
+
+      if (caughtY && caughtX) {
+        orbs.splice(i, 1);
+        if (o.color.name === targetColor.name) {
+          streak++;
+          combo = 1 + Math.floor(streak / 4);
+          var gained = 10 * combo;
+          score += gained;
+          burst(o.x, basketY, o.color.hex, 14);
+          pickTarget();
+        } else {
+          streak = 0; combo = 1;
+          lives--;
+          burst(o.x, basketY, '#FF4444', 10);
+          renderLives();
+          if (lives <= 0) { endGame(); return; }
+        }
+        scoreEl.textContent = score;
+        comboEl.textContent = 'x' + combo;
+        continue;
+      }
+
+      if (o.y - o.r > H) {
+        orbs.splice(i, 1);
+        if (o.color.name === targetColor.name) {
+          streak = 0; combo = 1;
+          lives--;
+          renderLives();
+          comboEl.textContent = 'x1';
+          if (lives <= 0) { endGame(); return; }
+        }
+      }
+    }
+
+    for (var j = particles.length - 1; j >= 0; j--) {
+      var p = particles[j];
+      p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.life -= 0.025;
+      if (p.life <= 0) particles.splice(j, 1);
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    orbs.forEach(function(o) {
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+      ctx.fillStyle = o.color.hex;
+      ctx.shadowColor = o.color.hex;
+      ctx.shadowBlur = 14;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.beginPath();
+      ctx.arc(o.x - o.r * 0.3, o.y - o.r * 0.3, o.r * 0.28, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.fill();
+    });
+
+    particles.forEach(function(p) {
+      ctx.globalAlpha = Math.max(p.life, 0);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = p.hex;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+
+    var basketY = H - 34;
+    ctx.beginPath();
+    var r = 12;
+    var x = basket.x, y = basketY, w = basket.w, h = basket.h;
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+    ctx.fillStyle = targetColor.hex;
+    ctx.shadowColor = targetColor.hex;
+    ctx.shadowBlur = 16;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  }
+
+  function loop(now) {
+    if (state !== 'playing') return;
+    var dt = Math.min(now - lastTime, 40);
+    lastTime = now;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  resize();
+  draw();
+})();
+</script>
+</body>
+</html>
