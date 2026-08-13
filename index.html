@@ -1,998 +1,903 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>MY GAME ARCADE</title>
+<title>MY GAME ARCADE</title>
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-    body {
-      font-family: Arial, "Noto Sans KR", sans-serif;
-      min-height: 100vh;
-      color: #222;
+body {
+    font-family: Arial, "Noto Sans KR", sans-serif;
+    min-height: 100vh;
+    color: #222;
+    background:
+        radial-gradient(circle at 10% 10%, #fff3a6 0, transparent 20%),
+        radial-gradient(circle at 90% 20%, #bfefff 0, transparent 25%),
+        radial-gradient(circle at 30% 90%, #ffd0e5 0, transparent 25%),
+        linear-gradient(135deg, #f4f7ff, #fff9f2);
+}
 
-      background:
-        radial-gradient(circle at 10% 10%, #fff4a8 0, transparent 20%),
-        radial-gradient(circle at 90% 20%, #c5f3ff 0, transparent 25%),
-        radial-gradient(circle at 30% 90%, #ffd0e6 0, transparent 25%),
-        linear-gradient(135deg, #f2f7ff, #fff8f2);
 
-      overflow-x: hidden;
-    }
+/* =====================
+   HEADER
+===================== */
 
+header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
 
-    /* ==============================
-       상단 메뉴
-    ============================== */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
 
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
+    padding: 18px 6%;
 
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 30px;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
 
-      width: 100%;
-      padding: 18px 6%;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+}
 
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(14px);
+.logo {
+    font-size: clamp(20px,3vw,30px);
+    font-weight: 900;
 
-      border-bottom: 1px solid rgba(0,0,0,0.07);
-      box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-    }
+    background: linear-gradient(90deg,#ff467e,#7657ff,#00a8ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 
+    white-space: nowrap;
+}
 
-    /* 로고 */
 
-    .logo {
-      font-size: clamp(20px, 3vw, 30px);
-      font-weight: 900;
-      white-space: nowrap;
+/* 검색 */
 
-      background: linear-gradient(
-        90deg,
-        #ff467e,
-        #7a5cff,
-        #00a8ff
-      );
+.search-box {
+    position: relative;
+    width: min(420px,100%);
+}
 
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+.search-box input {
+    width: 100%;
+    padding: 14px 20px 14px 45px;
 
+    border: 2px solid transparent;
+    border-radius: 999px;
 
-    /* 검색창 */
+    outline: none;
+    background: #f0f3f8;
 
-    .search-box {
-      position: relative;
-      width: min(420px, 100%);
-    }
+    font-size: 15px;
 
-    .search-box input {
-      width: 100%;
-      padding: 14px 20px 14px 46px;
+    transition: .25s;
+}
 
-      border: 2px solid transparent;
-      border-radius: 999px;
-      outline: none;
+.search-box input:focus {
+    background: white;
+    border-color: #7657ff;
 
-      font-size: 15px;
-      background: #f0f3f8;
+    box-shadow: 0 0 0 5px rgba(118,87,255,.1);
+}
 
-      transition: 0.25s;
-    }
+.search-icon {
+    position: absolute;
 
-    .search-box input:focus {
-      border-color: #785cff;
-      background: white;
+    left: 17px;
+    top: 50%;
 
-      box-shadow:
-        0 0 0 5px rgba(120, 92, 255, 0.1);
-    }
+    transform: translateY(-50%);
+}
 
-    .search-icon {
-      position: absolute;
-      left: 17px;
-      top: 50%;
 
-      transform: translateY(-50%);
+/* =====================
+   HERO
+===================== */
 
-      font-size: 18px;
-      pointer-events: none;
-    }
+.hero {
+    max-width: 1400px;
 
+    margin: auto;
 
-    /* ==============================
-       메인 소개
-    ============================== */
+    padding: 70px 6% 35px;
+}
 
-    .hero {
-      max-width: 1400px;
-      margin: auto;
-      padding: 70px 6% 35px;
-    }
+.hero-badge {
+    display: inline-block;
 
-    .hero-badge {
-      display: inline-block;
+    padding: 8px 14px;
+    margin-bottom: 15px;
 
-      margin-bottom: 15px;
-      padding: 8px 14px;
+    border-radius: 999px;
 
-      border-radius: 999px;
+    background: #ebe5ff;
+    color: #6846db;
 
-      color: #6846db;
-      background: #ebe5ff;
+    font-size: 14px;
+    font-weight: bold;
+}
 
-      font-size: 14px;
-      font-weight: bold;
-    }
+.hero h1 {
+    font-size: clamp(34px,6vw,60px);
+    font-weight: 900;
+    line-height: 1.05;
 
-    .hero h1 {
-      margin-bottom: 15px;
+    margin-bottom: 15px;
+}
 
-      font-size: clamp(32px, 6vw, 60px);
-      font-weight: 900;
-      line-height: 1.05;
-    }
+.hero h1 span {
+    color: #7455ff;
+}
 
-    .hero h1 span {
-      color: #7455ff;
-    }
+.hero p {
+    max-width: 650px;
 
-    .hero p {
-      max-width: 650px;
+    color: #68707f;
 
-      color: #68707f;
+    font-size: 17px;
+    line-height: 1.6;
+}
 
-      font-size: 17px;
-      line-height: 1.6;
-    }
 
+/* =====================
+   MAIN
+===================== */
 
-    /* ==============================
-       게임 영역
-    ============================== */
+main {
+    max-width: 1400px;
 
-    main {
-      max-width: 1400px;
-      margin: auto;
-      padding: 0 6% 80px;
-    }
+    margin: auto;
 
-    .section-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    padding: 0 6% 80px;
+}
 
-      margin-bottom: 25px;
-    }
+.section-title {
+    display: flex;
 
-    .section-title h2 {
-      font-size: clamp(24px, 4vw, 34px);
-      font-weight: 900;
-    }
+    justify-content: space-between;
+    align-items: center;
 
-    .game-count {
-      color: #777;
-      font-size: 14px;
-      font-weight: bold;
-    }
+    margin-bottom: 25px;
+}
 
+.section-title h2 {
+    font-size: clamp(24px,4vw,34px);
+}
 
-    /* ==============================
-       게임 그리드
-    ============================== */
+.game-count {
+    color: #777;
 
-    .game-grid {
-      display: grid;
+    font-size: 14px;
+    font-weight: bold;
+}
 
-      grid-template-columns:
-        repeat(12, minmax(0, 1fr));
 
-      gap: 20px;
-    }
+/* =====================
+   GRID
+===================== */
 
+.game-grid {
+    display: grid;
 
-    /* ==============================
-       게임 카드
-    ============================== */
+    grid-template-columns:
+        repeat(12,minmax(0,1fr));
 
-    .game-card {
-      position: relative;
+    gap: 20px;
+}
 
-      grid-column: span 4;
 
-      overflow: hidden;
+/* =====================
+   CARD
+===================== */
 
-      border-radius: 28px;
+.game-card {
+    grid-column: span 4;
 
-      background: white;
+    overflow: hidden;
 
-      box-shadow:
-        0 8px 25px rgba(39, 44, 80, 0.08);
+    border-radius: 28px;
 
-      transition:
-        transform 0.25s ease,
-        box-shadow 0.25s ease;
+    background: white;
 
-      cursor: pointer;
-    }
+    box-shadow:
+        0 8px 25px rgba(39,44,80,.10);
 
-    .game-card:hover {
-      transform:
+    cursor: pointer;
+
+    transition:
+        transform .25s,
+        box-shadow .25s;
+}
+
+.game-card:hover {
+    transform:
         translateY(-8px)
         scale(1.02);
 
-      box-shadow:
-        0 20px 45px rgba(39, 44, 80, 0.18);
-    }
+    box-shadow:
+        0 20px 45px rgba(39,44,80,.20);
+}
 
 
-    /* 카드 크기를 조금씩 다르게 */
+/* 카드 크기 변화 */
 
-    .game-card.featured {
-      grid-column: span 6;
-    }
+.game-card.featured {
+    grid-column: span 6;
+}
 
+.game-card.small {
+    grid-column: span 3;
+}
+
+
+/* =====================
+   아이콘 영역
+===================== */
+
+.game-icon {
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+
+    aspect-ratio: 1 / 1;
+
+    overflow: hidden;
+
+    font-size: clamp(70px,10vw,140px);
+
+    transition: .3s;
+}
+
+
+/* 게임별 색상 */
+
+.game1 .game-icon {
+    background:
+        linear-gradient(135deg,#7ee081,#32b768);
+}
+
+.game2 .game-icon {
+    background:
+        linear-gradient(135deg,#54c7ff,#725cff);
+}
+
+.game3 .game-icon {
+    background:
+        linear-gradient(135deg,#ff8a65,#ff3d68);
+}
+
+.game4 .game-icon {
+    background:
+        linear-gradient(135deg,#cf66ff,#7656ff);
+}
+
+.game5 .game-icon {
+    background:
+        linear-gradient(135deg,#5bd6c3,#1aa66f);
+}
+
+
+/* 아이콘 애니메이션 */
+
+.game-card:hover .game-icon {
+    font-size: clamp(80px,11vw,155px);
+}
+
+
+/* 아이콘 뒤 장식 */
+
+.game-icon::before {
+    content: "";
+
+    position: absolute;
+
+    width: 70%;
+    height: 70%;
+
+    border-radius: 50%;
+
+    background: rgba(255,255,255,.15);
+
+    transform: rotate(20deg);
+}
+
+.icon {
+    position: relative;
+    z-index: 2;
+
+    filter:
+        drop-shadow(0 12px 10px rgba(0,0,0,.15));
+
+    transition: .3s;
+}
+
+.game-card:hover .icon {
+    transform:
+        scale(1.1)
+        rotate(-5deg);
+}
+
+
+/* 큰 카드 */
+
+.featured .game-icon {
+    aspect-ratio: 16 / 10;
+}
+
+
+/* =====================
+   게임 정보
+===================== */
+
+.game-info {
+    padding: 20px;
+}
+
+.game-title {
+    margin-bottom: 7px;
+
+    font-size: 21px;
+    font-weight: 900;
+}
+
+.game-description {
+    min-height: 44px;
+
+    margin-bottom: 18px;
+
+    color: #727787;
+
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+
+/* PLAY 버튼 */
+
+.play-button {
+    width: 100%;
+
+    padding: 13px;
+
+    border: none;
+    border-radius: 14px;
+
+    color: white;
+
+    background:
+        linear-gradient(135deg,#7b5cff,#a447ff);
+
+    font-size: 15px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+.play-button:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 18px rgba(115,73,255,.35);
+}
+
+
+/* 검색 결과 */
+
+.no-result {
+    display: none;
+
+    grid-column: 1 / -1;
+
+    padding: 60px;
+
+    text-align: center;
+
+    border-radius: 25px;
+
+    background: white;
+
+    font-size: 18px;
+}
+
+
+/* FOOTER */
+
+footer {
+    padding: 30px 20px 50px;
+
+    text-align: center;
+
+    color: #8a8f9c;
+
+    font-size: 14px;
+}
+
+
+/* =====================
+   태블릿
+===================== */
+
+@media(max-width:1000px) {
+
+    .game-card,
+    .game-card.featured,
     .game-card.small {
-      grid-column: span 3;
-    }
-
-
-    /* ==============================
-       게임 이미지
-    ============================== */
-
-    .game-image {
-      position: relative;
-
-      width: 100%;
-
-      aspect-ratio: 1 / 1;
-
-      overflow: hidden;
-
-      background: #eee;
-    }
-
-    .featured .game-image {
-      aspect-ratio: 16 / 10;
-    }
-
-    .game-image img {
-      width: 100%;
-      height: 100%;
-
-      display: block;
-
-      object-fit: cover;
-
-      transition: transform 0.35s ease;
-    }
-
-    .game-card:hover .game-image img {
-      transform: scale(1.08);
-    }
-
-
-    /* 마우스를 올렸을 때 PLAY */
-
-    .hover-play {
-      position: absolute;
-      inset: 0;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      opacity: 0;
-
-      background:
-        rgba(20, 13, 50, 0.30);
-
-      transition: 0.25s;
-    }
-
-    .game-card:hover .hover-play {
-      opacity: 1;
-    }
-
-    .play-circle {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      width: 70px;
-      height: 70px;
-
-      border-radius: 50%;
-
-      color: #6946e8;
-      background: white;
-
-      font-size: 28px;
-
-      box-shadow:
-        0 10px 30px rgba(0,0,0,0.25);
-
-      transform: scale(0.7);
-
-      transition: 0.25s;
-    }
-
-    .game-card:hover .play-circle {
-      transform: scale(1);
-    }
-
-
-    /* ==============================
-       게임 정보
-    ============================== */
-
-    .game-info {
-      padding: 20px;
-    }
-
-    .game-title {
-      margin-bottom: 8px;
-
-      font-size: 21px;
-      font-weight: 900;
-    }
-
-    .game-description {
-      min-height: 44px;
-
-      margin-bottom: 18px;
-
-      color: #727787;
-
-      font-size: 14px;
-      line-height: 1.55;
-    }
-
-
-    /* PLAY 버튼 */
-
-    .play-button {
-      width: 100%;
-
-      padding: 13px;
-
-      border: none;
-      border-radius: 14px;
-
-      color: white;
-
-      background:
-        linear-gradient(
-          135deg,
-          #7b5cff,
-          #a447ff
-        );
-
-      font-size: 15px;
-      font-weight: bold;
-
-      cursor: pointer;
-
-      transition: 0.2s;
-    }
-
-    .play-button:hover {
-      transform: translateY(-2px);
-
-      box-shadow:
-        0 8px 18px rgba(115, 73, 255, 0.35);
-    }
-
-
-    /* ==============================
-       검색 결과 없음
-    ============================== */
-
-    .no-result {
-      display: none;
-
-      grid-column: 1 / -1;
-
-      padding: 60px 20px;
-
-      text-align: center;
-
-      border-radius: 25px;
-
-      color: #666;
-      background: white;
-
-      font-size: 18px;
-    }
-
-
-    /* ==============================
-       하단
-    ============================== */
-
-    footer {
-      padding: 30px 20px 50px;
-
-      text-align: center;
-
-      color: #8a8f9c;
-
-      font-size: 14px;
-    }
-
-
-    /* ==============================
-       태블릿
-    ============================== */
-
-    @media (max-width: 1000px) {
-
-      .game-card,
-      .game-card.featured,
-      .game-card.small {
         grid-column: span 6;
-      }
-
     }
 
+}
 
-    /* ==============================
-       스마트폰
-    ============================== */
 
-    @media (max-width: 650px) {
+/* =====================
+   스마트폰
+===================== */
 
-      header {
+@media(max-width:650px) {
+
+    header {
         flex-direction: column;
-        align-items: stretch;
 
         padding: 15px 5%;
-        gap: 13px;
-      }
 
-      .logo {
+        gap: 13px;
+    }
+
+    .logo {
         text-align: center;
-      }
+    }
 
-      .hero {
+    .hero {
         padding-top: 45px;
-      }
+    }
 
-      .game-grid {
+    .game-grid {
         gap: 13px;
-      }
+    }
 
-      .game-card,
-      .game-card.featured,
-      .game-card.small {
+    .game-card,
+    .game-card.featured,
+    .game-card.small {
         grid-column: span 6;
 
         border-radius: 20px;
-      }
+    }
 
-      .featured .game-image,
-      .game-image {
+    .featured .game-icon,
+    .game-icon {
         aspect-ratio: 1 / 1;
-      }
 
-      .game-info {
+        font-size: 65px;
+    }
+
+    .game-info {
         padding: 14px;
-      }
+    }
 
-      .game-title {
-        font-size: 16px;
-      }
+    .game-title {
+        font-size: 15px;
+    }
 
-      .game-description {
+    .game-description {
         display: none;
-      }
+    }
 
-      .play-button {
+    .play-button {
         padding: 10px;
+
         font-size: 13px;
-      }
-
-      .play-circle {
-        width: 50px;
-        height: 50px;
-
-        font-size: 20px;
-      }
-
     }
 
+}
 
-    /* 아주 작은 스마트폰 */
 
-    @media (max-width: 400px) {
+@media(max-width:400px) {
 
-      .game-card,
-      .game-card.featured,
-      .game-card.small {
+    .game-card,
+    .game-card.featured,
+    .game-card.small {
         grid-column: span 12;
-      }
-
-      .game-description {
-        display: block;
-      }
-
     }
 
-  </style>
+    .game-description {
+        display: block;
+    }
+
+}
+
+</style>
 </head>
 
 
 <body>
 
 
-  <!-- ==============================
-       상단 메뉴
-  =============================== -->
-
-  <header>
+<header>
 
     <div class="logo">
-      🎮 MY GAME ARCADE
+        🎮 MY GAME ARCADE
     </div>
 
     <div class="search-box">
 
-      <span class="search-icon">
-        🔎
-      </span>
+        <span class="search-icon">🔎</span>
 
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="게임을 검색해 보세요!"
-      >
+        <input
+            type="text"
+            id="searchInput"
+            placeholder="어떤 게임을 해볼까요?"
+        >
 
     </div>
 
-  </header>
+</header>
 
 
 
-  <!-- ==============================
-       소개 영역
-  =============================== -->
-
-  <section class="hero">
+<section class="hero">
 
     <div class="hero-badge">
-      ✨ MY GAME COLLECTION
+        🕹️ MY GAME COLLECTION
     </div>
 
     <h1>
-      내가 만든 게임을<br>
-      <span>플레이해 보세요!</span>
+        내가 만든 게임을<br>
+        <span>플레이해 보세요!</span>
     </h1>
 
     <p>
-      직접 만든 게임들을 한곳에 모았습니다.
-      마음에 드는 게임을 선택하고 PLAY 버튼을 눌러
-      바로 게임을 시작해 보세요!
+        직접 만든 5개의 게임을 한곳에 모았습니다.
+        원하는 게임을 골라 PLAY 버튼을 눌러보세요!
     </p>
 
-  </section>
+</section>
 
 
 
-  <!-- ==============================
-       게임 목록
-  =============================== -->
+<main>
 
-  <main>
+<div class="section-title">
 
-    <div class="section-title">
+    <h2>
+        🔥 내가 만든 게임
+    </h2>
 
-      <h2>
-        🎮 내가 만든 게임
-      </h2>
-
-      <span class="game-count">
+    <span class="game-count">
         5 GAMES
-      </span>
+    </span>
+
+</div>
+
+
+<div class="game-grid">
+
+
+<!-- =====================
+     GAME 1
+===================== -->
+
+<article
+    class="game-card featured game1"
+    data-title="복불복 악어 이빨 뽑기"
+    data-link="복불복악어이빨뽑기 챗지피티(승리).html"
+>
+
+    <div class="game-icon">
+
+        <div class="icon">
+            🐊
+        </div>
 
     </div>
 
+    <div class="game-info">
 
-    <div
-      class="game-grid"
-      id="gameGrid"
-    >
+        <h3 class="game-title">
+            🐊 복불복 악어 이빨 뽑기
+        </h3>
 
+        <p class="game-description">
+            어느 이빨이 함정일까? 조심조심 악어의 이빨을 눌러보세요!
+        </p>
 
-      <!-- =========================
-           GAME 1
-      ========================== -->
-
-      <article
-        class="game-card featured"
-        data-title="복불복악어이빨뽑기"
-        data-link="복불복악어이빨뽑기 챗지피티(승리).html"
-      >
-
-        <div class="game-image">
-
-          <img
-            src="game1.png"
-            alt="게임 1"
-          >
-
-          <div class="hover-play">
-
-            <div class="play-circle">
-              ▶
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="game-info">
-
-          <h3 class="game-title">
-            GAME 01
-          </h3>
-
-          <p class="game-description">
-            복불복 악어이빨 뽑기 
-          </p>
-
-          <button class="play-button">
+        <button class="play-button">
             ▶ PLAY
-          </button>
-
-        </div>
-
-      </article>
-
-
-
-      <!-- =========================
-           GAME 2
-      ========================== -->
-
-      <article
-        class="game-card"
-        data-title="게임 2 GAME 02"
-        data-link="game2.html"
-      >
-
-        <div class="game-image">
-
-          <img
-            src="game2.png"
-            alt="게임 2"
-          >
-
-          <div class="hover-play">
-
-            <div class="play-circle">
-              ▶
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="game-info">
-
-          <h3 class="game-title">
-            GAME 02
-          </h3>
-
-          <p class="game-description">
-            빠른 판단력과 순발력이 필요한 두 번째 게임!
-          </p>
-
-          <button class="play-button">
-            ▶ PLAY
-          </button>
-
-        </div>
-
-      </article>
-
-
-
-      <!-- =========================
-           GAME 3
-      ========================== -->
-
-      <article
-        class="game-card small"
-        data-title="게임 3 GAME 03"
-        data-link="game3.html"
-      >
-
-        <div class="game-image">
-
-          <img
-            src="game3.png"
-            alt="게임 3"
-          >
-
-          <div class="hover-play">
-
-            <div class="play-circle">
-              ▶
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="game-info">
-
-          <h3 class="game-title">
-            GAME 03
-          </h3>
-
-          <p class="game-description">
-            점수를 높이며 계속 도전하는 재미있는 게임!
-          </p>
-
-          <button class="play-button">
-            ▶ PLAY
-          </button>
-
-        </div>
-
-      </article>
-
-
-
-      <!-- =========================
-           GAME 4
-      ========================== -->
-
-      <article
-        class="game-card small"
-        data-title="게임 4 GAME 04"
-        data-link="game4.html"
-      >
-
-        <div class="game-image">
-
-          <img
-            src="game4.png"
-            alt="게임 4"
-          >
-
-          <div class="hover-play">
-
-            <div class="play-circle">
-              ▶
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="game-info">
-
-          <h3 class="game-title">
-            GAME 04
-          </h3>
-
-          <p class="game-description">
-            친구들과 최고 기록을 경쟁해 보세요!
-          </p>
-
-          <button class="play-button">
-            ▶ PLAY
-          </button>
-
-        </div>
-
-      </article>
-
-
-
-      <!-- =========================
-           GAME 5
-      ========================== -->
-
-      <article
-        class="game-card featured"
-        data-title="게임 5 GAME 05"
-        data-link="game5.html"
-      >
-
-        <div class="game-image">
-
-          <img
-            src="game5.png"
-            alt="게임 5"
-          >
-
-          <div class="hover-play">
-
-            <div class="play-circle">
-              ▶
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="game-info">
-
-          <h3 class="game-title">
-            GAME 05
-          </h3>
-
-          <p class="game-description">
-            마지막까지 집중해서 최고 기록에 도전하세요!
-          </p>
-
-          <button class="play-button">
-            ▶ PLAY
-          </button>
-
-        </div>
-
-      </article>
-
-
-
-      <!-- 검색 결과 없음 -->
-
-      <div
-        class="no-result"
-        id="noResult"
-      >
-        😢 검색한 게임을 찾을 수 없습니다.
-      </div>
-
+        </button>
 
     </div>
 
-  </main>
+</article>
 
 
 
-  <!-- ==============================
-       하단
-  =============================== -->
+<!-- =====================
+     GAME 2
+===================== -->
 
-  <footer>
+<article
+    class="game-card game2"
+    data-title="테트리스 모바일"
+    data-link="테트리스 모바일 포함.html"
+>
+
+    <div class="game-icon">
+
+        <div class="icon">
+            🧱
+        </div>
+
+    </div>
+
+    <div class="game-info">
+
+        <h3 class="game-title">
+            🧱 테트리스
+        </h3>
+
+        <p class="game-description">
+            떨어지는 블록을 맞추고 최고 점수에 도전하세요!
+        </p>
+
+        <button class="play-button">
+            ▶ PLAY
+        </button>
+
+    </div>
+
+</article>
+
+
+
+<!-- =====================
+     GAME 3
+===================== -->
+
+<article
+    class="game-card small game3"
+    data-title="라이벌 슈팅 게임"
+    data-link="라이벌 수정완료.html"
+>
+
+    <div class="game-icon">
+
+        <div class="icon">
+            🔫
+        </div>
+
+    </div>
+
+    <div class="game-info">
+
+        <h3 class="game-title">
+            🔫 라이벌
+        </h3>
+
+        <p class="game-description">
+            라이벌과 펼치는 박진감 넘치는 슈팅 대결!
+        </p>
+
+        <button class="play-button">
+            ▶ PLAY
+        </button>
+
+    </div>
+
+</article>
+
+
+
+<!-- =====================
+     GAME 4
+===================== -->
+
+<article
+    class="game-card small game4"
+    data-title="리듬 게임 음악"
+    data-link="리듬게임2.html"
+>
+
+    <div class="game-icon">
+
+        <div class="icon">
+            🎵
+        </div>
+
+    </div>
+
+    <div class="game-info">
+
+        <h3 class="game-title">
+            🎵 리듬 게임
+        </h3>
+
+        <p class="game-description">
+            음악에 맞춰 타이밍을 잡고 완벽한 콤보에 도전하세요!
+        </p>
+
+        <button class="play-button">
+            ▶ PLAY
+        </button>
+
+    </div>
+
+</article>
+
+
+
+<!-- =====================
+     GAME 5
+===================== -->
+
+<article
+    class="game-card featured game5"
+    data-title="크리스마스 트리 꾸미기"
+    data-link="3.크리스마스 트리 꾸미기.html"
+>
+
+    <div class="game-icon">
+
+        <div class="icon">
+            🎄
+        </div>
+
+    </div>
+
+    <div class="game-info">
+
+        <h3 class="game-title">
+            🎄 크리스마스 트리 꾸미기
+        </h3>
+
+        <p class="game-description">
+            다양한 장식으로 나만의 멋진 크리스마스 트리를 완성해 보세요!
+        </p>
+
+        <button class="play-button">
+            ▶ PLAY
+        </button>
+
+    </div>
+
+</article>
+
+
+<div
+    class="no-result"
+    id="noResult"
+>
+    😢 검색한 게임을 찾을 수 없습니다.
+</div>
+
+
+</div>
+
+</main>
+
+
+
+<footer>
 
     🎮 MY GAME ARCADE
 
     <br><br>
 
-    Made by Me · My Game Portfolio
+    내가 직접 만든 게임 포트폴리오
 
-  </footer>
-
-
-
-  <!-- ==============================
-       JavaScript
-  =============================== -->
-
-  <script>
-
-    /* 게임 카드 가져오기 */
-
-    const gameCards =
-      document.querySelectorAll(".game-card");
+</footer>
 
 
-    /* ============================
-       게임 클릭
-    ============================ */
 
-    gameCards.forEach(function(card) {
+<script>
 
-      card.addEventListener(
+/* 게임 카드 */
+
+const gameCards =
+    document.querySelectorAll(".game-card");
+
+
+/* 게임 실행 */
+
+gameCards.forEach(function(card) {
+
+    card.addEventListener(
         "click",
         function() {
 
-          const gameLink =
-            card.dataset.link;
+            const link =
+                card.dataset.link;
 
-          window.location.href =
-            gameLink;
+            window.location.href =
+                encodeURI(link);
 
         }
-      );
+    );
 
-    });
-
-
-
-    /* ============================
-       게임 검색
-    ============================ */
-
-    const searchInput =
-      document.getElementById("searchInput");
-
-    const noResult =
-      document.getElementById("noResult");
+});
 
 
-    searchInput.addEventListener(
-      "input",
-      function() {
+/* =====================
+   게임 검색
+===================== */
+
+const searchInput =
+    document.getElementById("searchInput");
+
+const noResult =
+    document.getElementById("noResult");
+
+
+searchInput.addEventListener(
+    "input",
+    function() {
 
         const keyword =
-          searchInput.value
+            searchInput.value
             .toLowerCase()
             .trim();
 
-        let visibleCount = 0;
+        let count = 0;
 
 
         gameCards.forEach(
-          function(card) {
+            function(card) {
 
-            const title =
-              card.dataset.title
-                .toLowerCase();
+                const title =
+                    card.dataset.title
+                    .toLowerCase();
 
 
-            if (title.includes(keyword)) {
+                if(title.includes(keyword)) {
 
-              card.style.display =
-                "block";
+                    card.style.display =
+                        "block";
 
-              visibleCount++;
+                    count++;
+
+                }
+
+                else {
+
+                    card.style.display =
+                        "none";
+
+                }
 
             }
-
-            else {
-
-              card.style.display =
-                "none";
-
-            }
-
-          }
         );
 
 
-        if (visibleCount === 0) {
+        if(count === 0) {
 
-          noResult.style.display =
-            "block";
+            noResult.style.display =
+                "block";
 
         }
 
         else {
 
-          noResult.style.display =
-            "none";
+            noResult.style.display =
+                "none";
 
         }
 
-      }
-    );
+    }
+);
 
-  </script>
+</script>
 
 
 </body>
