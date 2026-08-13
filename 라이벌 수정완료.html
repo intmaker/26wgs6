@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI FPS ARENA</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: #1a1a2e;
+            color: #ffffff;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-container {
+            position: relative;
+            width: 1000px;
+            height: 600px;
+            background: #0f1016;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        /* 왼쪽 상단 미니맵 스타일 */
+        #minimap {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 130px;
+            height: 130px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* UI 레이어 */
+        .ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        .timer-box {
+            position: absolute;
+            top: 20px;
+            left: 160px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-start;
+        }
+
+        .stats-box {
+            text-align: right;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 18px;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .stats-box div {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .bottom-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .hp-box {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(231, 76, 60, 0.5);
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        .weapon-box {
+            text-align: right;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(52, 152, 219, 0.5);
+        }
+
+        .weapon-box .ammo {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #48dbfb;
+        }
+
+        .weapon-box .w-name {
+            font-size: 0.9rem;
+            color: #c8d6e5;
+            letter-spacing: 1px;
+        }
+
+        /* 기본 십자 조준점 */
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            transition: width 0.05s, height 0.05s;
+        }
+        #crosshair::before, #crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        #crosshair::before { top: 4px; left: -6px; width: 22px; height: 2px; }
+        #crosshair::after { top: -6px; left: 4px; width: 2px; height: 22px; }
+
+        /* 저격총 스코프 뷰 */
+        #sniper-scope {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle, rgba(0,0,0,0) 30%, rgba(0,0,0,0.9) 70%);
+            z-index: 10;
+        }
+        #sniper-scope .scope-inner {
+            width: 380px;
+            height: 380px;
+            border: 3px solid #111;
+            border-radius: 50%;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0,255,0,0.3);
+        }
+        #sniper-scope .scope-inner::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 5%; right: 5%; height: 2px;
+            background: rgba(0, 255, 0, 0.85);
+            transform: translateY(-50%);
+        }
+        #sniper-scope .scope-inner::after {
+            content: '';
+            position: absolute;
+            left: 50%; top: 5%; bottom: 5%; width: 2px;
+            background: rgba(0, 255, 0, 0.85);
+            transform: translateX(-50%);
+        }
+
+        #damage-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            box-shadow: inset 0 0 80px rgba(255, 0, 0, 0);
+            pointer-events: none;
+            transition: box-shadow 0.2s ease;
+        }
+
+        #notification-area {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            width: 100%;
+            z-index: 15;
+        }
+
+        .notify-text {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #feca57;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.2s ease;
+        }
+        .notify-text.show {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .screen-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 16, 22, 0.92);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .screen-overlay h1 {
+            font-size: 3rem;
+            color: #ff9f43;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px rgba(255, 159, 67, 0.5);
+        }
+
+        .screen-overlay p {
+            font-size: 1.1rem;
+            color: #dcdde1;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            background-color: #ff9f43;
+            color: #1a1a2e;
+            border: none;
+            padding: 14px 35px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 5px 15px rgba(255, 159, 67, 0.4);
+        }
+
+        .btn:hover {
+            background-color: #ff6b6b;
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(255, 107, 107, 0.5);
+        }
+
+        .guide-box {
+            background: rgba(255,255,255,0.05);
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            text-align: left;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        #game-over-screen {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- 왼쪽 상단 미니맵 캔버스 -->
+        <canvas id="minimap" width="130" height="130"></canvas>
+        <canvas id="gameCanvas" width="1000" height="600"></canvas>
+        <div id="damage-overlay"></div>
+        <div id="crosshair"></div>
+        
+        <!-- 저격총 스코프 뷰 -->
+        <div id="sniper-scope">
+            <div class="scope-inner"></div>
+        </div>
+
+        <div id="notification-area">
+            <div id="main-notify" class="notify-text"></div>
+        </div>
+
+        <div class="ui-layer" id="game-ui" style="display: none;">
+            <div class="timer-box" id="ui-timer">02:00</div>
+            <div class="top-bar">
+                <div class="stats-box">
+                    <div id="ui-kills">KILLS: 0 / 20</div>
+                    <div id="ui-score">SCORE: 0</div>
+                </div>
+            </div>
+            <div class="bottom-bar">
+                <div class="hp-box" id="ui-hp">HP 100</div>
+                <div class="weapon-box">
+                    <div class="ammo" id="ui-ammo">35 / 140</div>
+                    <div class="w-name" id="ui-weapon">ASSAULT RIFLE</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="start-screen" class="screen-overlay">
+            <h1>AI FPS ARENA</h1>
+            <p>적 총 20마리를 처치하여 승리하세요! 탄약이 다 떨어지면 자동으로 재장전됩니다.</p>
+            <div class="guide-box">
+                <b>[조작 방법]</b><br>
+                • 이동 : W, A, S, D | 달리기 : Shift<br>
+                • 시점 변경 : 마우스 이동<br>
+                • 사격 : 마우스 좌클릭 | 수동 재장전 : R (탄약 소진 시 자동 재장전)<br>
+                • 저격총(3번) 장착 후 **우클릭** : 스코프 줌인 / 줌아웃 토글<br>
+                • 무기 교체 : 1 (돌격소총), 2 (샷건), 3 (저격총)
+            </div>
+            <button class="btn" onclick="startGame()">START GAME</button>
+        </div>
+
+        <div id="game-over-screen" class="screen-overlay">
+            <h1 id="go-title">GAME OVER</h1>
+            <p id="go-stats">최종 점수: 0점</p>
+            <button class="btn" onclick="restartGame()">다시 시작</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const minimapCanvas = document.getElementById('minimap');
+        const minimapCtx = minimapCanvas.getContext('2d');
+
+        let gameState = 'START';
+        let gameTime = 120;
+        let timerInterval = null;
+
+        let score = 0;
+        let kills = 0;
+        const targetKills = 20; // 목표 킬 수 (20마리)
+        let headshots = 0;
+        let comboCount = 0;
+        let comboTimer = null;
+
+        const player = {
+            x: 5,
+            y: 5,
+            angle: 0,
+            fov: Math.PI / 3,
+            hp: 100,
+            maxHp: 100,
+            speed: 0.04
+        };
+
+        const weapons = [
+            { name: 'ASSAULT RIFLE', ammo: 35, maxAmmo: 35, reserve: 140, damage: 25, headDamage: 50, fireRate: 80, spread: 0.03, count: 1, reloadTime: 1200 },
+            { name: 'SHOTGUN', ammo: 6, maxAmmo: 6, reserve: 36, damage: 14, headDamage: 28, fireRate: 500, spread: 0.22, count: 8, reloadTime: 1800 },
+            { name: 'SNIPER RIFLE', ammo: 5, maxAmmo: 5, reserve: 20, damage: 100, headDamage: 200, fireRate: 850, spread: 0.002, count: 1, reloadTime: 2000 }
+        ];
+        let currentWeaponIndex = 0;
+        let canShoot = true;
+        let isReloading = false;
+        let isMouseDown = false;
+        let isSniperZoomed = false;
+
+        let projectiles = [];
+        const keys = { w: false, a: false, s: false, d: false, shift: false };
+        let recoilOffsetY = 0;
+
+        const map = [
+            [1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,0,1,0,0,0,1],
+            [1,0,1,1,0,1,0,1,0,1],
+            [1,0,0,0,0,0,0,1,0,1],
+            [1,1,0,1,1,0,0,0,0,1],
+            [1,0,0,0,1,1,1,0,1,1],
+            [1,0,1,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1]
+        ];
+        const mapWidth = map[0].length;
+        const mapHeight = map.length;
+
+        let enemies = [];
+        const maxEnemies = 5;
+
+        window.addEventListener('keydown', (e) => {
+            if (gameState !== 'PLAYING') return;
+            if (e.key === 'w' || e.key === 'W') keys.w = true;
+            if (e.key === 's' || e.key === 'S') keys.s = true;
+            if (e.key === 'a' || e.key === 'A') keys.a = true;
+            if (e.key === 'd' || e.key === 'D') keys.d = true;
+            if (e.key === 'Shift') keys.shift = true;
+            if (e.key === 'r' || e.key === 'R') reloadWeapon();
+            if (e.key === '1') switchWeapon(0);
+            if (e.key === '2') switchWeapon(1);
+            if (e.key === '3') switchWeapon(2);
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'w' || e.key === 'W') keys.w = false;
+            if (e.key === 's' || e.key === 'S') keys.s = false;
+            if (e.key === 'a' || e.key === 'A') keys.a = false;
+            if (e.key === 'd' || e.key === 'D') keys.d = false;
+            if (e.key === 'Shift') keys.shift = false;
+        });
+
+        canvas.addEventListener('click', () => {
+            if (gameState === 'PLAYING') {
+                canvas.requestPointerLock();
+            }
+        });
+
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            if (gameState === 'PLAYING' && currentWeaponIndex === 2) {
+                isSniperZoomed = !isSniperZoomed;
+                let scopeEl = document.getElementById('sniper-scope');
+                let crosshairEl = document.getElementById('crosshair');
+
+                if (isSniperZoomed) {
+                    player.fov = Math.PI / 10;
+                    scopeEl.style.display = 'flex';
+                    crosshairEl.style.display = 'none';
+                } else {
+                    player.fov = Math.PI / 3;
+                    scopeEl.style.display = 'none';
+                    crosshairEl.style.display = 'block';
+                }
+            }
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (document.pointerLockElement === canvas && gameState === 'PLAYING') {
+                player.angle += e.movementX * 0.003;
+            }
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (gameState === 'PLAYING' && e.button === 0) {
+                isMouseDown = true;
+                shootWeapon();
+            }
+        });
+
+        window.addEventListener('mouseup', (e) => {
+            if (e.button === 0) isMouseDown = false;
+        });
+
+        function switchWeapon(index) {
+            if (isReloading) return;
+            currentWeaponIndex = index;
+            isSniperZoomed = false;
+            let scopeEl = document.getElementById('sniper-scope');
+            let crosshairEl = document.getElementById('crosshair');
+
+            player.fov = Math.PI / 3;
+            scopeEl.style.display = 'none';
+            crosshairEl.style.display = 'block';
+            updateUI();
+        }
+
+        function reloadWeapon() {
+            let w = weapons[currentWeaponIndex];
+            if (isReloading || w.ammo === w.maxAmmo || w.reserve <= 0) return;
+
+            isReloading = true;
+            showNotification('RELOADING...');
+
+            setTimeout(() => {
+                let needed = w.maxAmmo - w.ammo;
+                let take = Math.min(needed, w.reserve);
+                w.ammo += take;
+                w.reserve -= take;
+                isReloading = false;
+                updateUI();
+            }, w.reloadTime);
+        }
+
+        function shootWeapon() {
+            let w = weapons[currentWeaponIndex];
+            if (!canShoot || isReloading) return;
+
+            // 탄약이 다 떨어졌을 때 자동으로 재장전 실행
+            if (w.ammo <= 0) {
+                if (w.reserve > 0) {
+                    reloadWeapon();
+                } else {
+                    showNotification('OUT OF AMMO!');
+                }
+                return;
+            }
+
+            w.ammo--;
+            canShoot = false;
+            updateUI();
+
+            // 탄약이 0이 되었을 때 예비 탄약이 있다면 자동 재장전 트리거
+            if (w.ammo === 0 && w.reserve > 0) {
+                setTimeout(() => {
+                    reloadWeapon();
+                }, 100);
+            }
+
+            recoilOffsetY = currentWeaponIndex === 2 ? 25 : 12;
+            setTimeout(() => { recoilOffsetY = 0; }, 80);
+
+            for (let i = 0; i < w.count; i++) {
+                let spreadAngle = (Math.random() - 0.5) * w.spread * 10;
+                let shootAngle = player.angle + spreadAngle;
+
+                projectiles.push({
+                    x: player.x,
+                    y: player.y,
+                    vx: Math.cos(shootAngle) * 0.4,
+                    vy: Math.sin(shootAngle) * 0.4,
+                    damage: w.damage,
+                    headDamage: w.headDamage,
+                    distanceTraveled: 0,
+                    maxRange: 12
+                });
+            }
+
+            setTimeout(() => { canShoot = true; }, w.fireRate);
+        }
+
+        function updateProjectiles() {
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                let p = projectiles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.distanceTraveled += 0.4;
+
+                let cellX = Math.floor(p.x);
+                let cellY = Math.floor(p.y);
+                if (cellX < 0 || cellX >= mapWidth || cellY < 0 || cellY >= mapHeight || map[cellY][cellX] === 1 || p.distanceTraveled > p.maxRange) {
+                    projectiles.splice(i, 1);
+                    continue;
+                }
+
+                let hitFound = false;
+                for (let enemy of enemies) {
+                    let dx = enemy.x - p.x;
+                    let dy = enemy.y - p.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 0.35) {
+                        let isHeadshot = Math.random() < 0.4;
+                        let finalDmg = isHeadshot ? p.headDamage : p.damage;
+                        enemy.hp -= finalDmg;
+
+                        if (isHeadshot) {
+                            headshots++;
+                            showNotification('HEADSHOT!');
+                        } else {
+                            showNotification('HIT!');
+                        }
+
+                        if (enemy.hp <= 0) {
+                            handleEnemyKill();
+                        }
+
+                        hitFound = true;
+                        break;
+                    }
+                }
+
+                if (hitFound) {
+                    projectiles.splice(i, 1);
+                }
+            }
+        }
+
+        function handleEnemyKill() {
+            kills++;
+            score += 100;
+            comboCount++;
+            if (comboTimer) clearTimeout(comboTimer);
+
+            if (kills >= targetKills) {
+                endGame(true); // 20마리 모두 처치 시 승리 종료
+                return;
+            }
+
+            if (comboCount === 2) showNotification('DOUBLE KILL!');
+            else if (comboCount === 3) showNotification('TRIPLE KILL!');
+            else if (comboCount >= 5) showNotification('KILLING SPREE!');
+            else showNotification('+100 SCORE');
+
+            comboTimer = setTimeout(() => { comboCount = 0; }, 3000);
+
+            spawnEnemies();
+            updateUI();
+        }
+
+        function showNotification(text) {
+            let notifyEl = document.getElementById('main-notify');
+            notifyEl.innerText = text;
+            notifyEl.classList.add('show');
+            setTimeout(() => { notifyEl.classList.remove('show'); }, 800);
+        }
+
+        function spawnEnemies() {
+            enemies = [];
+            while (enemies.length < maxEnemies) {
+                let rx = Math.floor(Math.random() * (mapWidth - 2)) + 1;
+                let ry = Math.floor(Math.random() * (mapHeight - 2)) + 1;
+                if (map[ry][rx] === 0 && (Math.abs(rx - player.x) > 2 || Math.abs(ry - player.y) > 2)) {
+                    enemies.push({
+                        x: rx + 0.5,
+                        y: ry + 0.5,
+                        hp: 100,
+                        maxHp: 100,
+                        speed: 0.01 + (kills) * 0.0005
+                    });
+                }
+            }
+        }
+
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('game-ui').style.display = 'flex';
+            
+            gameState = 'PLAYING';
+            score = 0;
+            kills = 0;
+            headshots = 0;
+            comboCount = 0;
+            gameTime = 120;
+            player.hp = player.maxHp;
+            player.x = 1.5;
+            player.y = 1.5;
+            projectiles = [];
+
+            weapons.forEach(w => {
+                w.ammo = w.maxAmmo;
+                w.reserve = w.maxAmmo * 4;
+            });
+
+            switchWeapon(0);
+            spawnEnemies();
+            updateUI();
+
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (gameState === 'PLAYING') {
+                    gameTime--;
+                    updateUI();
+                    if (gameTime <= 0) endGame(false);
+                }
+            }, 1000);
+        }
+
+        function endGame(isVictory) {
+            gameState = 'GAMEOVER';
+            clearInterval(timerInterval);
+            if (document.pointerLockElement === canvas) document.exitPointerLock();
+
+            document.getElementById('sniper-scope').style.display = 'none';
+            document.getElementById('game-ui').style.display = 'none';
+            document.getElementById('game-over-screen').style.display = 'flex';
+            
+            let titleEl = document.getElementById('go-title');
+            if (isVictory) {
+                titleEl.innerText = "VICTORY! (20/20 KILLS)";
+                titleEl.style.color = "#2ed573";
+            } else {
+                titleEl.innerText = "GAME OVER";
+                titleEl.style.color = "#ff4757";
+            }
+
+            document.getElementById('go-stats').innerHTML = `
+                SCORE : ${score}<br>
+                KILLS : ${kills} / ${targetKills}<br>
+                HEADSHOTS : ${headshots}
+            `;
+        }
+
+        function restartGame() {
+            document.getElementById('game-over-screen').style.display = 'none';
+            startGame();
+        }
+
+        function updateUI() {
+            let m = Math.floor(gameTime / 60);
+            let s = gameTime % 60;
+            document.getElementById('ui-timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+            document.getElementById('ui-kills').innerText = `KILLS: ${kills} / ${targetKills}`;
+            document.getElementById('ui-score').innerText = `SCORE: ${score}`;
+            document.getElementById('ui-hp').innerText = `HP ${player.hp}`;
+            
+            let w = weapons[currentWeaponIndex];
+            document.getElementById('ui-ammo').innerText = `${w.ammo} / ${w.reserve}`;
+            document.getElementById('ui-weapon').innerText = w.name;
+        }
+
+        function updateGameEntities() {
+            if (gameState !== 'PLAYING') return;
+
+            if (isMouseDown && currentWeaponIndex === 0) {
+                shootWeapon();
+            }
+
+            let moveSpeed = keys.shift ? player.speed * 1.5 : player.speed;
+            let dx = 0, dy = 0;
+
+            if (keys.w) { dx += Math.cos(player.angle) * moveSpeed; dy += Math.sin(player.angle) * moveSpeed; }
+            if (keys.s) { dx -= Math.cos(player.angle) * moveSpeed; dy -= Math.sin(player.angle) * moveSpeed; }
+            if (keys.a) { dx += Math.sin(player.angle) * moveSpeed; dy -= Math.cos(player.angle) * moveSpeed; }
+            if (keys.d) { dx -= Math.sin(player.angle) * moveSpeed; dy += Math.cos(player.angle) * moveSpeed; }
+
+            let newX = player.x + dx;
+            if (map[Math.floor(player.y)][Math.floor(newX)] === 0) player.x = newX;
+            let newY = player.y + dy;
+            if (map[Math.floor(newY)][Math.floor(player.x)] === 0) player.y = newY;
+
+            for (let enemy of enemies) {
+                let edx = player.x - enemy.x;
+                let edy = player.y - enemy.y;
+                let edist = Math.sqrt(edx * edx + edy * edy);
+
+                if (edist > 0.6) {
+                    let nextEx = enemy.x + (edx / edist) * enemy.speed;
+                    let nextEy = enemy.y + (edy / edist) * enemy.speed;
+
+                    if (map[Math.floor(enemy.y)][Math.floor(nextEx)] === 0) {
+                        enemy.x = nextEx;
+                    }
+                    if (map[Math.floor(nextEy)][Math.floor(enemy.x)] === 0) {
+                        enemy.y = nextEy;
+                    }
+                } else {
+                    player.hp -= 1;
+                    triggerDamageEffect();
+                    if (player.hp <= 0) {
+                        endGame(false); // 체력 소진 시 게임오버
+                    }
+                    updateUI();
+                }
+            }
+
+            updateProjectiles();
+        }
+
+        function triggerDamageEffect() {
+            let overlay = document.getElementById('damage-overlay');
+            overlay.style.boxShadow = 'inset 0 0 100px rgba(255, 0, 0, 0.8)';
+            setTimeout(() => {
+                overlay.style.boxShadow = 'inset 0 0 80px rgba(255, 0, 0, 0)';
+            }, 200);
+        }
+
+        function isBlockedByWall(x1, y1, x2, y2) {
+            let dist = Math.sqrt((x2 - x1)**2 + (y2 - y1)**2);
+            let steps = Math.floor(dist * 10);
+            for (let i = 1; i < steps; i++) {
+                let t = i / steps;
+                let cx = x1 + (x2 - x1) * t;
+                let cy = y1 + (y2 - y1) * t;
+                if (map[Math.floor(cy)][Math.floor(cx)] === 1) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#0f1016';
+            ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
+            ctx.fillStyle = '#222f3e';
+            ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
+
+            let numRays = canvas.width;
+            let fov = player.fov;
+
+            for (let i = 0; i < numRays; i++) {
+                let rayAngle = (player.angle - fov / 2) + (i / numRays) * fov;
+                let distance = 0;
+                let hitWall = false;
+
+                let eyeX = Math.cos(rayAngle);
+                let eyeY = Math.sin(rayAngle);
+
+                while (!hitWall && distance < 16) {
+                    distance += 0.05;
+                    let testX = Math.floor(player.x + eyeX * distance);
+                    let testY = Math.floor(player.y + eyeY * distance);
+
+                    if (testX < 0 || testX >= mapWidth || testY < 0 || testY >= mapHeight) {
+                        hitWall = true;
+                        distance = 16;
+                    } else if (map[testY][testX] === 1) {
+                        hitWall = true;
+                    }
+                }
+
+                let correctedDist = distance * Math.cos(rayAngle - player.angle);
+                let wallHeight = Math.min(canvas.height, (canvas.height / correctedDist));
+                let ceiling = (canvas.height - wallHeight) / 2 + recoilOffsetY;
+                let shade = Math.max(20, 255 - (distance * 15));
+
+                ctx.fillStyle = `rgb(${shade}, ${shade * 0.9}, ${shade * 1.1})`;
+                ctx.fillRect(i, ceiling, 1, wallHeight);
+            }
+
+            for (let p of projectiles) {
+                let dx = p.x - player.x;
+                let dy = p.y - player.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                let pAngle = Math.atan2(dy, dx);
+                let angleDiff = Math.atan2(Math.sin(pAngle - player.angle), Math.cos(pAngle - player.angle));
+
+                if (Math.abs(angleDiff) < fov && dist > 0.1) {
+                    let screenX = (canvas.width / 2) + (angleDiff / (fov / 2)) * (canvas.width / 2);
+                    let size = Math.max(3, (canvas.height / dist) * 0.04);
+
+                    ctx.fillStyle = '#fffa65';
+                    ctx.beginPath();
+                    ctx.arc(screenX, (canvas.height / 2) + recoilOffsetY, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            let visibleEnemies = [];
+            for (let enemy of enemies) {
+                let dx = enemy.x - player.x;
+                let dy = enemy.y - player.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                let enemyAngle = Math.atan2(dy, dx);
+                let angleDiff = Math.atan2(Math.sin(enemyAngle - player.angle), Math.cos(enemyAngle - player.angle));
+
+                if (Math.abs(angleDiff) < fov && dist > 0.2 && !isBlockedByWall(player.x, player.y, enemy.x, enemy.y)) {
+                    visibleEnemies.push({ enemy, dist, angleDiff });
+                }
+            }
+
+            visibleEnemies.sort((a, b) => b.dist - a.dist);
+
+            for (let item of visibleEnemies) {
+                let screenX = (canvas.width / 2) + (item.angleDiff / (fov / 2)) * (canvas.width / 2);
+                let size = Math.min(canvas.height, (canvas.height / item.dist) * 0.8);
+
+                ctx.fillStyle = '#ff4757';
+                ctx.fillRect(screenX - size / 4, (canvas.height / 2) - size / 2 + recoilOffsetY, size / 2, size);
+
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.fillRect(screenX - size / 4, (canvas.height / 2) - size / 2 - 10 + recoilOffsetY, size / 2, 5);
+                ctx.fillStyle = '#2ed573';
+                ctx.fillRect(screenX - size / 4, (canvas.height / 2) - size / 2 - 10 + recoilOffsetY, (size / 2) * (item.enemy.hp / item.enemy.maxHp), 5);
+            }
+
+            drawWeaponModel();
+            renderMinimap();
+        }
+
+        function renderMinimap() {
+            minimapCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+            let cellW = minimapCanvas.width / mapWidth;
+            let cellH = minimapCanvas.height / mapHeight;
+
+            for (let y = 0; y < mapHeight; y++) {
+                for (let x = 0; x < mapWidth; x++) {
+                    if (map[y][x] === 1) {
+                        minimapCtx.fillStyle = '#4b6584';
+                        minimapCtx.fillRect(x * cellW, y * cellH, cellW, cellH);
+                    }
+                }
+            }
+
+            for (let enemy of enemies) {
+                minimapCtx.fillStyle = '#ff4757';
+                minimapCtx.beginPath();
+                minimapCtx.arc(enemy.x * cellW, enemy.y * cellH, 3.5, 0, Math.PI * 2);
+                minimapCtx.fill();
+            }
+
+            minimapCtx.fillStyle = '#2ed573';
+            minimapCtx.beginPath();
+            minimapCtx.arc(player.x * cellW, player.y * cellH, 4, 0, Math.PI * 2);
+            minimapCtx.fill();
+
+            minimapCtx.strokeStyle = '#2ed573';
+            minimapCtx.lineWidth = 1.5;
+            minimapCtx.beginPath();
+            minimapCtx.moveTo(player.x * cellW, player.y * cellH);
+            minimapCtx.lineTo((player.x + Math.cos(player.angle) * 0.8) * cellW, (player.y + Math.sin(player.angle) * 0.8) * cellH);
+            minimapCtx.stroke();
+        }
+
+        function drawWeaponModel() {
+            if (isSniperZoomed) return;
+
+            ctx.save();
+            let wx = canvas.width / 2 + 120;
+            let wy = canvas.height - 120 + recoilOffsetY;
+
+            if (currentWeaponIndex === 0) {
+                ctx.fillStyle = '#57606f';
+                ctx.fillRect(wx - 40, wy, 90, 35);
+                ctx.fillStyle = '#2f3542';
+                ctx.fillRect(wx - 10, wy + 35, 25, 45);
+            } else if (currentWeaponIndex === 1) {
+                ctx.fillStyle = '#718093';
+                ctx.fillRect(wx - 50, wy + 10, 100, 30);
+                ctx.fillStyle = '#2d3748';
+                ctx.fillRect(wx - 20, wy + 40, 20, 35);
+            } else if (currentWeaponIndex === 2) {
+                ctx.fillStyle = '#2f3542';
+                ctx.fillRect(wx - 80, wy + 15, 140, 20);
+                ctx.fillStyle = '#333';
+                ctx.fillRect(wx - 40, wy, 50, 12);
+            }
+            ctx.restore();
+        }
+
+        function gameLoop() {
+            if (gameState === 'PLAYING') {
+                updateGameEntities();
+                render();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>

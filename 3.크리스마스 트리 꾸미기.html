@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>나만의 크리스마스트리 꾸미기</title>
+  <style>
+    /* --- 기본 설정 및 폰트 --- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+      background: radial-gradient(circle at center top, #1a2a6c, #13183f, #080a1a);
+      color: #fff;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      touch-action: none; /* 모바일 터치 스크롤 방지 */
+    }
+
+    /* --- 눈 내리는 배경 캔버스 --- */
+    #snowCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* --- 상단 타이틀 --- */
+    header {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 12px 10px 5px;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      color: #ffeaa7;
+      text-shadow: 0 0 10px rgba(255, 234, 167, 0.8), 2px 2px 4px rgba(0,0,0,0.5);
+      letter-spacing: -0.5px;
+    }
+
+    /* --- 메인 레이아웃 (반응형) --- */
+    #gameArea {
+      position: relative;
+      z-index: 5;
+      flex: 1;
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      padding: 10px;
+    }
+
+    /* --- 트리 스테이지 영역 --- */
+    #treeStage {
+      position: relative;
+      width: 440px;
+      height: 580px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    /* SVG 트리 스타일 */
+    #treeSvg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 15px 20px rgba(0,0,0,0.6));
+    }
+
+    /* 전구 반짝임 애니메이션 */
+    .light-bulb {
+      transition: opacity 0.3s;
+      opacity: 0;
+    }
+    .lights-on .light-bulb {
+      animation: twinkle 1s infinite alternate ease-in-out;
+    }
+    .lights-on .light-bulb:nth-child(2n) { animation-delay: 0.2s; }
+    .lights-on .light-bulb:nth-child(3n) { animation-delay: 0.5s; }
+    .lights-on .light-bulb:nth-child(5n) { animation-delay: 0.7s; }
+
+    @keyframes twinkle {
+      0% { opacity: 0.2; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1.2); filter: drop-shadow(0 0 8px currentColor); }
+    }
+
+    /* 드롭된 장식들이 들어가는 컨테이너 */
+    #placedItemsContainer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: auto;
+    }
+
+    /* 트리 위에 올려진 장식 아이템 */
+    .placed-item {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      cursor: grab;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s ease;
+      z-index: 20;
+    }
+    .placed-item:active {
+      cursor: grabbing;
+      transform: translate(-50%, -50%) scale(1.15);
+    }
+    .placed-item svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+    }
+
+    /* --- 우측 장식 상자 패널 --- */
+    #itemPanel {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 20px;
+      padding: 15px;
+      width: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      text-align: center;
+      color: #ffeaa7;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+    }
+
+    #itemGrid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      justify-items: center;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 5px;
+    }
+
+    /* 장식 소스 슬롯 아이템 */
+    .source-item {
+      width: 55px;
+      height: 55px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      transition: all 0.2s;
+    }
+    .source-item:hover {
+      background: rgba(255, 255, 255, 0.35);
+      transform: scale(1.08);
+    }
+    .source-item:active {
+      cursor: grabbing;
+      transform: scale(0.95);
+    }
+    .source-item svg {
+      width: 40px;
+      height: 40px;
+      pointer-events: none;
+    }
+
+    .help-text {
+      font-size: 0.75rem;
+      text-align: center;
+      color: #dfe6e9;
+      line-height: 1.3;
+    }
+
+    /* --- 하단 컨트롤 버튼 바 --- */
+    #controls {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      padding: 10px 15px 15px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    button {
+      background: linear-gradient(135deg, #ff7675, #d63031);
+      color: white;
+      border: 2px solid #fff;
+      border-radius: 25px;
+      padding: 10px 16px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+    }
+    button:active {
+      transform: translateY(1px);
+    }
+    button.btn-green {
+      background: linear-gradient(135deg, #55efc4, #00b894);
+      color: #1e3799;
+    }
+    button.btn-yellow {
+      background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+      color: #d35400;
+    }
+    button.btn-blue {
+      background: linear-gradient(135deg, #74b9ff, #0984e3);
+    }
+
+    /* --- 축하 완성 메시지 배너 --- */
+    #congratsBanner {
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+      color: #d63031;
+      padding: 15px 30px;
+      border-radius: 50px;
+      border: 4px solid #fff;
+      font-size: 1.5rem;
+      font-weight: 900;
+      box-shadow: 0 0 30px rgba(255, 234, 167, 0.8), 0 10px 20px rgba(0,0,0,0.4);
+      z-index: 100;
+      pointer-events: none;
+      transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+    #congratsBanner.show {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    /* --- 반짝임 이펙트 (Sparkle) --- */
+    .sparkle {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #ffeaa7, 0 0 20px #ffeaa7;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      animation: sparkle-anim 0.6s ease-out forwards;
+      z-index: 50;
+    }
+    @keyframes sparkle-anim {
+      0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+      50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.8; }
+      100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    }
+
+    /* --- 모바일 & 작은 화면 반응형 최적화 --- */
+    @media (max-width: 768px) {
+      h1 { font-size: 1.3rem; }
+      #gameArea {
+        flex-direction: column;
+        gap: 5px;
+        padding: 5px;
+      }
+      #treeStage {
+        width: 300px;
+        height: 380px;
+      }
+      #itemPanel {
+        width: 95%;
+        max-width: 400px;
+        padding: 8px 12px;
+        flex-direction: column;
+      }
+      #itemGrid {
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        width: 100%;
+        max-height: none;
+        gap: 8px;
+        padding-bottom: 5px;
+      }
+      .source-item {
+        flex: 0 0 45px;
+        height: 45px;
+      }
+      .source-item svg { width: 30px; height: 30px; }
+      .placed-item { width: 36px; height: 36px; }
+      button { padding: 8px 12px; font-size: 0.8rem; }
+      .help-text { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 배경 눈 내리기 캔버스 -->
+  <canvas id="snowCanvas"></canvas>
+
+  <header>
+    <h1>나만의 크리스마스트리를 꾸며보세요!</h1>
+  </header>
+
+  <main id="gameArea">
+    <!-- 크리스마스트리 무대 영역 -->
+    <div id="treeStage">
+      <!-- SVG 트리 그래픽 -->
+      <svg id="treeSvg" viewBox="0 0 400 550">
+        <!-- 바닥 눈 둔덕 -->
+        <ellipse cx="200" cy="520" rx="160" ry="25" fill="#dfe6e9" opacity="0.8" />
+        <ellipse cx="200" cy="520" rx="140" ry="18" fill="#ffffff" />
+        
+        <!-- 나무 기둥 -->
+        <rect x="175" y="440" width="50" height="70" rx="5" fill="#6d4c41" />
+        <path d="M175 460 Q200 470 225 460" stroke="#4e342e" stroke-width="3" fill="none"/>
+
+        <!-- 트리 레이어 (아래 -> 위) -->
+        <!-- 레이어 3 -->
+        <path d="M60 450 L340 450 Q200 480 60 450 Z" fill="#1b4d3e" />
+        <path d="M60 450 Q200 410 340 450 L200 280 Z" fill="#2d6a4f" />
+        <path d="M70 440 Q200 410 330 440 L200 295 Z" fill="#40916c" opacity="0.4"/>
+
+        <!-- 레이어 2 -->
+        <path d="M90 330 L310 330 Q200 360 90 330 Z" fill="#1b4d3e" />
+        <path d="M90 330 Q200 290 310 330 L200 180 Z" fill="#2d6a4f" />
+        <path d="M100 320 Q200 290 300 320 L200 195 Z" fill="#40916c" opacity="0.4"/>
+
+        <!-- 레이어 1 (상단) -->
+        <path d="M120 210 L280 210 Q200 240 120 210 Z" fill="#1b4d3e" />
+        <path d="M120 210 Q200 170 280 210 L200 70 Z" fill="#2d6a4f" />
+        <path d="M130 200 Q200 170 270 200 L200 85 Z" fill="#52b788" opacity="0.3"/>
+
+        <!-- 장식 전구 선 및 전구들 -->
+        <g id="lightsGroup" class="lights-on">
+          <path d="M130 190 Q200 220 270 190" stroke="rgba(255,255,255,0.2)" fill="none" stroke-width="1"/>
+          <path d="M100 300 Q200 340 300 300" stroke="rgba(255,255,255,0.2)" fill="none" stroke-width="1"/>
+          <path d="M70 420 Q200 460 330 420" stroke="rgba(255,255,255,0.2)" fill="none" stroke-width="1"/>
+
+          <!-- 전구 엘리먼트 -->
+          <circle class="light-bulb" cx="200" cy="100" r="6" fill="#ff7675" />
+          <circle class="light-bulb" cx="160" cy="150" r="6" fill="#ffeaa7" />
+          <circle class="light-bulb" cx="230" cy="160" r="6" fill="#74b9ff" />
+          <circle class="light-bulb" cx="140" cy="200" r="6" fill="#55efc4" />
+          <circle class="light-bulb" cx="200" cy="210" r="6" fill="#fd79a8" />
+          <circle class="light-bulb" cx="260" cy="200" r="6" fill="#ffeaa7" />
+          <circle class="light-bulb" cx="120" cy="270" r="6" fill="#74b9ff" />
+          <circle class="light-bulb" cx="170" cy="310" r="6" fill="#ff7675" />
+          <circle class="light-bulb" cx="230" cy="320" r="6" fill="#ffeaa7" />
+          <circle class="light-bulb" cx="280" cy="280" r="6" fill="#55efc4" />
+          <circle class="light-bulb" cx="90" cy="380" r="6" fill="#fd79a8" />
+          <circle class="light-bulb" cx="140" cy="420" r="6" fill="#ffeaa7" />
+          <circle class="light-bulb" cx="200" cy="440" r="6" fill="#74b9ff" />
+          <circle class="light-bulb" cx="260" cy="430" r="6" fill="#ff7675" />
+          <circle class="light-bulb" cx="310" cy="390" r="6" fill="#55efc4" />
+        </g>
+
+        <!-- 트리 아래 선물 상자들 -->
+        <g id="presents">
+          <!-- 선물 1 (왼쪽) -->
+          <rect x="90" y="470" width="50" height="45" rx="3" fill="#e74c3c"/>
+          <rect x="110" y="470" width="10" height="45" fill="#f1c40f"/>
+          <rect x="90" y="488" width="50" height="9" fill="#f1c40f"/>
+          
+          <!-- 선물 2 (오른쪽 뒤) -->
+          <rect x="250" y="460" width="60" height="55" rx="3" fill="#3498db"/>
+          <rect x="275" y="460" width="10" height="55" fill="#ecf0f1"/>
+          <rect x="250" y="482" width="60" height="10" fill="#ecf0f1"/>
+
+          <!-- 선물 3 (가운데 앞 작은 상자) -->
+          <rect x="145" y="490" width="40" height="35" rx="3" fill="#2ecc71"/>
+          <rect x="160" y="490" width="8" height="35" fill="#e67e22"/>
+          <rect x="145" y="503" width="40" height="7" fill="#e67e22"/>
+        </g>
+      </svg>
+
+      <!-- 배치된 장식들이 생성될 컨테이너 -->
+      <div id="placedItemsContainer"></div>
+    </div>
+
+    <!-- 장식 아이템 박스 패널 -->
+    <aside id="itemPanel">
+      <div class="panel-title">장식 상자</div>
+      <div id="itemGrid">
+        <!-- SVG 장식 아이템 목록 -->
+        <div class="source-item" data-type="redBall" title="빨간색 공">
+          <svg viewBox="0 0 40 40"><circle cx="20" cy="22" r="14" fill="#e74c3c"/><path d="M15 14 Q20 10 25 14" stroke="#c0392b" fill="none"/><circle cx="16" cy="18" r="3" fill="#ff7675" opacity="0.8"/><rect x="18" y="5" width="4" height="4" fill="#bdc3c7"/></svg>
+        </div>
+        <div class="source-item" data-type="yellowBall" title="노란색 공">
+          <svg viewBox="0 0 40 40"><circle cx="20" cy="22" r="14" fill="#f1c40f"/><path d="M15 14 Q20 10 25 14" stroke="#d4ac0d" fill="none"/><circle cx="16" cy="18" r="3" fill="#fff" opacity="0.8"/><rect x="18" y="5" width="4" height="4" fill="#bdc3c7"/></svg>
+        </div>
+        <div class="source-item" data-type="blueBall" title="파란색 공">
+          <svg viewBox="0 0 40 40"><circle cx="20" cy="22" r="14" fill="#3498db"/><path d="M15 14 Q20 10 25 14" stroke="#2980b9" fill="none"/><circle cx="16" cy="18" r="3" fill="#fff" opacity="0.8"/><rect x="18" y="5" width="4" height="4" fill="#bdc3c7"/></svg>
+        </div>
+        <div class="source-item" data-type="star" title="별">
+          <svg viewBox="0 0 40 40"><polygon points="20,4 24,15 36,15 26,22 30,34 20,26 10,34 14,22 4,15 16,15" fill="#f1c40f" stroke="#d4ac0d" stroke-width="1.5"/></svg>
+        </div>
+        <div class="source-item" data-type="snowflake" title="눈송이">
+          <svg viewBox="0 0 40 40" stroke="#ecf0f1" stroke-width="2.5" stroke-linecap="round"><line x1="20" y1="6" x2="20" y2="34"/><line x1="6" y1="20" x2="34" y2="20"/><line x1="10" y1="10" x2="30" y2="30"/><line x1="10" y1="30" x2="30" y2="10"/><circle cx="20" cy="20" r="2.5" fill="#ecf0f1"/></svg>
+        </div>
+        <div class="source-item" data-type="candyCane" title="사탕 지팡이">
+          <svg viewBox="0 0 40 40"><path d="M24 35 L24 16 A 7 7 0 0 0 10 16 L10 20" fill="none" stroke="#e74c3c" stroke-width="5" stroke-linecap="round"/><path d="M24 35 L24 16 A 7 7 0 0 0 10 16 L10 20" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-dasharray="4 4"/></svg>
+        </div>
+        <div class="source-item" data-type="ribbon" title="리본">
+          <svg viewBox="0 0 40 40"><polygon points="20,20 8,12 8,28" fill="#e74c3c"/><polygon points="20,20 32,12 32,28" fill="#e74c3c"/><circle cx="20" cy="20" r="5" fill="#c0392b"/><path d="M18 24 L14 34 M22 24 L26 34" stroke="#c0392b" stroke-width="3"/></svg>
+        </div>
+        <div class="source-item" data-type="bell" title="종">
+          <svg viewBox="0 0 40 40"><path d="M12 28 C12 16 16 10 20 10 C24 10 28 16 28 28 Z" fill="#f39c12"/><ellipse cx="20" cy="28" rx="8" ry="3" fill="#e67e22"/><circle cx="20" cy="32" r="3" fill="#d35400"/><rect x="18" y="7" width="4" height="4" fill="#d35400"/></svg>
+        </div>
+        <div class="source-item" data-type="sock" title="양말">
+          <svg viewBox="0 0 40 40"><path d="M15 8 L27 8 L27 22 Q27 28 22 30 L16 30 Q10 30 10 24 L10 22 Q10 18 15 18 Z" fill="#e74c3c"/><rect x="13" y="6" width="16" height="6" rx="2" fill="#fff"/></svg>
+        </div>
+        <div class="source-item" data-type="giftBox" title="작은 선물상자">
+          <svg viewBox="0 0 40 40"><rect x="9" y="14" width="22" height="20" rx="2" fill="#9b59b6"/><rect x="18" y="14" width="4" height="20" fill="#f1c40f"/><rect x="9" y="22" width="22" height="4" fill="#f1c40f"/><circle cx="20" cy="12" r="3" fill="#f1c40f"/></svg>
+        </div>
+      </div>
+      <div class="help-text">
+        아이템을 끌어서 트리에 놓아보세요!<br>
+        더블클릭/더블탭 시 삭제됩니다.
+      </div>
+    </aside>
+  </main>
+
+  <!-- 하단 조작 버튼 그룹 -->
+  <footer id="controls">
+    <button id="btnLight" class="btn-yellow">💡 전구 켜기/끄기</button>
+    <button id="btnSnow" class="btn-blue">❄️ 눈 내리기</button>
+    <button id="btnTopStar" class="btn-yellow">⭐ 꼭대기 별 달기</button>
+    <button id="btnRandom" class="btn-green">🎲 랜덤 꾸미기</button>
+    <button id="btnClear">🗑️ 모두 지우기</button>
+  </footer>
+
+  <!-- 완성 축하 배너 -->
+  <div id="congratsBanner">🎄 크리스마스트리 완성! 🎄</div>
+
+  <script>
+    /* =========================================================================
+       1. 사운드 효과음 엔진 (Web Audio API)
+       ========================================================================= */
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    // 통통 튀는 방울/실로폰 효과음 재생
+    function playPopSound(freq = 523.25, type = 'sine') {
+      try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.5, audioCtx.currentTime + 0.1);
+
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+      } catch(e) {}
+    }
+
+    // 마법 팡파레 효과음 (트리 완성 시)
+    function playFanfare() {
+      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+      notes.forEach((note, idx) => {
+        setTimeout(() => playPopSound(note, 'triangle'), idx * 120);
+      });
+    }
+
+
+    /* =========================================================================
+       2. 눈 내리는 애니메이션 (Canvas)
+       ========================================================================= */
+    const canvas = document.getElementById('snowCanvas');
+    const ctx = canvas.getContext('2d');
+    let snowflakes = [];
+    let isSnowing = true;
+    let snowDensity = 70;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Snowflake {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * -canvas.height;
+        this.size = Math.random() * 3 + 1.5;
+        this.speed = Math.random() * 1.5 + 0.8;
+        this.velX = (Math.random() - 0.5) * 0.5;
+        this.opacity = Math.random() * 0.6 + 0.4;
+      }
+      update() {
+        this.y += this.speed;
+        this.x += this.velX;
+        if (this.y > canvas.height) {
+          this.reset();
+          this.y = 0;
+        }
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.fill();
+      }
+    }
+
+    function initSnow() {
+      snowflakes = [];
+      for (let i = 0; i < snowDensity; i++) {
+        const flake = new Snowflake();
+        flake.y = Math.random() * canvas.height; // 처음 로드 시 화면 골고루 분산
+        snowflakes.push(flake);
+      }
+    }
+    initSnow();
+
+    function renderSnow() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (isSnowing) {
+        snowflakes.forEach(flake => {
+          flake.update();
+          flake.draw();
+        });
+      }
+      requestAnimationFrame(renderSnow);
+    }
+    renderSnow();
+
+
+    /* =========================================================================
+       3. 장식 아이템 드래그 & 드롭 시스템 (Mouse & Touch 통합)
+       ========================================================================= */
+    const stage = document.getElementById('treeStage');
+    const placedContainer = document.getElementById('placedItemsContainer');
+    const sourceItems = document.querySelectorAll('.source-item');
+    const congratsBanner = document.getElementById('congratsBanner');
+    
+    let activeDrag = null;
+    let isCompleted = false;
+
+    // SVG 템플릿 딕셔너리
+    const itemSvgTemplates = {};
+    sourceItems.forEach(item => {
+      itemSvgTemplates[item.dataset.type] = item.querySelector('svg').outerHTML;
+    });
+
+    // 소스 패널 아이템에 대한 이벤트 등록
+    sourceItems.forEach(item => {
+      item.addEventListener('mousedown', (e) => startDrag(e, item.dataset.type, true));
+      item.addEventListener('touchstart', (e) => startDrag(e, item.dataset.type, true), { passive: false });
+    });
+
+    function startDrag(e, type, isNew, existingElem = null) {
+      e.preventDefault();
+      initAudio();
+
+      const point = getEventPoint(e);
+      let elem;
+
+      if (isNew) {
+        elem = createPlacedElement(type);
+        placedContainer.appendChild(elem);
+      } else {
+        elem = existingElem;
+      }
+
+      const rect = stage.getBoundingClientRect();
+      const posX = point.x - rect.left;
+      const posY = point.y - rect.top;
+
+      elem.style.left = `${posX}px`;
+      elem.style.top = `${posY}px`;
+
+      activeDrag = {
+        elem: elem,
+        type: type,
+        isNew: isNew
+      };
+
+      window.addEventListener('mousemove', onDragMove);
+      window.addEventListener('touchmove', onDragMove, { passive: false });
+      window.addEventListener('mouseup', onDragEnd);
+      window.addEventListener('touchend', onDragEnd);
+    }
+
+    function onDragMove(e) {
+      if (!activeDrag) return;
+      e.preventDefault();
+
+      const point = getEventPoint(e);
+      const rect = stage.getBoundingClientRect();
+      
+      const posX = point.x - rect.left;
+      const posY = point.y - rect.top;
+
+      activeDrag.elem.style.left = `${posX}px`;
+      activeDrag.elem.style.top = `${posY}px`;
+    }
+
+    function onDragEnd(e) {
+      if (!activeDrag) return;
+
+      const rect = stage.getBoundingClientRect();
+      const currentX = parseFloat(activeDrag.elem.style.left);
+      const currentY = parseFloat(activeDrag.elem.style.top);
+
+      // 트리 영역 밖으로 나간 경우 삭제
+      if (currentX < -20 || currentX > rect.width + 20 || currentY < -20 || currentY > rect.height + 20) {
+        activeDrag.elem.remove();
+        playPopSound(250, 'sawtooth');
+      } else {
+        // 성공적으로 트리에 장식됨
+        createSparkle(currentX, currentY);
+        playPopSound(500 + Math.random() * 300);
+        checkCompletion();
+      }
+
+      activeDrag = null;
+      window.removeEventListener('mousemove', onDragMove);
+      window.removeEventListener('touchmove', onDragMove);
+      window.removeEventListener('mouseup', onDragEnd);
+      window.removeEventListener('touchend', onDragEnd);
+    }
+
+    // 장식 엘리먼트 생성
+    function createPlacedElement(type) {
+      const div = document.createElement('div');
+      div.className = 'placed-item';
+      div.dataset.type = type;
+      div.innerHTML = itemSvgTemplates[type];
+
+      // 더블클릭/더블탭 시 삭제
+      let lastTap = 0;
+      div.addEventListener('click', (e) => {
+        const now = Date.now();
+        if (now - lastTap < 300) {
+          div.remove();
+          playPopSound(300, 'sawtooth');
+          checkCompletion();
+        }
+        lastTap = now;
+      });
+
+      // 재드래그 설정
+      div.addEventListener('mousedown', (e) => {
+        if (e.detail > 1) return; // 더블클릭 제외
+        startDrag(e, type, false, div);
+      });
+      div.addEventListener('touchstart', (e) => {
+        startDrag(e, type, false, div);
+      }, { passive: false });
+
+      return div;
+    }
+
+    function getEventPoint(e) {
+      if (e.touches && e.touches.length > 0) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+      return { x: e.clientX, y: e.clientY };
+    }
+
+    // 반짝임 파티클 생성
+    function createSparkle(x, y) {
+      for (let i = 0; i < 5; i++) {
+        const sparkle = document.createElement('div');
+        sparkle.className = 'sparkle';
+        sparkle.style.left = `${x + (Math.random() - 0.5) * 30}px`;
+        sparkle.style.top = `${y + (Math.random() - 0.5) * 30}px`;
+        placedContainer.appendChild(sparkle);
+        setTimeout(() => sparkle.remove(), 600);
+      }
+    }
+
+
+    /* =========================================================================
+       4. 게임 추가 기능 및 버튼 상호작용
+       ========================================================================= */
+    const lightsGroup = document.getElementById('lightsGroup');
+    const btnLight = document.getElementById('btnLight');
+    const btnSnow = document.getElementById('btnSnow');
+    const btnTopStar = document.getElementById('btnTopStar');
+    const btnRandom = document.getElementById('btnRandom');
+    const btnClear = document.getElementById('btnClear');
+
+    // 1) 전구 켜기 / 끄기
+    btnLight.addEventListener('click', () => {
+      initAudio();
+      lightsGroup.classList.toggle('lights-on');
+      playPopSound(lightsGroup.classList.contains('lights-on') ? 880 : 440);
+    });
+
+    // 2) 눈 내리기 토글
+    btnSnow.addEventListener('click', () => {
+      initAudio();
+      isSnowing = !isSnowing;
+      btnSnow.style.opacity = isSnowing ? '1' : '0.6';
+      playPopSound(isSnowing ? 659 : 330);
+    });
+
+    // 3) 꼭대기 별 달기
+    btnTopStar.addEventListener('click', () => {
+      initAudio();
+      // 기존 별 중 꼭대기 위치 제거 후 새로 달기
+      const topStar = createPlacedElement('star');
+      const rect = stage.getBoundingClientRect();
+      const topX = rect.width / 2;
+      const topY = 75; // 트리의 최상단 위치
+
+      topStar.style.left = `${topX}px`;
+      topStar.style.top = `${topY}px`;
+      topStar.style.transform = 'translate(-50%, -50%) scale(1.3)';
+
+      placedContainer.appendChild(topStar);
+      createSparkle(topX, topY);
+      playPopSound(987.77);
+      checkCompletion();
+    });
+
+    // 4) 모두 지우기
+    btnClear.addEventListener('click', () => {
+      initAudio();
+      placedContainer.innerHTML = '';
+      isCompleted = false;
+      congratsBanner.classList.remove('show');
+      playPopSound(220, 'triangle');
+    });
+
+    // 5) 랜덤 꾸미기
+    btnRandom.addEventListener('click', () => {
+      initAudio();
+      placedContainer.innerHTML = '';
+      const types = Object.keys(itemSvgTemplates);
+      const rect = stage.getBoundingClientRect();
+
+      // 트리 꼭대기 별 추가
+      const topStar = createPlacedElement('star');
+      topStar.style.left = `${rect.width / 2}px`;
+      topStar.style.top = `75px`;
+      placedContainer.appendChild(topStar);
+
+      // 트리 삼각 영역 내부로 랜덤 12개 배치
+      for (let i = 0; i < 12; i++) {
+        const randType = types[Math.floor(Math.random() * types.length)];
+        const elem = createPlacedElement(randType);
+        
+        // 트리 모양 내부 좌표 추정
+        const progress = Math.random() * 0.7 + 0.2; // 0.2 ~ 0.9 높이 비율
+        const posY = progress * (rect.height - 150) + 70;
+        const maxSpread = progress * (rect.width * 0.35);
+        const posX = rect.width / 2 + (Math.random() - 0.5) * 2 * maxSpread;
+
+        elem.style.left = `${posX}px`;
+        elem.style.top = `${posY}px`;
+        placedContainer.appendChild(elem);
+      }
+
+      playFanfare();
+      checkCompletion();
+    });
+
+    // --- 장식 개수 확인 및 완성 축하 이벤트 ---
+    function checkCompletion() {
+      const itemsCount = placedContainer.querySelectorAll('.placed-item').length;
+      
+      if (itemsCount >= 8 && !isCompleted) {
+        isCompleted = true;
+        congratsBanner.classList.add('show');
+        playFanfare();
+
+        // 트리 전구 켜기 & 눈 펑펑 내리기 효과
+        lightsGroup.classList.add('lights-on');
+        snowDensity = 160;
+        initSnow();
+
+        setTimeout(() => {
+          congratsBanner.classList.remove('show');
+        }, 3500);
+      } else if (itemsCount < 8) {
+        isCompleted = false;
+      }
+    }
+  </script>
+</body>
+</html>
