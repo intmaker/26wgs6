@@ -2,21 +2,16 @@
 <html lang="ko">
 
 <head>
-
 <meta charset="UTF-8">
-
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>MY GAME ARCADE | 지혜의숲학교 8학년</title>
 
-
 <style>
 
-
-/* =========================
+/* ========================================
    기본 설정
-========================= */
+======================================== */
 
 * {
     margin: 0;
@@ -24,89 +19,71 @@
     box-sizing: border-box;
 }
 
-
 body {
+    min-height: 100vh;
 
     font-family:
         Arial,
         "Noto Sans KR",
         sans-serif;
 
-    min-height: 100vh;
-
     color: #222;
 
     background:
-
         radial-gradient(
             circle at 10% 10%,
             #fff3a6 0,
             transparent 20%
         ),
-
         radial-gradient(
             circle at 90% 20%,
             #bfefff 0,
             transparent 25%
         ),
-
         radial-gradient(
             circle at 30% 90%,
             #ffd0e5 0,
             transparent 25%
         ),
-
         linear-gradient(
             135deg,
             #f4f7ff,
             #fff9f2
         );
-
 }
 
 
-
-/* =========================
+/* ========================================
    HEADER
-========================= */
+======================================== */
 
 header {
-
     position: sticky;
-
     top: 0;
-
     z-index: 100;
 
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
 
-    gap: 30px;
+    gap: 25px;
 
     padding: 18px 6%;
 
     background:
-        rgba(255,255,255,0.92);
+        rgba(255,255,255,0.93);
 
     backdrop-filter: blur(12px);
 
     box-shadow:
         0 5px 20px
         rgba(0,0,0,0.06);
-
 }
 
 
-
-/* =========================
-   LOGO
-========================= */
+/* 로고 */
 
 .logo {
-
     font-size:
         clamp(20px,3vw,30px);
 
@@ -123,21 +100,14 @@ header {
         );
 
     -webkit-background-clip: text;
-
     -webkit-text-fill-color: transparent;
-
 }
 
 
-
-/* =========================
-   학교 / 수업 정보
-========================= */
+/* 학교 정보 */
 
 .teacher-info {
-
     display: flex;
-
     align-items: center;
 
     gap: 10px;
@@ -163,62 +133,42 @@ header {
 
     font-weight:
         700;
-
-    box-shadow:
-        0 4px 15px
-        rgba(90,70,180,.08);
-
 }
-
 
 .teacher-info strong {
-
-    color:
-        #7555ff;
-
-    font-weight:
-        900;
-
+    color: #7555ff;
+    font-weight: 900;
 }
-
 
 .divider {
-
-    color:
-        #c5bbec;
-
+    color: #c5bbec;
 }
 
 
-
-/* =========================
+/* ========================================
    HERO
-========================= */
+======================================== */
 
 .hero {
+    max-width: 1400px;
 
-    max-width:
-        1400px;
-
-    margin:
-        auto;
+    margin: auto;
 
     padding:
-        70px 6% 35px;
-
+        65px 6%
+        38px;
 }
 
 
-.hero-badge {
+/* 배지 */
 
-    display:
-        inline-block;
+.hero-badge {
+    display: inline-block;
+
+    margin-bottom: 16px;
 
     padding:
         8px 15px;
-
-    margin-bottom:
-        16px;
 
     border-radius:
         999px;
@@ -233,30 +183,24 @@ header {
         14px;
 
     font-weight:
-        bold;
-
+        700;
 }
 
 
+/* 제목 */
+
 .hero h1 {
+    margin-bottom: 18px;
 
     font-size:
         clamp(34px,6vw,60px);
 
-    font-weight:
-        900;
+    font-weight: 900;
 
-    line-height:
-        1.08;
-
-    margin-bottom:
-        18px;
-
+    line-height: 1.08;
 }
 
-
 .hero h1 span {
-
     background:
         linear-gradient(
             90deg,
@@ -264,45 +208,34 @@ header {
             #b347ff
         );
 
-    -webkit-background-clip:
-        text;
-
-    -webkit-text-fill-color:
-        transparent;
-
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
+
+/* 소개 */
 
 .hero p {
+    max-width: 720px;
 
-    max-width:
-        720px;
+    color: #68707f;
 
-    color:
-        #68707f;
+    font-size: 17px;
 
-    font-size:
-        17px;
-
-    line-height:
-        1.7;
-
+    line-height: 1.8;
 }
 
 
+/* 선생님 */
+
 .teacher {
+    display: inline-flex;
 
-    display:
-        inline-flex;
+    align-items: center;
 
-    align-items:
-        center;
+    gap: 8px;
 
-    gap:
-        8px;
-
-    margin-top:
-        24px;
+    margin-top: 24px;
 
     padding:
         11px 18px;
@@ -322,83 +255,56 @@ header {
     box-shadow:
         0 6px 20px
         rgba(0,0,0,.06);
-
 }
-
 
 .teacher strong {
-
-    color:
-        #7455ff;
-
-    font-size:
-        15px;
-
+    color: #7455ff;
 }
 
 
-
-/* =========================
+/* ========================================
    MAIN
-========================= */
+======================================== */
 
 main {
+    max-width: 1400px;
 
-    max-width:
-        1400px;
-
-    margin:
-        auto;
+    margin: auto;
 
     padding:
-        0 6% 80px;
-
+        0 6%
+        80px;
 }
 
 
-
-/* =========================
-   SECTION TITLE
-========================= */
+/* 게임 목록 제목 */
 
 .section-title {
+    display: flex;
 
-    display:
-        flex;
+    align-items: center;
 
-    justify-content:
-        space-between;
+    justify-content: space-between;
 
-    align-items:
-        center;
-
-    margin-bottom:
-        25px;
-
+    margin-bottom: 25px;
 }
 
-
 .section-title h2 {
-
     font-size:
         clamp(24px,4vw,34px);
 
-    font-weight:
-        900;
-
+    font-weight: 900;
 }
 
-
 .game-count {
-
     padding:
-        7px 12px;
+        7px 13px;
 
     border-radius:
         999px;
 
     background:
-        #ffffff;
+        white;
 
     color:
         #7657ff;
@@ -407,105 +313,73 @@ main {
         13px;
 
     font-weight:
-        bold;
+        800;
 
     box-shadow:
         0 4px 15px
         rgba(0,0,0,.05);
-
 }
 
 
+/* ========================================
+   게임 GRID
 
-/* =========================
-   GRID
-========================= */
+   모든 카드 동일한 크기
+======================================== */
 
 .game-grid {
-
     display: grid;
 
     grid-template-columns:
-        repeat(
-            12,
-            minmax(0,1fr)
-        );
+        repeat(4, 1fr);
 
     gap: 20px;
-
 }
 
 
-
-/* =========================
+/* ========================================
    GAME CARD
-========================= */
+======================================== */
 
 .game-card {
+    display: flex;
 
-    position: relative;
-
-    grid-column:
-        span 4;
+    flex-direction: column;
 
     overflow: hidden;
 
-    border-radius:
-        28px;
+    border-radius: 24px;
 
-    background:
-        white;
+    background: white;
 
     box-shadow:
         0 8px 25px
         rgba(39,44,80,.10);
 
-    cursor:
-        pointer;
+    cursor: pointer;
 
     transition:
-        transform .25s,
-        box-shadow .25s;
-
+        transform .25s ease,
+        box-shadow .25s ease;
 }
-
 
 .game-card:hover {
-
     transform:
-        translateY(-8px)
-        scale(1.02);
+        translateY(-6px);
 
     box-shadow:
-        0 20px 45px
-        rgba(39,44,80,.20);
-
+        0 18px 40px
+        rgba(39,44,80,.18);
 }
 
 
-.game-card.featured {
+/* ========================================
+   게임 아이콘 영역
 
-    grid-column:
-        span 6;
-
-}
-
-
-.game-card.small {
-
-    grid-column:
-        span 3;
-
-}
-
-
-
-/* =========================
-   GAME ICON
-========================= */
+   모든 게임 동일한 크기
+======================================== */
 
 .game-icon {
-
     position: relative;
 
     display: flex;
@@ -516,89 +390,117 @@ main {
 
     width: 100%;
 
-    aspect-ratio:
-        1 / 1;
+    height: 180px;
 
     overflow: hidden;
-
-    font-size:
-        clamp(
-            55px,
-            7vw,
-            105px
-        );
-
-    transition:
-        .3s;
-
 }
 
 
+/* 아이콘 뒤 원 */
 
-/* 게임별 색상 */
+.game-icon::before {
+    content: "";
+
+    position: absolute;
+
+    width: 105px;
+    height: 105px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255,255,255,.18);
+}
+
+
+/* 실제 아이콘
+
+   이전보다 작게
+*/
+
+.icon {
+    position: relative;
+
+    z-index: 2;
+
+    font-size: 62px;
+
+    line-height: 1;
+
+    filter:
+        drop-shadow(
+            0 7px 7px
+            rgba(0,0,0,.13)
+        );
+
+    transition:
+        transform .25s ease;
+}
+
+
+/* 마우스 올리면 아주 살짝만 확대 */
+
+.game-card:hover .icon {
+    transform:
+        scale(1.08);
+}
+
+
+/* ========================================
+   게임별 배경색
+======================================== */
 
 .game1 .game-icon {
-
     background:
         linear-gradient(
             135deg,
             #7ee081,
             #32b768
         );
-
 }
 
 
 .game2 .game-icon {
-
     background:
         linear-gradient(
             135deg,
             #54c7ff,
             #725cff
         );
-
 }
 
 
 .game3 .game-icon {
-
     background:
         linear-gradient(
             135deg,
             #ff8a65,
             #ff3d68
         );
-
 }
 
 
 .game4 .game-icon {
-
     background:
         linear-gradient(
             135deg,
             #cf66ff,
             #7656ff
         );
-
 }
 
 
 .game5 .game-icon {
-
     background:
         linear-gradient(
             135deg,
             #5bd6c3,
             #1aa66f
         );
-
 }
 
 
 .game6 .game-icon {
-
     background:
         linear-gradient(
             135deg,
@@ -606,184 +508,80 @@ main {
             #ff6ec7,
             #7b5cff
         );
-
 }
 
 
-/* GAME 7 */
-
 .game7 .game-icon {
-
     background:
         linear-gradient(
             135deg,
             #ffcf5c,
             #ff8b5c
         );
-
 }
 
 
-/* GAME 8 */
-
 .game8 .game-icon {
-
     background:
         linear-gradient(
             135deg,
             #ffb6d9,
             #a98bff
         );
-
 }
 
 
-
-/* 아이콘 배경 장식 */
-
-.game-icon::before {
-
-    content: "";
-
-    position: absolute;
-
-    width: 60%;
-
-    height: 60%;
-
-    border-radius: 50%;
-
-    background:
-        rgba(
-            255,
-            255,
-            255,
-            .15
-        );
-
-    transform:
-        rotate(20deg);
-
-}
-
-
-.icon {
-
-    position: relative;
-
-    z-index: 2;
-
-    filter:
-        drop-shadow(
-            0 10px 8px
-            rgba(0,0,0,.15)
-        );
-
-    transition:
-        .3s;
-
-}
-
-
-.game-card:hover
-.game-icon {
-
-    font-size:
-        clamp(
-            62px,
-            7.5vw,
-            115px
-        );
-
-}
-
-
-.game-card:hover
-.icon {
-
-    transform:
-        scale(1.08)
-        rotate(-5deg);
-
-}
-
-
-.featured
-.game-icon {
-
-    aspect-ratio:
-        16 / 10;
-
-}
-
-
-
-/* =========================
-   GAME INFO
-========================= */
+/* ========================================
+   게임 정보
+======================================== */
 
 .game-info {
+    display: flex;
 
-    padding:
-        20px;
+    flex-direction: column;
 
+    flex: 1;
+
+    padding: 18px;
 }
-
 
 .game-title {
+    margin-bottom: 8px;
 
-    margin-bottom:
-        7px;
+    font-size: 18px;
 
-    font-size:
-        21px;
-
-    font-weight:
-        900;
-
+    font-weight: 900;
 }
-
 
 .game-description {
+    flex: 1;
 
-    min-height:
-        44px;
+    min-height: 48px;
 
-    margin-bottom:
-        18px;
+    margin-bottom: 17px;
 
-    color:
-        #727787;
+    color: #727787;
 
-    font-size:
-        14px;
+    font-size: 14px;
 
-    line-height:
-        1.55;
-
+    line-height: 1.55;
 }
 
 
-
-/* =========================
-   PLAY BUTTON
-========================= */
+/* ========================================
+   PLAY 버튼
+======================================== */
 
 .play-button {
-
     width: 100%;
 
-    padding:
-        13px;
+    padding: 12px;
 
-    border:
-        none;
+    border: none;
 
-    border-radius:
-        14px;
+    border-radius: 13px;
 
-    color:
-        white;
+    color: white;
 
     background:
         linear-gradient(
@@ -792,45 +590,32 @@ main {
             #a447ff
         );
 
-    font-size:
-        15px;
+    font-size: 14px;
 
-    font-weight:
-        bold;
+    font-weight: 800;
 
-    cursor:
-        pointer;
+    cursor: pointer;
 
     transition:
-        .2s;
-
+        transform .2s,
+        box-shadow .2s;
 }
 
-
 .play-button:hover {
-
     transform:
         translateY(-2px);
 
     box-shadow:
-        0 8px 18px
-        rgba(
-            115,
-            73,
-            255,
-            .35
-        );
-
+        0 7px 17px
+        rgba(115,73,255,.3);
 }
 
 
-
-/* =========================
-   GAME PLAYER
-========================= */
+/* ========================================
+   게임 실행 화면
+======================================== */
 
 .game-player {
-
     display: none;
 
     position: fixed;
@@ -839,65 +624,55 @@ main {
 
     z-index: 1000;
 
-    background:
-        #f4f7ff;
+    flex-direction: column;
 
-    flex-direction:
-        column;
+    background: #f4f7ff;
+}
 
+.game-player.active {
+    display: flex;
 }
 
 
-.game-player.active {
+/* 게임 실행 상단바 */
+
+.player-header {
+    min-height: 64px;
 
     display: flex;
 
-}
+    flex-shrink: 0;
 
+    align-items: center;
 
-.player-header {
+    justify-content: space-between;
 
-    min-height:
-        64px;
-
-    flex-shrink:
-        0;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        space-between;
-
-    gap:
-        20px;
+    gap: 20px;
 
     padding:
         10px 25px;
 
     background:
-        rgba(255,255,255,.97);
+        rgba(255,255,255,.98);
 
     box-shadow:
         0 3px 15px
         rgba(0,0,0,.10);
-
 }
 
 
+/* 게임 목록 버튼 */
+
 .back-button {
-
-    border:
-        none;
-
     padding:
         11px 18px;
 
+    border: none;
+
     border-radius:
         12px;
+
+    color: white;
 
     background:
         linear-gradient(
@@ -906,38 +681,31 @@ main {
             #a447ff
         );
 
-    color:
-        white;
-
     font-size:
         14px;
 
     font-weight:
         800;
 
-    cursor:
-        pointer;
+    cursor: pointer;
 
     transition:
         .2s;
-
 }
 
-
 .back-button:hover {
-
     transform:
         translateY(-2px);
 
     box-shadow:
         0 6px 15px
         rgba(115,73,255,.3);
-
 }
 
 
-.player-title {
+/* 실행 화면 제목 */
 
+.player-title {
     font-size:
         18px;
 
@@ -952,349 +720,237 @@ main {
             #00a8ff
         );
 
-    -webkit-background-clip:
-        text;
-
-    -webkit-text-fill-color:
-        transparent;
-
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 
 .player-school {
+    color: #777;
 
-    color:
-        #777;
+    font-size: 13px;
 
-    font-size:
-        13px;
-
-    font-weight:
-        700;
-
+    font-weight: 700;
 }
 
 
-#gameFrame {
+/* 게임 iframe */
 
+#gameFrame {
     display: block;
 
     width: 100%;
 
     flex: 1;
 
-    border:
-        none;
+    border: none;
 
-    background:
-        white;
-
+    background: white;
 }
 
 
-
-/* =========================
+/* ========================================
    FOOTER
-========================= */
+======================================== */
 
 footer {
-
     padding:
         35px 20px
         50px;
 
-    text-align:
-        center;
+    text-align: center;
 
-    color:
-        #8a8f9c;
+    color: #8a8f9c;
 
-    font-size:
-        14px;
+    font-size: 14px;
 
-    line-height:
-        1.8;
-
+    line-height: 1.8;
 }
-
 
 footer strong {
-
-    color:
-        #7455ff;
-
+    color: #7455ff;
 }
 
 
+/* ========================================
+   태블릿
+======================================== */
 
-/* =========================
-   TABLET
-========================= */
+@media(max-width:1000px) {
 
-@media(
-    max-width:1000px
-) {
-
-    .game-card,
-    .game-card.featured,
-    .game-card.small {
-
-        grid-column:
-            span 6;
-
+    .game-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
     }
 
 }
 
 
+/* ========================================
+   스마트폰
+======================================== */
 
-/* =========================
-   MOBILE
-========================= */
-
-@media(
-    max-width:650px
-) {
-
+@media(max-width:650px) {
 
     header {
-
-        flex-direction:
-            column;
-
-        align-items:
-            center;
+        flex-direction: column;
 
         padding:
             15px 5%;
 
-        gap:
-            12px;
-
-    }
-
-
-    .logo {
-
-        text-align:
-            center;
-
+        gap: 12px;
     }
 
 
     .teacher-info {
+        width: 100%;
 
-        justify-content:
-            center;
+        justify-content: center;
 
-        flex-wrap:
-            wrap;
-
-        width:
-            100%;
+        flex-wrap: wrap;
 
         padding:
             9px 12px;
 
-        font-size:
-            12px;
-
+        font-size: 12px;
     }
 
 
     .hero {
-
-        padding-top:
-            45px;
-
+        padding-top: 45px;
     }
 
 
     .hero p {
-
-        font-size:
-            15px;
-
-    }
-
-
-    .teacher {
-
-        font-size:
-            12px;
-
+        font-size: 15px;
     }
 
 
     .game-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
 
-        gap:
-            13px;
-
+        gap: 13px;
     }
 
 
-    .game-card,
-    .game-card.featured,
-    .game-card.small {
-
-        grid-column:
-            span 6;
-
-        border-radius:
-            20px;
-
+    .game-card {
+        border-radius: 18px;
     }
 
 
-    .featured
-    .game-icon,
+    /* 모바일에서도 동일한 크기 */
 
     .game-icon {
+        height: 135px;
+    }
 
-        aspect-ratio:
-            1 / 1;
 
-        font-size:
-            52px;
+    .game-icon::before {
+        width: 80px;
+        height: 80px;
+    }
 
+
+    .icon {
+        font-size: 48px;
     }
 
 
     .game-info {
-
-        padding:
-            14px;
-
+        padding: 13px;
     }
 
 
     .game-title {
-
-        font-size:
-            15px;
-
+        font-size: 14px;
     }
 
 
     .game-description {
-
-        display:
-            none;
-
+        display: none;
     }
 
 
     .play-button {
+        padding: 10px;
 
-        padding:
-            10px;
-
-        font-size:
-            13px;
-
+        font-size: 12px;
     }
 
 
     .player-header {
-
-        min-height:
-            58px;
+        min-height: 58px;
 
         padding:
             8px 12px;
-
     }
 
 
     .back-button {
-
         padding:
             9px 12px;
 
-        font-size:
-            12px;
-
+        font-size: 12px;
     }
 
 
     .player-title {
-
-        font-size:
-            13px;
-
+        font-size: 13px;
     }
 
 
     .player-school {
-
-        display:
-            none;
-
+        display: none;
     }
 
 }
 
 
-
-/* =========================
+/* ========================================
    작은 스마트폰
-========================= */
+======================================== */
 
-@media(
-    max-width:400px
-) {
+@media(max-width:400px) {
 
-    .game-card,
-    .game-card.featured,
-    .game-card.small {
+    .game-grid {
+        grid-template-columns:
+            1fr;
+    }
 
-        grid-column:
-            span 12;
 
+    .game-icon {
+        height: 150px;
     }
 
 
     .game-description {
-
-        display:
-            block;
-
+        display: block;
     }
 
 
-    .teacher-info
-    .divider {
-
-        display:
-            none;
-
+    .teacher-info .divider {
+        display: none;
     }
 
 }
-
 
 </style>
 
 </head>
 
 
-
 <body>
 
 
-
-<!-- =========================
+<!-- ========================================
      HEADER
-========================= -->
+======================================== -->
 
 <header>
 
-
     <div class="logo">
-
         🎮 MY GAME ARCADE
-
     </div>
 
 
@@ -1330,26 +986,19 @@ footer strong {
 
     </div>
 
-
 </header>
 
 
 
-
-<!-- =========================
+<!-- ========================================
      HERO
-========================= -->
+======================================== -->
 
 <section class="hero">
 
-
     <div class="hero-badge">
-
-        🌳 지혜의숲학교 · 8학년
-        · DIGITAL LITERACY
-
+        🌳 지혜의숲학교 · 8학년 · DIGITAL LITERACY
     </div>
-
 
 
     <h1>
@@ -1365,7 +1014,6 @@ footer strong {
     </h1>
 
 
-
     <p>
 
         내가 상상한 게임을 직접 만들어 볼까요? 🎮
@@ -1378,352 +1026,371 @@ footer strong {
     </p>
 
 
-
     <div class="teacher">
 
-        👩‍💻
-        Digital Literacy Class
+        👩‍💻 Digital Literacy Class
 
-        <span>
-            |
-        </span>
+        <span>|</span>
 
         Teacher.
 
-        <strong>
-            Siah
-        </strong>
+        <strong>Siah</strong>
 
     </div>
-
 
 </section>
 
 
 
-
-<!-- =========================
+<!-- ========================================
      GAME SECTION
-========================= -->
+======================================== -->
 
 <main>
 
 
+    <div class="section-title">
 
-<div class="section-title">
+        <h2>
+            🕹️ MY GAME COLLECTION
+        </h2>
 
-
-    <h2>
-
-        🕹️ MY GAME COLLECTION
-
-    </h2>
-
-
-    <span class="game-count">
-
-        8 GAMES
-
-    </span>
-
-
-</div>
-
-
-
-<div class="game-grid">
-
-
-
-<!-- GAME 1 -->
-
-<article
-    class="game-card featured game1"
-    data-link="01_복불복악어.html"
->
-
-    <div class="game-icon">
-        <div class="icon">🐊</div>
-    </div>
-
-    <div class="game-info">
-
-        <h3 class="game-title">
-            🐊 복불복 악어 이빨 뽑기
-        </h3>
-
-        <p class="game-description">
-            어느 이빨이 함정일까?
-            조심조심 악어의 이빨을
-            눌러보세요!
-        </p>
-
-        <button class="play-button">
-            ▶ PLAY
-        </button>
+        <span class="game-count">
+            8 GAMES
+        </span>
 
     </div>
 
-</article>
+
+
+    <div class="game-grid">
+
+
+        <!-- =================================
+             GAME 1
+        ================================== -->
+
+        <article
+            class="game-card game1"
+            data-link="01_복불복악어.html"
+        >
+
+            <div class="game-icon">
+
+                <div class="icon">
+                    🐊
+                </div>
+
+            </div>
+
+
+            <div class="game-info">
+
+                <h3 class="game-title">
+                    🐊 복불복 악어 이빨 뽑기
+                </h3>
+
+                <p class="game-description">
+                    어느 이빨이 함정일까?
+                    조심조심 악어의 이빨을 눌러보세요!
+                </p>
+
+                <button class="play-button">
+                    ▶ PLAY
+                </button>
+
+            </div>
+
+        </article>
 
 
 
+        <!-- =================================
+             GAME 2
+        ================================== -->
 
-<!-- GAME 2 -->
+        <article
+            class="game-card game2"
+            data-link="02_테트리스.html"
+        >
 
-<article
-    class="game-card game2"
-    data-link="02_테트리스.html"
->
+            <div class="game-icon">
 
-    <div class="game-icon">
-        <div class="icon">🧱</div>
+                <div class="icon">
+                    🧱
+                </div>
+
+            </div>
+
+
+            <div class="game-info">
+
+                <h3 class="game-title">
+                    🧱 테트리스
+                </h3>
+
+                <p class="game-description">
+                    떨어지는 블록을 맞추고
+                    최고 점수에 도전하세요!
+                </p>
+
+                <button class="play-button">
+                    ▶ PLAY
+                </button>
+
+            </div>
+
+        </article>
+
+
+
+        <!-- =================================
+             GAME 3
+        ================================== -->
+
+        <article
+            class="game-card game3"
+            data-link="03_라이벌.html"
+        >
+
+            <div class="game-icon">
+
+                <div class="icon">
+                    🔫
+                </div>
+
+            </div>
+
+
+            <div class="game-info">
+
+                <h3 class="game-title">
+                    🔫 라이벌 (모바일x)
+                </h3>
+
+                <p class="game-description">
+                    라이벌과 펼치는
+                    박진감 넘치는 슈팅 대결!
+                </p>
+
+                <button class="play-button">
+                    ▶ PLAY
+                </button>
+
+            </div>
+
+        </article>
+
+
+
+        <!-- =================================
+             GAME 4
+        ================================== -->
+
+        <article
+            class="game-card game4"
+            data-link="04_리듬게임.html"
+        >
+
+            <div class="game-icon">
+
+                <div class="icon">
+                    🎵
+                </div>
+
+            </div>
+
+
+            <div class="game-info">
+
+                <h3 class="game-title">
+                    🎵 리듬 게임
+                </h3>
+
+                <p class="game-description">
+                    음악에 맞춰 타이밍을 잡고
+                    완벽한 콤보에 도전하세요!
+                </p>
+
+                <button class="play-button">
+                    ▶ PLAY
+                </button>
+
+            </div>
+
+        </article>
+
+
+
+        <!-- =================================
+             GAME 5
+        ================================== -->
+
+        <article
+            class="game-card game5"
+            data-link="05_크리스마스트리.html"
+        >
+
+            <div class="game-icon">
+
+                <div class="icon">
+                    🎄
+                </div>
+
+            </div>
+
+
+            <div class="game-info">
+
+                <h3 class="game-title">
+                    🎄 크리스마스 트리 꾸미기
+                </h3>
+
+                <p class="game-description">
+                    다양한 장식으로
+                    나만의 멋진 크리스마스 트리를 완성해 보세요!
+                </p>
+
+                <button class="play-button">
+                    ▶ PLAY
+                </button>
+
+            </div>
+
+        </article>
+
+
+
+        <!-- =================================
+             GAME 6
+        ================================== -->
+
+        <article
+            class="game-card game6"
+            data-link="06.chroma-catch.html"
+        >
+
+            <div class="game-icon">
+
+                <div class="icon">
+                    🌈
+                </div>
+
+            </div>
+
+
+            <div class="game-info">
+
+                <h3 class="game-title">
+                    🌈 Chroma Catch
+                </h3>
+
+                <p class="game-description">
+                    다양한 색을 빠르게 구분하고
+                    정확한 타이밍에 잡아보세요!
+                </p>
+
+                <button class="play-button">
+                    ▶ PLAY
+                </button>
+
+            </div>
+
+        </article>
+
+
+
+        <!-- =================================
+             GAME 7
+        ================================== -->
+
+        <article
+            class="game-card game7"
+            data-link="07_huddleman.html"
+        >
+
+            <div class="game-icon">
+
+                <div class="icon">
+                    🏃
+                </div>
+
+            </div>
+
+
+            <div class="game-info">
+
+                <h3 class="game-title">
+                    🏃 허들 맨
+                </h3>
+
+                <p class="game-description">
+                    달려오는 허들을 타이밍에 맞춰
+                    점프해서 넘어보세요!
+                </p>
+
+                <button class="play-button">
+                    ▶ PLAY
+                </button>
+
+            </div>
+
+        </article>
+
+
+
+        <!-- =================================
+             GAME 8
+        ================================== -->
+
+        <article
+            class="game-card game8"
+            data-link="08_pet.html"
+        >
+
+            <div class="game-icon">
+
+                <div class="icon">
+                    🐣
+                </div>
+
+            </div>
+
+
+            <div class="game-info">
+
+                <h3 class="game-title">
+                    🐣 나만의 펫 키우기
+                </h3>
+
+                <p class="game-description">
+                    먹이를 주고 놀아주면서
+                    귀여운 나만의 펫을 키워보세요!
+                </p>
+
+                <button class="play-button">
+                    ▶ PLAY
+                </button>
+
+            </div>
+
+        </article>
+
+
     </div>
-
-    <div class="game-info">
-
-        <h3 class="game-title">
-            🧱 테트리스
-        </h3>
-
-        <p class="game-description">
-            떨어지는 블록을 맞추고
-            최고 점수에 도전하세요!
-        </p>
-
-        <button class="play-button">
-            ▶ PLAY
-        </button>
-
-    </div>
-
-</article>
-
-
-
-
-<!-- GAME 3 -->
-
-<article
-    class="game-card small game3"
-    data-link="03_라이벌.html"
->
-
-    <div class="game-icon">
-        <div class="icon">🔫</div>
-    </div>
-
-    <div class="game-info">
-
-        <h3 class="game-title">
-            🔫 라이벌 (모바일x)
-        </h3>
-
-        <p class="game-description">
-            라이벌과 펼치는
-            박진감 넘치는
-            슈팅 대결!
-        </p>
-
-        <button class="play-button">
-            ▶ PLAY
-        </button>
-
-    </div>
-
-</article>
-
-
-
-
-<!-- GAME 4 -->
-
-<article
-    class="game-card small game4"
-    data-link="04_리듬게임.html"
->
-
-    <div class="game-icon">
-        <div class="icon">🎵</div>
-    </div>
-
-    <div class="game-info">
-
-        <h3 class="game-title">
-            🎵 리듬 게임
-        </h3>
-
-        <p class="game-description">
-            음악에 맞춰 타이밍을 잡고
-            완벽한 콤보에
-            도전하세요!
-        </p>
-
-        <button class="play-button">
-            ▶ PLAY
-        </button>
-
-    </div>
-
-</article>
-
-
-
-
-<!-- GAME 5 -->
-
-<article
-    class="game-card featured game5"
-    data-link="05_크리스마스트리.html"
->
-
-    <div class="game-icon">
-        <div class="icon">🎄</div>
-    </div>
-
-    <div class="game-info">
-
-        <h3 class="game-title">
-            🎄 크리스마스 트리 꾸미기
-        </h3>
-
-        <p class="game-description">
-            다양한 장식으로
-            나만의 멋진
-            크리스마스 트리를
-            완성해 보세요!
-        </p>
-
-        <button class="play-button">
-            ▶ PLAY
-        </button>
-
-    </div>
-
-</article>
-
-
-
-
-<!-- GAME 6 -->
-
-<article
-    class="game-card game6"
-    data-link="06.chroma-catch.html"
->
-
-    <div class="game-icon">
-        <div class="icon">🌈</div>
-    </div>
-
-    <div class="game-info">
-
-        <h3 class="game-title">
-            🌈 Chroma Catch
-        </h3>
-
-        <p class="game-description">
-            다양한 색을 빠르게 구분하고
-            정확한 타이밍에 잡아보세요!
-        </p>
-
-        <button class="play-button">
-            ▶ PLAY
-        </button>
-
-    </div>
-
-</article>
-
-
-
-
-<!-- =========================
-     GAME 7
-========================= -->
-
-<article
-    class="game-card game7"
-    data-link="07_huddleman.html"
->
-
-    <div class="game-icon">
-        <div class="icon">🏃</div>
-    </div>
-
-    <div class="game-info">
-
-        <h3 class="game-title">
-            🏃 허들 맨
-        </h3>
-
-        <p class="game-description">
-            달려오는 허들을 타이밍에 맞춰
-            점프해서 넘어보세요!
-        </p>
-
-        <button class="play-button">
-            ▶ PLAY
-        </button>
-
-    </div>
-
-</article>
-
-
-
-
-<!-- =========================
-     GAME 8
-========================= -->
-
-<article
-    class="game-card game8"
-    data-link="08_pet.html"
->
-
-    <div class="game-icon">
-        <div class="icon">🐣</div>
-    </div>
-
-    <div class="game-info">
-
-        <h3 class="game-title">
-            🐣 나만의 펫 키우기
-        </h3>
-
-        <p class="game-description">
-            먹이를 주고 놀아주면서
-            귀여운 나만의 펫을 키워보세요!
-        </p>
-
-        <button class="play-button">
-            ▶ PLAY
-        </button>
-
-    </div>
-
-</article>
-
-
-
-</div>
-
 
 </main>
 
 
 
-
-<!-- =========================
+<!-- ========================================
      게임 실행 화면
-========================= -->
+======================================== -->
 
 <div
     class="game-player"
     id="gamePlayer"
 >
-
 
     <div class="player-header">
 
@@ -1732,30 +1399,21 @@ footer strong {
             class="back-button"
             id="backButton"
         >
-
             ← 게임 목록으로
-
         </button>
 
 
-
         <div class="player-title">
-
             🎮 MY GAME ARCADE
-
         </div>
 
 
-
         <div class="player-school">
-
             🌳 지혜의숲학교
-
         </div>
 
 
     </div>
-
 
 
     <iframe
@@ -1765,18 +1423,15 @@ footer strong {
         allowfullscreen
     ></iframe>
 
-
 </div>
 
 
 
-
-<!-- =========================
+<!-- ========================================
      FOOTER
-========================= -->
+======================================== -->
 
 <footer>
-
 
     🌳 지혜의숲학교
 
@@ -1791,22 +1446,20 @@ footer strong {
     <br>
 
     Teacher.
-    <strong>
-        Siah
-    </strong>
-
+    <strong>Siah</strong>
 
 </footer>
 
 
 
-
-<!-- =========================
+<!-- ========================================
      JAVASCRIPT
-========================= -->
+======================================== -->
 
 <script>
 
+
+/* 게임 카드 */
 
 const gameCards =
     document.querySelectorAll(
@@ -1814,17 +1467,23 @@ const gameCards =
     );
 
 
+/* 게임 실행 화면 */
+
 const gamePlayer =
     document.getElementById(
         "gamePlayer"
     );
 
 
+/* iframe */
+
 const gameFrame =
     document.getElementById(
         "gameFrame"
     );
 
+
+/* 뒤로가기 버튼 */
 
 const backButton =
     document.getElementById(
@@ -1833,9 +1492,9 @@ const backButton =
 
 
 
-/* =========================
+/* ========================================
    게임 실행
-========================= */
+======================================== */
 
 gameCards.forEach(
 
@@ -1850,16 +1509,19 @@ gameCards.forEach(
 
 
                 const link =
-
                     card
                     .dataset
                     .link
                     .trim();
 
 
+                /* 게임 파일 불러오기 */
+
                 gameFrame.src =
                     encodeURI(link);
 
+
+                /* 게임 화면 열기 */
 
                 gamePlayer
                     .classList
@@ -1867,6 +1529,8 @@ gameCards.forEach(
                         "active"
                     );
 
+
+                /* 메인 페이지 스크롤 막기 */
 
                 document
                     .body
@@ -1886,9 +1550,9 @@ gameCards.forEach(
 
 
 
-/* =========================
+/* ========================================
    게임 목록으로 돌아가기
-========================= */
+======================================== */
 
 backButton.addEventListener(
 
@@ -1897,6 +1561,8 @@ backButton.addEventListener(
     function() {
 
 
+        /* 게임 화면 닫기 */
+
         gamePlayer
             .classList
             .remove(
@@ -1904,9 +1570,13 @@ backButton.addEventListener(
             );
 
 
+        /* 실행 중인 게임 종료 */
+
         gameFrame.src =
             "";
 
+
+        /* 스크롤 복구 */
 
         document
             .body
@@ -1921,9 +1591,9 @@ backButton.addEventListener(
 
 
 
-/* =========================
-   ESC 키로 게임 종료
-========================= */
+/* ========================================
+   ESC 키로도 게임 종료
+======================================== */
 
 document.addEventListener(
 
@@ -1969,7 +1639,5 @@ document.addEventListener(
 </script>
 
 
-
 </body>
-
 </html>
