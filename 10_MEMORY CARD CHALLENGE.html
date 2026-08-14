@@ -1,0 +1,3085 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+/>
+
+<title>🧠 MEMORY CARD CHALLENGE! 🃏</title>
+
+<style>
+/* =========================================================
+   기본 설정
+========================================================= */
+:root {
+  --purple: #6257e8;
+  --purple-dark: #4439bd;
+  --pink: #ff6bad;
+  --yellow: #ffd75e;
+  --blue: #5fd7ff;
+  --green: #64e6b1;
+  --text: #302b4f;
+  --muted: #77728f;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+}
+
+body {
+  min-height: 100dvh;
+  font-family:
+    "Arial Rounded MT Bold",
+    "Apple SD Gothic Neo",
+    "Noto Sans KR",
+    Arial,
+    sans-serif;
+
+  color: var(--text);
+
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255,255,255,.48), transparent 22%),
+    radial-gradient(circle at 90% 15%, rgba(255,255,255,.28), transparent 20%),
+    radial-gradient(circle at 25% 90%, rgba(255,255,255,.20), transparent 25%),
+    linear-gradient(
+      135deg,
+      #61dfff 0%,
+      #8d7cf4 48%,
+      #ff83bd 100%
+    );
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  padding:
+    max(10px, env(safe-area-inset-top))
+    max(10px, env(safe-area-inset-right))
+    max(10px, env(safe-area-inset-bottom))
+    max(10px, env(safe-area-inset-left));
+}
+
+button {
+  font-family: inherit;
+}
+
+/* =========================================================
+   메인 게임
+========================================================= */
+.game-shell {
+  position: relative;
+  width: min(1050px, 100%);
+  min-height: calc(100dvh - 20px);
+
+  padding: 18px;
+
+  background: rgba(255,255,255,.94);
+  border-radius: 32px;
+
+  box-shadow:
+    0 24px 70px rgba(38, 29, 100, .28),
+    inset 0 0 0 3px rgba(255,255,255,.72);
+
+  overflow: hidden;
+}
+
+.game-shell::before {
+  content: "";
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  top: -100px;
+  left: -80px;
+  background: rgba(91, 225, 255, .15);
+  pointer-events: none;
+}
+
+.game-shell::after {
+  content: "";
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  bottom: -140px;
+  right: -100px;
+  background: rgba(255, 105, 174, .12);
+  pointer-events: none;
+}
+
+/* =========================================================
+   타이틀
+========================================================= */
+.title-area {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.game-title {
+  margin: 2px 0 3px;
+  font-size: clamp(26px, 5vw, 47px);
+  line-height: 1.1;
+  font-weight: 1000;
+
+  color: #4a40c7;
+
+  text-shadow:
+    0 3px 0 white,
+    0 5px 12px rgba(70, 58, 179, .14);
+}
+
+.subtitle {
+  margin-bottom: 12px;
+
+  font-size: clamp(15px, 3vw, 21px);
+  font-weight: 900;
+  color: #746d96;
+}
+
+/* =========================================================
+   상단 컨트롤
+========================================================= */
+.top-controls {
+  position: relative;
+  z-index: 2;
+
+  max-width: 900px;
+  margin: 0 auto 10px;
+
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.control-btn {
+  min-height: 42px;
+  padding: 8px 14px;
+
+  border: 0;
+  border-radius: 14px;
+
+  cursor: pointer;
+
+  color: #4a44a8;
+  background: #efeeff;
+
+  font-size: 13px;
+  font-weight: 1000;
+
+  transition: transform .15s ease, filter .15s ease;
+}
+
+.control-btn:active {
+  transform: scale(.94);
+}
+
+/* =========================================================
+   정보판
+========================================================= */
+.stats {
+  position: relative;
+  z-index: 2;
+
+  width: min(900px, 100%);
+  margin: 0 auto 8px;
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.stat-box {
+  min-width: 0;
+  padding: 10px 7px;
+
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #f2f1ff
+    );
+
+  border: 2px solid rgba(100, 86, 220, .09);
+
+  text-align: center;
+
+  box-shadow:
+    0 8px 18px rgba(65, 55, 132, .08);
+}
+
+.stat-label {
+  font-size: clamp(10px, 2vw, 13px);
+  color: #7a7592;
+  font-weight: 900;
+}
+
+.stat-value {
+  margin-top: 2px;
+
+  font-size: clamp(15px, 3vw, 22px);
+  color: #423ca9;
+  font-weight: 1000;
+
+  white-space: nowrap;
+}
+
+.stat-value.bump {
+  animation: scoreBump .45s cubic-bezier(.2,1.7,.4,1);
+}
+
+/* =========================================================
+   메시지
+========================================================= */
+.status-zone {
+  position: relative;
+  z-index: 4;
+
+  width: min(900px, 100%);
+  margin: 0 auto 8px;
+
+  min-height: 53px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  border-radius: 18px;
+  padding: 8px 12px;
+
+  background: #f7f7ff;
+  border: 2px dashed #c8c4ff;
+}
+
+.status-text {
+  font-weight: 1000;
+  font-size: clamp(15px, 3vw, 21px);
+  color: #5048be;
+}
+
+.status-text.match {
+  color: #e69700;
+  animation: statusPop .45s ease;
+}
+
+.status-text.fail {
+  color: #e44d74;
+  animation: statusShake .42s ease;
+}
+
+/* =========================================================
+   콤보
+========================================================= */
+.combo-display {
+  min-height: 31px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  margin-bottom: 5px;
+
+  font-size: clamp(14px, 3vw, 20px);
+  font-weight: 1000;
+  color: #ef5b2f;
+}
+
+.combo-display.active {
+  animation: comboPulse .45s ease;
+}
+
+/* =========================================================
+   카드 보드
+========================================================= */
+.board-wrap {
+  position: relative;
+  z-index: 2;
+
+  width: min(900px, 100%);
+  margin: 0 auto;
+
+  display: flex;
+  justify-content: center;
+}
+
+.card-board {
+  width: 100%;
+
+  display: grid;
+  gap: 10px;
+
+  perspective: 1000px;
+}
+
+.card-board.easy,
+.card-board.normal {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.card-board.hard {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+/* =========================================================
+   카드
+========================================================= */
+.memory-card {
+  position: relative;
+
+  width: 100%;
+  aspect-ratio: 0.79;
+
+  border: 0;
+  padding: 0;
+  background: transparent;
+
+  cursor: pointer;
+
+  perspective: 900px;
+
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+
+  min-width: 0;
+}
+
+.card-inner {
+  position: absolute;
+  inset: 0;
+
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+
+  transition:
+    transform .52s cubic-bezier(.2,.7,.2,1);
+
+  border-radius: 20px;
+
+  box-shadow:
+    0 8px 0 rgba(54, 46, 125, .14),
+    0 12px 20px rgba(50, 42, 113, .11);
+}
+
+.memory-card.flipped .card-inner,
+.memory-card.matched .card-inner,
+.memory-card.preview .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 20px;
+
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+
+  overflow: hidden;
+}
+
+.card-back {
+  background:
+    radial-gradient(
+      circle at 30% 20%,
+      rgba(255,255,255,.45),
+      transparent 22%
+    ),
+    linear-gradient(
+      145deg,
+      #7467f7,
+      #5146d5
+    );
+
+  border: 3px solid rgba(255,255,255,.55);
+
+  color: white;
+
+  font-size: clamp(31px, 7vw, 61px);
+  text-shadow: 0 3px 0 rgba(0,0,0,.08);
+}
+
+.card-back::after {
+  content: "★";
+
+  position: absolute;
+  bottom: 8%;
+  right: 11%;
+
+  font-size: .32em;
+  opacity: .6;
+}
+
+.card-front {
+  transform: rotateY(180deg);
+
+  background:
+    radial-gradient(
+      circle at 25% 18%,
+      rgba(255,255,255,.95),
+      transparent 25%
+    ),
+    linear-gradient(
+      145deg,
+      #fff8dc,
+      #ffebad
+    );
+
+  border: 3px solid #fff;
+
+  font-size: clamp(36px, 8vw, 72px);
+
+  filter:
+    drop-shadow(0 4px 3px rgba(50,40,100,.08));
+}
+
+.memory-card:active:not(.matched) .card-inner {
+  transform: scale(.94);
+}
+
+.memory-card.flipped:active .card-inner,
+.memory-card.preview:active .card-inner {
+  transform: rotateY(180deg) scale(.94);
+}
+
+.memory-card.matched {
+  cursor: default;
+}
+
+.memory-card.matched .card-front {
+  background:
+    radial-gradient(circle, #ffffff, #fff3b4);
+}
+
+.memory-card.match-pop .card-inner {
+  animation: cardMatch .55s cubic-bezier(.2,1.7,.4,1);
+}
+
+.memory-card.wrong-shake .card-inner {
+  animation: cardWrong .4s ease;
+}
+
+.memory-card.sparkle::before,
+.memory-card.sparkle::after {
+  content: "✨";
+
+  position: absolute;
+  z-index: 8;
+
+  font-size: clamp(18px, 3.5vw, 28px);
+
+  pointer-events: none;
+
+  animation: sparkleFly .65s ease forwards;
+}
+
+.memory-card.sparkle::before {
+  top: -5px;
+  left: -4px;
+}
+
+.memory-card.sparkle::after {
+  right: -4px;
+  bottom: -4px;
+
+  animation-delay: .08s;
+}
+
+/* =========================================================
+   시작/난이도 오버레이
+========================================================= */
+.overlay {
+  position: absolute;
+  z-index: 30;
+  inset: 0;
+
+  display: none;
+  justify-content: center;
+  align-items: center;
+
+  padding:
+    max(20px, env(safe-area-inset-top))
+    max(18px, env(safe-area-inset-right))
+    max(20px, env(safe-area-inset-bottom))
+    max(18px, env(safe-area-inset-left));
+
+  background: rgba(41, 34, 89, .72);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.overlay.show {
+  display: flex;
+  animation: fadeIn .28s ease;
+}
+
+.overlay-card {
+  width: min(650px, 100%);
+
+  padding: 25px 20px;
+
+  background: white;
+  border-radius: 30px;
+
+  text-align: center;
+
+  box-shadow:
+    0 24px 70px rgba(0,0,0,.28);
+
+  animation: overlayPop .42s cubic-bezier(.2,1.5,.4,1);
+}
+
+.overlay-icon {
+  font-size: clamp(55px, 13vw, 100px);
+  line-height: 1;
+}
+
+.overlay-title {
+  margin: 10px 0 7px;
+
+  font-size: clamp(25px, 6vw, 42px);
+  font-weight: 1000;
+  color: #493fc7;
+}
+
+.overlay-subtitle {
+  color: #746f87;
+
+  font-size: clamp(14px, 3vw, 18px);
+  font-weight: 800;
+
+  line-height: 1.5;
+}
+
+.difficulty-grid {
+  margin-top: 20px;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.difficulty-btn {
+  min-height: 112px;
+
+  border: 0;
+  border-radius: 22px;
+
+  cursor: pointer;
+
+  padding: 12px 7px;
+
+  font-family: inherit;
+
+  transition: transform .15s ease, filter .15s ease;
+}
+
+.difficulty-btn:nth-child(1) {
+  background:
+    linear-gradient(145deg, #b9ffd9, #67e6ac);
+}
+
+.difficulty-btn:nth-child(2) {
+  background:
+    linear-gradient(145deg, #b3ebff, #66cfff);
+}
+
+.difficulty-btn:nth-child(3) {
+  background:
+    linear-gradient(145deg, #ffc3dc, #ff7eb5);
+}
+
+.difficulty-btn:active {
+  transform: scale(.94);
+}
+
+.diff-name {
+  display: block;
+
+  font-size: clamp(17px, 4vw, 25px);
+  font-weight: 1000;
+  color: #303054;
+}
+
+.diff-size {
+  display: block;
+
+  margin-top: 5px;
+
+  font-size: clamp(13px, 2.8vw, 16px);
+  font-weight: 900;
+  color: #55516d;
+}
+
+.best-list {
+  margin-top: 18px;
+
+  padding: 13px;
+
+  border-radius: 18px;
+  background: #f6f5ff;
+
+  font-weight: 900;
+  color: #5a54aa;
+
+  line-height: 1.65;
+}
+
+/* =========================================================
+   카운트다운
+========================================================= */
+.countdown-overlay {
+  position: absolute;
+  z-index: 25;
+  inset: 0;
+
+  display: none;
+  justify-content: center;
+  align-items: center;
+
+  pointer-events: none;
+
+  background: rgba(255,255,255,.17);
+
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.countdown-overlay.show {
+  display: flex;
+}
+
+.countdown-text {
+  padding: 18px 25px;
+
+  background: rgba(69, 58, 188, .92);
+  color: white;
+
+  border-radius: 25px;
+
+  font-size: clamp(36px, 10vw, 80px);
+  font-weight: 1000;
+
+  text-align: center;
+
+  box-shadow:
+    0 16px 42px rgba(39, 31, 119, .3);
+
+  animation: countdownPop .4s ease;
+}
+
+/* =========================================================
+   큰 콤보 표시
+========================================================= */
+.big-combo {
+  position: absolute;
+  z-index: 18;
+
+  top: 48%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  pointer-events: none;
+
+  font-size: clamp(36px, 10vw, 80px);
+  font-weight: 1000;
+
+  color: #ff5b33;
+
+  text-shadow:
+    0 4px 0 white,
+    0 8px 20px rgba(255, 84, 43, .28);
+
+  opacity: 0;
+}
+
+.big-combo.show {
+  animation: bigCombo .85s ease forwards;
+}
+
+/* =========================================================
+   클리어 화면
+========================================================= */
+.result-stats {
+  margin: 16px auto;
+  width: min(390px, 100%);
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.result-stat {
+  padding: 10px;
+
+  border-radius: 16px;
+  background: #f5f4ff;
+
+  color: #4a449a;
+
+  font-weight: 1000;
+}
+
+.stars-result {
+  min-height: 52px;
+
+  margin: 10px 0;
+
+  font-size: clamp(30px, 8vw, 55px);
+
+  letter-spacing: 4px;
+}
+
+.new-record {
+  min-height: 30px;
+
+  font-size: clamp(18px, 4vw, 25px);
+  font-weight: 1000;
+  color: #e69b00;
+
+  animation: recordPulse .7s ease infinite alternate;
+}
+
+.result-buttons {
+  margin-top: 14px;
+
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.result-btn {
+  min-width: 150px;
+  min-height: 58px;
+
+  border: 0;
+  border-radius: 18px;
+
+  padding: 10px 16px;
+
+  color: white;
+
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 1000;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 8px 18px rgba(60, 50, 150, .20);
+}
+
+.restart-btn {
+  background:
+    linear-gradient(135deg, #6357ed, #8a63f5);
+}
+
+.level-btn {
+  background:
+    linear-gradient(135deg, #ff629f, #ff8b71);
+}
+
+.result-btn:active {
+  transform: scale(.95);
+}
+
+/* =========================================================
+   파티클
+========================================================= */
+.particle-layer {
+  position: absolute;
+  z-index: 50;
+  inset: 0;
+
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  top: -30px;
+
+  animation: confettiFall linear forwards;
+
+  will-change: transform, opacity;
+}
+
+/* =========================================================
+   애니메이션
+========================================================= */
+@keyframes scoreBump {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.45); }
+  100% { transform: scale(1); }
+}
+
+@keyframes statusPop {
+  0% { transform: scale(.7); opacity: .2; }
+  65% { transform: scale(1.18); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes statusShake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-7px); }
+  50% { transform: translateX(7px); }
+  75% { transform: translateX(-4px); }
+}
+
+@keyframes comboPulse {
+  0% { transform: scale(.7); }
+  65% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+
+@keyframes cardMatch {
+  0% {
+    transform: rotateY(180deg) scale(1);
+  }
+
+  50% {
+    transform:
+      rotateY(180deg)
+      scale(1.16)
+      translateY(-7px);
+  }
+
+  100% {
+    transform:
+      rotateY(180deg)
+      scale(1);
+  }
+}
+
+@keyframes cardWrong {
+  0% {
+    transform:
+      rotateY(180deg)
+      translateX(0);
+  }
+
+  25% {
+    transform:
+      rotateY(180deg)
+      translateX(-8px);
+  }
+
+  50% {
+    transform:
+      rotateY(180deg)
+      translateX(8px);
+  }
+
+  75% {
+    transform:
+      rotateY(180deg)
+      translateX(-5px);
+  }
+
+  100% {
+    transform:
+      rotateY(180deg)
+      translateX(0);
+  }
+}
+
+@keyframes sparkleFly {
+  0% {
+    transform: scale(.4) rotate(0);
+    opacity: 0;
+  }
+
+  45% {
+    opacity: 1;
+    transform:
+      scale(1.3)
+      translateY(-9px)
+      rotate(90deg);
+  }
+
+  100% {
+    transform:
+      scale(.5)
+      translateY(-24px)
+      rotate(180deg);
+    opacity: 0;
+  }
+}
+
+@keyframes overlayPop {
+  0% {
+    transform: scale(.7);
+    opacity: 0;
+  }
+
+  70% {
+    transform: scale(1.04);
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes countdownPop {
+  0% {
+    transform: scale(.5);
+    opacity: 0;
+  }
+
+  70% {
+    transform: scale(1.12);
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bigCombo {
+  0% {
+    opacity: 0;
+    transform:
+      translate(-50%, -50%)
+      scale(.4)
+      rotate(-7deg);
+  }
+
+  35% {
+    opacity: 1;
+    transform:
+      translate(-50%, -50%)
+      scale(1.25)
+      rotate(3deg);
+  }
+
+  75% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      translate(-50%, -65%)
+      scale(.95);
+  }
+}
+
+@keyframes recordPulse {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(1.08);
+    filter:
+      drop-shadow(0 0 8px #ffd74b);
+  }
+}
+
+@keyframes confettiFall {
+  0% {
+    opacity: 1;
+    transform:
+      translate3d(0, -20px, 0)
+      rotate(0deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      translate3d(
+        var(--drift),
+        110vh,
+        0
+      )
+      rotate(var(--spin));
+  }
+}
+
+/* =========================================================
+   PC Hover
+========================================================= */
+@media (hover:hover) and (pointer:fine) {
+  .memory-card:not(.matched):hover .card-inner {
+    filter: brightness(1.04);
+  }
+
+  .difficulty-btn:hover,
+  .control-btn:hover,
+  .result-btn:hover {
+    transform: translateY(-3px) scale(1.03);
+    filter: brightness(1.03);
+  }
+}
+
+/* =========================================================
+   스마트폰
+========================================================= */
+@media (max-width: 650px) {
+  body {
+    padding: 0;
+  }
+
+  .game-shell {
+    width: 100%;
+    min-height: 100dvh;
+
+    border-radius: 0;
+
+    padding:
+      max(9px, env(safe-area-inset-top))
+      8px
+      max(10px, env(safe-area-inset-bottom))
+      8px;
+  }
+
+  .game-title {
+    font-size: clamp(24px, 7vw, 34px);
+  }
+
+  .subtitle {
+    margin-bottom: 7px;
+  }
+
+  .top-controls {
+    margin-bottom: 6px;
+  }
+
+  .control-btn {
+    min-height: 37px;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .stats {
+    gap: 5px;
+  }
+
+  .stat-box {
+    padding: 7px 3px;
+    border-radius: 13px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+  }
+
+  .stat-value {
+    font-size: clamp(12px, 3.4vw, 17px);
+  }
+
+  .status-zone {
+    min-height: 45px;
+    margin-bottom: 5px;
+    border-radius: 14px;
+  }
+
+  .combo-display {
+    min-height: 24px;
+    margin-bottom: 3px;
+  }
+
+  .card-board {
+    gap: 6px;
+  }
+
+  .card-inner,
+  .card-face {
+    border-radius: 14px;
+  }
+
+  .card-inner {
+    box-shadow:
+      0 5px 0 rgba(54, 46, 125, .13),
+      0 7px 12px rgba(50, 42, 113, .09);
+  }
+
+  .card-back,
+  .card-front {
+    border-width: 2px;
+  }
+
+  .card-board.hard {
+    gap: 5px;
+  }
+
+  .card-board.hard .card-front {
+    font-size: clamp(30px, 9vw, 51px);
+  }
+
+  .difficulty-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .difficulty-btn {
+    min-height: 78px;
+  }
+
+  .overlay-card {
+    padding: 20px 14px;
+  }
+}
+
+/* =========================================================
+   작은 세로 화면
+========================================================= */
+@media (max-width: 430px) and (max-height: 780px) {
+  .game-title {
+    font-size: 23px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  .top-controls {
+    margin-bottom: 4px;
+  }
+
+  .control-btn {
+    min-height: 33px;
+  }
+
+  .stats {
+    margin-bottom: 4px;
+  }
+
+  .stat-box {
+    padding: 5px 2px;
+  }
+
+  .status-zone {
+    min-height: 39px;
+    padding: 4px 6px;
+  }
+
+  .status-text {
+    font-size: 14px;
+  }
+
+  .combo-display {
+    min-height: 19px;
+    font-size: 13px;
+  }
+
+  .card-board {
+    gap: 5px;
+  }
+}
+
+/* =========================================================
+   모바일 가로 화면
+========================================================= */
+@media (orientation: landscape) and (max-height: 540px) {
+  body {
+    padding: 0;
+  }
+
+  .game-shell {
+    min-height: 100dvh;
+    border-radius: 0;
+    padding:
+      max(5px, env(safe-area-inset-top))
+      max(9px, env(safe-area-inset-right))
+      max(5px, env(safe-area-inset-bottom))
+      max(9px, env(safe-area-inset-left));
+  }
+
+  .game-title {
+    font-size: 21px;
+    margin: 0;
+  }
+
+  .subtitle {
+    display: none;
+  }
+
+  .top-controls {
+    position: absolute;
+    right: 9px;
+    top: 7px;
+  }
+
+  .control-btn {
+    min-height: 30px;
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  .stats {
+    max-width: 720px;
+    gap: 4px;
+    margin-bottom: 3px;
+  }
+
+  .stat-box {
+    padding: 3px;
+    border-radius: 11px;
+  }
+
+  .stat-label {
+    font-size: 8px;
+  }
+
+  .stat-value {
+    font-size: 13px;
+  }
+
+  .status-zone {
+    min-height: 30px;
+    padding: 2px 5px;
+    margin-bottom: 2px;
+  }
+
+  .status-text {
+    font-size: 13px;
+  }
+
+  .combo-display {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+
+    min-height: 28px;
+
+    font-size: 12px;
+  }
+
+  .board-wrap {
+    max-width: 680px;
+  }
+
+  .card-board {
+    gap: 4px;
+  }
+
+  .memory-card {
+    aspect-ratio: .88;
+  }
+
+  .card-inner,
+  .card-face {
+    border-radius: 10px;
+  }
+
+  .card-front {
+    font-size: clamp(26px, 8vh, 46px);
+  }
+
+  .card-back {
+    font-size: clamp(24px, 7vh, 40px);
+  }
+}
+
+/* =========================================================
+   애니메이션 최소화 설정
+========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<main class="game-shell" id="gameShell">
+
+  <div class="particle-layer" id="particleLayer"></div>
+
+  <header class="title-area">
+    <h1 class="game-title">
+      🧠 MEMORY CARD CHALLENGE! 🃏
+    </h1>
+
+    <div class="subtitle">
+      같은 카드를 찾아라!
+    </div>
+  </header>
+
+  <div class="top-controls">
+    <button
+      class="control-btn"
+      id="soundBtn"
+      type="button"
+    >
+      🔊 SOUND ON
+    </button>
+
+    <button
+      class="control-btn"
+      id="levelSelectBtn"
+      type="button"
+    >
+      🎮 난이도 선택
+    </button>
+  </div>
+
+  <section class="stats">
+    <div class="stat-box">
+      <div class="stat-label">
+        ⏱ TIME
+      </div>
+      <div class="stat-value" id="timeDisplay">
+        00:00
+      </div>
+    </div>
+
+    <div class="stat-box">
+      <div class="stat-label">
+        👆 MOVES
+      </div>
+      <div class="stat-value" id="movesDisplay">
+        0
+      </div>
+    </div>
+
+    <div class="stat-box">
+      <div class="stat-label">
+        ⭐ MATCH
+      </div>
+      <div class="stat-value" id="matchDisplay">
+        0 / 0
+      </div>
+    </div>
+
+    <div class="stat-box">
+      <div class="stat-label">
+        🏆 SCORE
+      </div>
+      <div class="stat-value" id="scoreDisplay">
+        0
+      </div>
+    </div>
+  </section>
+
+  <div class="status-zone">
+    <div
+      class="status-text"
+      id="statusText"
+      aria-live="polite"
+    >
+      난이도를 선택하고 시작하세요!
+    </div>
+  </div>
+
+  <div
+    class="combo-display"
+    id="comboDisplay"
+  >
+    🔥 COMBO x0
+  </div>
+
+  <section class="board-wrap">
+    <div
+      class="card-board easy"
+      id="cardBoard"
+      aria-label="메모리 카드 게임판"
+    ></div>
+  </section>
+
+  <div
+    class="big-combo"
+    id="bigCombo"
+  >
+    COMBO!
+  </div>
+
+  <!-- 카운트다운 -->
+  <div
+    class="countdown-overlay"
+    id="countdownOverlay"
+  >
+    <div
+      class="countdown-text"
+      id="countdownText"
+    >
+      READY...
+    </div>
+  </div>
+
+  <!-- 난이도 선택 화면 -->
+  <section
+    class="overlay show"
+    id="difficultyOverlay"
+  >
+    <div class="overlay-card">
+
+      <div class="overlay-icon">
+        🧠🃏
+      </div>
+
+      <div class="overlay-title">
+        MEMORY CARD
+      </div>
+
+      <div class="overlay-subtitle">
+        같은 그림의 카드 두 장을 찾아보세요!<br>
+        시작할 난이도를 선택하세요.
+      </div>
+
+      <div class="difficulty-grid">
+
+        <button
+          class="difficulty-btn"
+          data-level="easy"
+          type="button"
+        >
+          <span class="diff-name">
+            😊 EASY
+          </span>
+
+          <span class="diff-size">
+            4 × 3 · 12장 · 6쌍
+          </span>
+        </button>
+
+        <button
+          class="difficulty-btn"
+          data-level="normal"
+          type="button"
+        >
+          <span class="diff-name">
+            😎 NORMAL
+          </span>
+
+          <span class="diff-size">
+            4 × 4 · 16장 · 8쌍
+          </span>
+        </button>
+
+        <button
+          class="difficulty-btn"
+          data-level="hard"
+          type="button"
+        >
+          <span class="diff-name">
+            🔥 HARD
+          </span>
+
+          <span class="diff-size">
+            5 × 4 · 20장 · 10쌍
+          </span>
+        </button>
+
+      </div>
+
+      <div
+        class="best-list"
+        id="bestList"
+      >
+        🏆 BEST<br>
+        EASY : --:--<br>
+        NORMAL : --:--<br>
+        HARD : --:--
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 결과 화면 -->
+  <section
+    class="overlay"
+    id="resultOverlay"
+  >
+    <div class="overlay-card">
+
+      <div class="overlay-icon">
+        🎉🏆🎉
+      </div>
+
+      <div class="overlay-title">
+        GAME CLEAR!
+      </div>
+
+      <div class="new-record" id="newRecord"></div>
+
+      <div class="stars-result" id="starsResult">
+        ⭐⭐⭐
+      </div>
+
+      <div class="result-stats">
+
+        <div class="result-stat">
+          ⏱ TIME<br>
+          <span id="resultTime">00:00</span>
+        </div>
+
+        <div class="result-stat">
+          👆 MOVES<br>
+          <span id="resultMoves">0</span>
+        </div>
+
+        <div class="result-stat">
+          🔥 BEST COMBO<br>
+          <span id="resultCombo">0</span>
+        </div>
+
+        <div class="result-stat">
+          🏆 SCORE<br>
+          <span id="resultScore">0</span>
+        </div>
+
+      </div>
+
+      <div class="result-buttons">
+
+        <button
+          class="result-btn restart-btn"
+          id="restartBtn"
+          type="button"
+        >
+          🔄 다시 하기
+        </button>
+
+        <button
+          class="result-btn level-btn"
+          id="resultLevelBtn"
+          type="button"
+        >
+          🎮 난이도 선택
+        </button>
+
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+
+<script>
+(() => {
+  "use strict";
+
+  /* =========================================================
+     카드 이미지
+  ========================================================= */
+
+  const EMOJIS = [
+    "🐶",
+    "🐱",
+    "🐰",
+    "🦊",
+    "🐼",
+    "🐸",
+    "🦁",
+    "🐵",
+    "🍎",
+    "🍓",
+    "🍉",
+    "🍕",
+    "🚗",
+    "🚀",
+    "⚽",
+    "🎁"
+  ];
+
+  /* =========================================================
+     난이도 설정
+  ========================================================= */
+
+  const LEVELS = {
+    easy: {
+      label: "EASY",
+      pairs: 6,
+      preview: 3000,
+      className: "easy",
+      targetTime: 45,
+      targetMoves: 12
+    },
+
+    normal: {
+      label: "NORMAL",
+      pairs: 8,
+      preview: 2000,
+      className: "normal",
+      targetTime: 75,
+      targetMoves: 18
+    },
+
+    hard: {
+      label: "HARD",
+      pairs: 10,
+      preview: 1500,
+      className: "hard",
+      targetTime: 110,
+      targetMoves: 26
+    }
+  };
+
+  /* =========================================================
+     상태값
+  ========================================================= */
+
+  let currentLevel = "easy";
+
+  let firstCard = null;
+  let secondCard = null;
+
+  let boardLocked = true;
+  let gameStarted = false;
+  let gameComplete = false;
+
+  let matchedPairs = 0;
+  let moves = 0;
+  let combo = 0;
+  let bestCombo = 0;
+  let score = 0;
+
+  let elapsedSeconds = 0;
+  let timerId = null;
+
+  let soundEnabled = true;
+  let audioContext = null;
+
+  /* =========================================================
+     DOM
+  ========================================================= */
+
+  const gameShell =
+    document.getElementById("gameShell");
+
+  const cardBoard =
+    document.getElementById("cardBoard");
+
+  const timeDisplay =
+    document.getElementById("timeDisplay");
+
+  const movesDisplay =
+    document.getElementById("movesDisplay");
+
+  const matchDisplay =
+    document.getElementById("matchDisplay");
+
+  const scoreDisplay =
+    document.getElementById("scoreDisplay");
+
+  const statusText =
+    document.getElementById("statusText");
+
+  const comboDisplay =
+    document.getElementById("comboDisplay");
+
+  const bigCombo =
+    document.getElementById("bigCombo");
+
+  const countdownOverlay =
+    document.getElementById("countdownOverlay");
+
+  const countdownText =
+    document.getElementById("countdownText");
+
+  const difficultyOverlay =
+    document.getElementById("difficultyOverlay");
+
+  const resultOverlay =
+    document.getElementById("resultOverlay");
+
+  const difficultyButtons =
+    [...document.querySelectorAll(".difficulty-btn")];
+
+  const soundBtn =
+    document.getElementById("soundBtn");
+
+  const levelSelectBtn =
+    document.getElementById("levelSelectBtn");
+
+  const resultLevelBtn =
+    document.getElementById("resultLevelBtn");
+
+  const restartBtn =
+    document.getElementById("restartBtn");
+
+  const bestList =
+    document.getElementById("bestList");
+
+  const newRecord =
+    document.getElementById("newRecord");
+
+  const starsResult =
+    document.getElementById("starsResult");
+
+  const resultTime =
+    document.getElementById("resultTime");
+
+  const resultMoves =
+    document.getElementById("resultMoves");
+
+  const resultCombo =
+    document.getElementById("resultCombo");
+
+  const resultScore =
+    document.getElementById("resultScore");
+
+  const particleLayer =
+    document.getElementById("particleLayer");
+
+  /* =========================================================
+     유틸
+  ========================================================= */
+
+  function sleep(ms) {
+    return new Promise(resolve => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  function shuffle(array) {
+    const copy = [...array];
+
+    for (
+      let i = copy.length - 1;
+      i > 0;
+      i--
+    ) {
+      const j =
+        Math.floor(Math.random() * (i + 1));
+
+      [copy[i], copy[j]] =
+        [copy[j], copy[i]];
+    }
+
+    return copy;
+  }
+
+  function formatTime(seconds) {
+    const min =
+      Math.floor(seconds / 60);
+
+    const sec =
+      seconds % 60;
+
+    return (
+      String(min).padStart(2, "0") +
+      ":" +
+      String(sec).padStart(2, "0")
+    );
+  }
+
+  function restartAnimation(
+    element,
+    className
+  ) {
+    element.classList.remove(className);
+
+    void element.offsetWidth;
+
+    element.classList.add(className);
+  }
+
+  /* =========================================================
+     Audio
+  ========================================================= */
+
+  function initAudio() {
+    if (!soundEnabled) return;
+
+    const AudioContextClass =
+      window.AudioContext ||
+      window.webkitAudioContext;
+
+    if (!AudioContextClass) return;
+
+    if (!audioContext) {
+      audioContext =
+        new AudioContextClass();
+    }
+
+    if (
+      audioContext.state === "suspended"
+    ) {
+      audioContext.resume().catch(() => {});
+    }
+  }
+
+  function playTone(
+    frequency,
+    duration = .1,
+    type = "sine",
+    volume = .035,
+    delay = 0
+  ) {
+    if (!soundEnabled) return;
+
+    initAudio();
+
+    if (!audioContext) return;
+
+    const start =
+      audioContext.currentTime + delay;
+
+    const oscillator =
+      audioContext.createOscillator();
+
+    const gain =
+      audioContext.createGain();
+
+    oscillator.type = type;
+
+    oscillator.frequency.setValueAtTime(
+      frequency,
+      start
+    );
+
+    gain.gain.setValueAtTime(
+      .0001,
+      start
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      Math.max(volume, .0001),
+      start + .01
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      .0001,
+      start + duration
+    );
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+
+    oscillator.start(start);
+    oscillator.stop(
+      start + duration + .04
+    );
+  }
+
+  function soundFlip() {
+    playTone(
+      470,
+      .06,
+      "square",
+      .025
+    );
+  }
+
+  function soundMatch() {
+    playTone(
+      560,
+      .10,
+      "sine",
+      .04
+    );
+
+    playTone(
+      720,
+      .11,
+      "sine",
+      .04,
+      .08
+    );
+
+    playTone(
+      910,
+      .15,
+      "sine",
+      .04,
+      .16
+    );
+  }
+
+  function soundFail() {
+    playTone(
+      330,
+      .10,
+      "triangle",
+      .03
+    );
+
+    playTone(
+      220,
+      .18,
+      "triangle",
+      .03,
+      .09
+    );
+  }
+
+  function soundCombo() {
+    playTone(
+      700,
+      .07,
+      "square",
+      .03
+    );
+
+    playTone(
+      880,
+      .09,
+      "square",
+      .03,
+      .07
+    );
+
+    playTone(
+      1050,
+      .13,
+      "square",
+      .035,
+      .14
+    );
+  }
+
+  function soundClear() {
+    const notes = [
+      523,
+      659,
+      784,
+      1047
+    ];
+
+    notes.forEach((note, index) => {
+      playTone(
+        note,
+        index === 3 ? .45 : .16,
+        "sine",
+        .05,
+        index * .13
+      );
+    });
+  }
+
+  /* =========================================================
+     LocalStorage 최고 기록
+  ========================================================= */
+
+  function bestKey(level) {
+    return `memory_card_best_${level}`;
+  }
+
+  function getBest(level) {
+    try {
+      const value =
+        localStorage.getItem(
+          bestKey(level)
+        );
+
+      if (!value) return null;
+
+      const parsed =
+        JSON.parse(value);
+
+      if (
+        !parsed ||
+        typeof parsed.time !== "number"
+      ) {
+        return null;
+      }
+
+      return parsed;
+    }
+    catch (error) {
+      return null;
+    }
+  }
+
+  function saveBest(
+    level,
+    data
+  ) {
+    try {
+      localStorage.setItem(
+        bestKey(level),
+        JSON.stringify(data)
+      );
+    }
+    catch (error) {
+      // localStorage를 사용할 수 없는
+      // 브라우저 환경에서도 게임은 계속 실행
+    }
+  }
+
+  function updateBestList() {
+    const easy =
+      getBest("easy");
+
+    const normal =
+      getBest("normal");
+
+    const hard =
+      getBest("hard");
+
+    bestList.innerHTML = `
+      🏆 BEST<br>
+      EASY : ${
+        easy
+          ? formatTime(easy.time)
+          : "--:--"
+      }<br>
+      NORMAL : ${
+        normal
+          ? formatTime(normal.time)
+          : "--:--"
+      }<br>
+      HARD : ${
+        hard
+          ? formatTime(hard.time)
+          : "--:--"
+      }
+    `;
+  }
+
+  /* =========================================================
+     점수 계산
+  ========================================================= */
+
+  function calculateLiveScore() {
+    const level =
+      LEVELS[currentLevel];
+
+    const matchPoints =
+      matchedPairs * 150;
+
+    const movePenalty =
+      Math.max(
+        0,
+        (moves - level.pairs) * 12
+      );
+
+    const timePenalty =
+      elapsedSeconds * 3;
+
+    const comboBonus =
+      bestCombo * 65;
+
+    return Math.max(
+      0,
+      300 +
+      matchPoints +
+      comboBonus -
+      movePenalty -
+      timePenalty
+    );
+  }
+
+  function calculateFinalScore() {
+    const level =
+      LEVELS[currentLevel];
+
+    const levelBonus = {
+      easy: 500,
+      normal: 900,
+      hard: 1400
+    }[currentLevel];
+
+    const timeBonus =
+      Math.max(
+        0,
+        1400 -
+        elapsedSeconds * 10
+      );
+
+    const moveBonus =
+      Math.max(
+        0,
+        1000 -
+        Math.max(
+          0,
+          moves - level.pairs
+        ) * 40
+      );
+
+    const comboBonus =
+      bestCombo * 160;
+
+    return Math.round(
+      levelBonus +
+      timeBonus +
+      moveBonus +
+      comboBonus
+    );
+  }
+
+  /* =========================================================
+     화면 정보 업데이트
+  ========================================================= */
+
+  function updateStats() {
+    timeDisplay.textContent =
+      formatTime(elapsedSeconds);
+
+    movesDisplay.textContent =
+      moves;
+
+    matchDisplay.textContent =
+      `${matchedPairs} / ${
+        LEVELS[currentLevel].pairs
+      }`;
+
+    const newScore =
+      calculateLiveScore();
+
+    if (newScore !== score) {
+      score = newScore;
+
+      scoreDisplay.textContent =
+        score;
+
+      restartAnimation(
+        scoreDisplay,
+        "bump"
+      );
+    }
+  }
+
+  function updateCombo() {
+    if (combo <= 0) {
+      comboDisplay.textContent =
+        "🔥 COMBO x0";
+
+      return;
+    }
+
+    const fireCount =
+      Math.min(combo, 3);
+
+    comboDisplay.textContent =
+      `${"🔥".repeat(fireCount)} COMBO x${combo}`;
+
+    restartAnimation(
+      comboDisplay,
+      "active"
+    );
+
+    if (combo >= 3) {
+      showBigCombo();
+    }
+  }
+
+  function showBigCombo() {
+    bigCombo.textContent =
+      `🔥 COMBO x${combo}!`;
+
+    restartAnimation(
+      bigCombo,
+      "show"
+    );
+
+    soundCombo();
+  }
+
+  /* =========================================================
+     타이머
+  ========================================================= */
+
+  function startTimer() {
+    stopTimer();
+
+    timerId =
+      setInterval(() => {
+        if (
+          gameStarted &&
+          !gameComplete
+        ) {
+          elapsedSeconds++;
+
+          updateStats();
+        }
+      }, 1000);
+  }
+
+  function stopTimer() {
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    }
+  }
+
+  /* =========================================================
+     카드 생성
+  ========================================================= */
+
+  function createBoard() {
+    cardBoard.innerHTML = "";
+
+    const level =
+      LEVELS[currentLevel];
+
+    cardBoard.className =
+      `card-board ${level.className}`;
+
+    const selected =
+      shuffle(EMOJIS)
+        .slice(0, level.pairs);
+
+    const cardValues =
+      shuffle([
+        ...selected,
+        ...selected
+      ]);
+
+    cardValues.forEach(
+      (emoji, index) => {
+
+        const card =
+          document.createElement("button");
+
+        card.type = "button";
+
+        card.className =
+          "memory-card";
+
+        card.dataset.emoji =
+          emoji;
+
+        card.dataset.cardId =
+          String(index);
+
+        card.setAttribute(
+          "aria-label",
+          "뒤집힌 카드"
+        );
+
+        card.innerHTML = `
+          <span class="card-inner">
+
+            <span
+              class="card-face card-back"
+            >
+              ❓
+            </span>
+
+            <span
+              class="card-face card-front"
+            >
+              ${emoji}
+            </span>
+
+          </span>
+        `;
+
+        card.addEventListener(
+          "click",
+          () => {
+            handleCardClick(card);
+          }
+        );
+
+        cardBoard.appendChild(card);
+      }
+    );
+  }
+
+  /* =========================================================
+     시작 연출
+  ========================================================= */
+
+  async function showCountdown() {
+    countdownOverlay
+      .classList.add("show");
+
+    const sequence = [
+      "READY...",
+      "MEMORIZE...",
+      "GO! 🔥"
+    ];
+
+    for (
+      let i = 0;
+      i < sequence.length;
+      i++
+    ) {
+      countdownText.textContent =
+        sequence[i];
+
+      restartAnimation(
+        countdownText,
+        "countdown-text"
+      );
+
+      if (soundEnabled) {
+        playTone(
+          i === 2 ? 660 : 340,
+          .08,
+          "square",
+          .025
+        );
+      }
+
+      await sleep(
+        i === 2 ? 550 : 650
+      );
+    }
+
+    countdownOverlay
+      .classList.remove("show");
+  }
+
+  async function previewCards() {
+    const cards =
+      [...document.querySelectorAll(
+        ".memory-card"
+      )];
+
+    cards.forEach(card => {
+      card.classList.add("preview");
+    });
+
+    statusText.textContent =
+      "👀 카드 위치를 기억하세요!";
+
+    await sleep(
+      LEVELS[currentLevel].preview
+    );
+
+    cards.forEach(card => {
+      card.classList.remove("preview");
+    });
+
+    await sleep(560);
+  }
+
+  /* =========================================================
+     게임 시작
+  ========================================================= */
+
+  async function startGame(level) {
+    initAudio();
+
+    currentLevel = level;
+
+    stopTimer();
+
+    firstCard = null;
+    secondCard = null;
+
+    boardLocked = true;
+    gameStarted = false;
+    gameComplete = false;
+
+    matchedPairs = 0;
+    moves = 0;
+    combo = 0;
+    bestCombo = 0;
+    score = 0;
+
+    elapsedSeconds = 0;
+
+    timeDisplay.textContent =
+      "00:00";
+
+    movesDisplay.textContent =
+      "0";
+
+    matchDisplay.textContent =
+      `0 / ${LEVELS[level].pairs}`;
+
+    scoreDisplay.textContent =
+      "0";
+
+    comboDisplay.textContent =
+      "🔥 COMBO x0";
+
+    statusText.className =
+      "status-text";
+
+    statusText.textContent =
+      `${LEVELS[level].label} 준비 중...`;
+
+    resultOverlay
+      .classList.remove("show");
+
+    difficultyOverlay
+      .classList.remove("show");
+
+    particleLayer.innerHTML = "";
+
+    createBoard();
+
+    await showCountdown();
+
+    await previewCards();
+
+    statusText.textContent =
+      "🃏 같은 그림 두 장을 찾아보세요!";
+
+    boardLocked = false;
+    gameStarted = true;
+
+    startTimer();
+  }
+
+  /* =========================================================
+     카드 클릭
+  ========================================================= */
+
+  function handleCardClick(card) {
+    initAudio();
+
+    if (
+      boardLocked ||
+      !gameStarted ||
+      gameComplete
+    ) {
+      return;
+    }
+
+    if (
+      card.classList.contains("flipped") ||
+      card.classList.contains("matched")
+    ) {
+      return;
+    }
+
+    soundFlip();
+
+    card.classList.add("flipped");
+
+    card.setAttribute(
+      "aria-label",
+      `카드 ${card.dataset.emoji}`
+    );
+
+    if (!firstCard) {
+      firstCard = card;
+
+      statusText.className =
+        "status-text";
+
+      statusText.textContent =
+        "한 장 더 선택하세요! 👆";
+
+      return;
+    }
+
+    secondCard = card;
+
+    moves++;
+
+    movesDisplay.textContent =
+      moves;
+
+    restartAnimation(
+      movesDisplay,
+      "bump"
+    );
+
+    boardLocked = true;
+
+    compareCards();
+  }
+
+  /* =========================================================
+     카드 비교
+  ========================================================= */
+
+  async function compareCards() {
+    const isMatch =
+      firstCard.dataset.emoji ===
+      secondCard.dataset.emoji;
+
+    if (isMatch) {
+      await handleMatch();
+    }
+    else {
+      await handleMismatch();
+    }
+
+    updateStats();
+
+    if (
+      matchedPairs ===
+      LEVELS[currentLevel].pairs
+    ) {
+      await finishGame();
+
+      return;
+    }
+
+    resetTurn();
+
+    boardLocked = false;
+  }
+
+  /* =========================================================
+     일치
+  ========================================================= */
+
+  async function handleMatch() {
+    matchedPairs++;
+    combo++;
+
+    if (combo > bestCombo) {
+      bestCombo = combo;
+    }
+
+    firstCard.classList.add(
+      "matched",
+      "match-pop",
+      "sparkle"
+    );
+
+    secondCard.classList.add(
+      "matched",
+      "match-pop",
+      "sparkle"
+    );
+
+    firstCard.classList.remove(
+      "flipped"
+    );
+
+    secondCard.classList.remove(
+      "flipped"
+    );
+
+    firstCard.disabled = true;
+    secondCard.disabled = true;
+
+    statusText.className =
+      "status-text match";
+
+    statusText.textContent =
+      "MATCH! ⭐";
+
+    soundMatch();
+
+    updateCombo();
+
+    if (combo >= 3) {
+      createSparkleBurst(18);
+    }
+
+    await sleep(620);
+
+    firstCard.classList.remove(
+      "match-pop",
+      "sparkle"
+    );
+
+    secondCard.classList.remove(
+      "match-pop",
+      "sparkle"
+    );
+  }
+
+  /* =========================================================
+     실패
+  ========================================================= */
+
+  async function handleMismatch() {
+    combo = 0;
+
+    updateCombo();
+
+    statusText.className =
+      "status-text fail";
+
+    statusText.textContent =
+      "TRY AGAIN! 😆";
+
+    firstCard.classList.add(
+      "wrong-shake"
+    );
+
+    secondCard.classList.add(
+      "wrong-shake"
+    );
+
+    soundFail();
+
+    await sleep(750);
+
+    firstCard.classList.remove(
+      "wrong-shake",
+      "flipped"
+    );
+
+    secondCard.classList.remove(
+      "wrong-shake",
+      "flipped"
+    );
+
+    firstCard.setAttribute(
+      "aria-label",
+      "뒤집힌 카드"
+    );
+
+    secondCard.setAttribute(
+      "aria-label",
+      "뒤집힌 카드"
+    );
+
+    await sleep(150);
+  }
+
+  function resetTurn() {
+    firstCard = null;
+    secondCard = null;
+
+    statusText.className =
+      "status-text";
+
+    statusText.textContent =
+      "🧠 다음 짝을 찾아보세요!";
+  }
+
+  /* =========================================================
+     별 반짝임
+  ========================================================= */
+
+  function createSparkleBurst(amount) {
+    const symbols =
+      ["✨", "⭐", "💫"];
+
+    for (
+      let i = 0;
+      i < amount;
+      i++
+    ) {
+      const particle =
+        document.createElement("span");
+
+      particle.className =
+        "confetti";
+
+      particle.textContent =
+        symbols[
+          Math.floor(
+            Math.random() *
+            symbols.length
+          )
+        ];
+
+      particle.style.left =
+        (20 + Math.random() * 60) +
+        "%";
+
+      particle.style.fontSize =
+        (14 + Math.random() * 16) +
+        "px";
+
+      particle.style.animationDuration =
+        (.8 + Math.random() * .7) +
+        "s";
+
+      particle.style.setProperty(
+        "--drift",
+        (-100 + Math.random() * 200) +
+        "px"
+      );
+
+      particle.style.setProperty(
+        "--spin",
+        (-300 + Math.random() * 600) +
+        "deg"
+      );
+
+      particleLayer.appendChild(
+        particle
+      );
+
+      setTimeout(() => {
+        particle.remove();
+      }, 1800);
+    }
+  }
+
+  /* =========================================================
+     색종이
+  ========================================================= */
+
+  function createConfetti(
+    amount = 80
+  ) {
+    const symbols = [
+      "🎉",
+      "⭐",
+      "✨",
+      "💫",
+      "🟡",
+      "🟣",
+      "🔵",
+      "🩷"
+    ];
+
+    for (
+      let i = 0;
+      i < amount;
+      i++
+    ) {
+      const particle =
+        document.createElement("span");
+
+      particle.className =
+        "confetti";
+
+      particle.textContent =
+        symbols[
+          Math.floor(
+            Math.random() *
+            symbols.length
+          )
+        ];
+
+      particle.style.left =
+        Math.random() * 100 +
+        "%";
+
+      particle.style.fontSize =
+        (12 + Math.random() * 18) +
+        "px";
+
+      particle.style.animationDuration =
+        (1.8 + Math.random() * 2.2) +
+        "s";
+
+      particle.style.animationDelay =
+        Math.random() * .5 +
+        "s";
+
+      particle.style.setProperty(
+        "--drift",
+        (-160 + Math.random() * 320) +
+        "px"
+      );
+
+      particle.style.setProperty(
+        "--spin",
+        (-720 + Math.random() * 1440) +
+        "deg"
+      );
+
+      particleLayer.appendChild(
+        particle
+      );
+
+      setTimeout(() => {
+        particle.remove();
+      }, 4800);
+    }
+  }
+
+  /* =========================================================
+     별점 계산
+  ========================================================= */
+
+  function calculateStars() {
+    const level =
+      LEVELS[currentLevel];
+
+    let rating = 1;
+
+    const greatTime =
+      elapsedSeconds <=
+      level.targetTime;
+
+    const goodMoves =
+      moves <=
+      level.targetMoves;
+
+    const strongCombo =
+      bestCombo >= 3;
+
+    if (
+      greatTime &&
+      goodMoves
+    ) {
+      rating = 3;
+    }
+    else if (
+      greatTime ||
+      goodMoves ||
+      strongCombo
+    ) {
+      rating = 2;
+    }
+
+    return rating;
+  }
+
+  /* =========================================================
+     클리어
+  ========================================================= */
+
+  async function finishGame() {
+    gameComplete = true;
+    gameStarted = false;
+    boardLocked = true;
+
+    stopTimer();
+
+    score =
+      calculateFinalScore();
+
+    scoreDisplay.textContent =
+      score;
+
+    restartAnimation(
+      scoreDisplay,
+      "bump"
+    );
+
+    statusText.className =
+      "status-text match";
+
+    statusText.textContent =
+      "🎉 GAME CLEAR! 🎉";
+
+    soundClear();
+
+    createConfetti(90);
+
+    const previousBest =
+      getBest(currentLevel);
+
+    let isNewRecord = false;
+
+    if (
+      !previousBest ||
+      elapsedSeconds <
+        previousBest.time ||
+      (
+        elapsedSeconds ===
+        previousBest.time &&
+        moves <
+          previousBest.moves
+      )
+    ) {
+      saveBest(
+        currentLevel,
+        {
+          time:
+            elapsedSeconds,
+
+          moves:
+            moves,
+
+          score:
+            score
+        }
+      );
+
+      isNewRecord = true;
+    }
+
+    updateBestList();
+
+    await sleep(900);
+
+    resultTime.textContent =
+      formatTime(elapsedSeconds);
+
+    resultMoves.textContent =
+      moves;
+
+    resultCombo.textContent =
+      bestCombo;
+
+    resultScore.textContent =
+      score;
+
+    const stars =
+      calculateStars();
+
+    starsResult.textContent =
+      "⭐".repeat(stars);
+
+    newRecord.textContent =
+      isNewRecord
+        ? "NEW RECORD! 🏆"
+        : "";
+
+    resultOverlay
+      .classList.add("show");
+  }
+
+  /* =========================================================
+     난이도 화면 열기
+  ========================================================= */
+
+  function openDifficulty() {
+    stopTimer();
+
+    gameStarted = false;
+    gameComplete = false;
+    boardLocked = true;
+
+    resultOverlay
+      .classList.remove("show");
+
+    difficultyOverlay
+      .classList.add("show");
+
+    updateBestList();
+  }
+
+  /* =========================================================
+     이벤트
+  ========================================================= */
+
+  difficultyButtons.forEach(
+    button => {
+      button.addEventListener(
+        "click",
+        () => {
+          initAudio();
+
+          const level =
+            button.dataset.level;
+
+          startGame(level);
+        }
+      );
+    }
+  );
+
+  restartBtn.addEventListener(
+    "click",
+    () => {
+      initAudio();
+
+      startGame(
+        currentLevel
+      );
+    }
+  );
+
+  levelSelectBtn.addEventListener(
+    "click",
+    openDifficulty
+  );
+
+  resultLevelBtn.addEventListener(
+    "click",
+    openDifficulty
+  );
+
+  soundBtn.addEventListener(
+    "click",
+    () => {
+      soundEnabled =
+        !soundEnabled;
+
+      if (soundEnabled) {
+        soundBtn.textContent =
+          "🔊 SOUND ON";
+
+        initAudio();
+
+        setTimeout(
+          soundFlip,
+          20
+        );
+      }
+      else {
+        soundBtn.textContent =
+          "🔇 SOUND OFF";
+      }
+    }
+  );
+
+  /*
+    iPhone Safari:
+    첫 사용자 터치 이후
+    AudioContext가 시작될 수 있도록 처리
+  */
+  document.addEventListener(
+    "touchstart",
+    () => {
+      if (soundEnabled) {
+        initAudio();
+      }
+    },
+    {
+      passive: true,
+      once: true
+    }
+  );
+
+  /*
+    마우스를 사용하는 PC에서도
+    첫 사용자 입력으로 오디오 활성화
+  */
+  document.addEventListener(
+    "pointerdown",
+    () => {
+      if (soundEnabled) {
+        initAudio();
+      }
+    },
+    {
+      once: true
+    }
+  );
+
+  /*
+    더블 탭 확대 방지 보조 처리.
+    게임 버튼 자체는 정상적으로
+    빠르게 터치할 수 있습니다.
+  */
+  let lastTouchEnd = 0;
+
+  document.addEventListener(
+    "touchend",
+    event => {
+      const now =
+        Date.now();
+
+      if (
+        now - lastTouchEnd <= 300
+      ) {
+        event.preventDefault();
+      }
+
+      lastTouchEnd = now;
+    },
+    {
+      passive: false
+    }
+  );
+
+  /* =========================================================
+     초기 화면
+  ========================================================= */
+
+  updateBestList();
+
+})();
+</script>
+
+</body>
+</html>

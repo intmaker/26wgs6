@@ -1,0 +1,3315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+/>
+<meta name="theme-color" content="#7468ff" />
+
+<title>👀 FIND THE ODD ONE!</title>
+
+<style>
+:root {
+  --purple: #665cff;
+  --purple-dark: #443bc6;
+  --pink: #ff6faf;
+  --blue: #64d9ff;
+  --yellow: #ffd75d;
+  --green: #62e6ad;
+  --red: #ff5578;
+  --text: #302a50;
+  --soft: #77718d;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+}
+
+body {
+  min-height: 100dvh;
+
+  font-family:
+    "Arial Rounded MT Bold",
+    "Apple SD Gothic Neo",
+    "Noto Sans KR",
+    Arial,
+    sans-serif;
+
+  color: var(--text);
+
+  background:
+    radial-gradient(circle at 12% 10%, rgba(255,255,255,.48), transparent 23%),
+    radial-gradient(circle at 88% 12%, rgba(255,255,255,.28), transparent 20%),
+    radial-gradient(circle at 30% 88%, rgba(255,255,255,.20), transparent 24%),
+    linear-gradient(
+      135deg,
+      #61dcff 0%,
+      #8177f4 48%,
+      #ff82ba 100%
+    );
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  padding:
+    max(10px, env(safe-area-inset-top))
+    max(10px, env(safe-area-inset-right))
+    max(10px, env(safe-area-inset-bottom))
+    max(10px, env(safe-area-inset-left));
+}
+
+button {
+  font-family: inherit;
+}
+
+/* =========================================================
+   MAIN PANEL
+========================================================= */
+.game-shell {
+  position: relative;
+  width: min(1050px, 100%);
+  min-height: calc(100dvh - 20px);
+
+  padding: 18px;
+
+  border-radius: 32px;
+
+  background: rgba(255,255,255,.95);
+
+  box-shadow:
+    0 24px 70px rgba(38, 29, 100, .28),
+    inset 0 0 0 3px rgba(255,255,255,.72);
+
+  overflow: hidden;
+}
+
+.game-shell::before {
+  content: "";
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  left: -100px;
+  top: -100px;
+  border-radius: 50%;
+  background: rgba(96, 218, 255, .14);
+  pointer-events: none;
+}
+
+.game-shell::after {
+  content: "";
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  right: -130px;
+  bottom: -150px;
+  border-radius: 50%;
+  background: rgba(255, 105, 177, .11);
+  pointer-events: none;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+.title-area {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.main-title {
+  margin: 0;
+  font-size: clamp(26px, 5vw, 47px);
+  line-height: 1.05;
+  font-weight: 1000;
+  color: #493fc6;
+
+  text-shadow:
+    0 3px 0 white,
+    0 5px 14px rgba(75, 60, 188, .12);
+}
+
+.korean-title {
+  margin-top: 4px;
+  margin-bottom: 10px;
+
+  font-size: clamp(16px, 3vw, 23px);
+  font-weight: 1000;
+  color: #716a94;
+}
+
+/* =========================================================
+   TOP CONTROLS
+========================================================= */
+.top-controls {
+  position: relative;
+  z-index: 3;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  margin: 0 auto 9px;
+}
+
+.control-btn {
+  min-height: 40px;
+  padding: 7px 13px;
+
+  border: 0;
+  border-radius: 14px;
+
+  background: #efeeff;
+  color: #4c46a9;
+
+  cursor: pointer;
+
+  font-size: 12px;
+  font-weight: 1000;
+
+  transition: transform .14s ease;
+}
+
+.control-btn:active {
+  transform: scale(.94);
+}
+
+/* =========================================================
+   BEST
+========================================================= */
+.best-line {
+  position: relative;
+  z-index: 2;
+
+  text-align: center;
+
+  margin: 0 auto 8px;
+  min-height: 25px;
+
+  color: #8b66c9;
+  font-size: clamp(11px, 2.5vw, 14px);
+  font-weight: 900;
+}
+
+/* =========================================================
+   STATS
+========================================================= */
+.stats {
+  position: relative;
+  z-index: 2;
+
+  width: min(920px, 100%);
+  margin: 0 auto 8px;
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+}
+
+.stat-box {
+  min-width: 0;
+
+  padding: 9px 4px;
+
+  border-radius: 17px;
+
+  text-align: center;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #f3f2ff
+    );
+
+  box-shadow:
+    0 7px 17px rgba(58, 49, 120, .07);
+
+  border: 2px solid rgba(90, 75, 185, .07);
+}
+
+.stat-label {
+  font-size: clamp(9px, 2vw, 12px);
+  color: #807b94;
+  font-weight: 900;
+}
+
+.stat-value {
+  margin-top: 2px;
+
+  font-size: clamp(15px, 3vw, 22px);
+  font-weight: 1000;
+  color: #443ca9;
+
+  white-space: nowrap;
+}
+
+.stat-value.bump {
+  animation: scoreBump .45s cubic-bezier(.2,1.7,.4,1);
+}
+
+.timer-danger {
+  color: #ff3f66 !important;
+  animation: timerDanger .5s ease infinite alternate;
+}
+
+/* =========================================================
+   LIFE + COMBO
+========================================================= */
+.sub-stats {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  margin-bottom: 6px;
+  min-height: 28px;
+
+  font-weight: 1000;
+}
+
+.life-display {
+  color: #e84068;
+  font-size: clamp(15px, 3vw, 19px);
+}
+
+.combo-display {
+  color: #ef592c;
+  font-size: clamp(14px, 3vw, 19px);
+}
+
+.combo-display.pop {
+  animation: comboPop .4s ease;
+}
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+.message-box {
+  position: relative;
+  z-index: 3;
+
+  width: min(920px, 100%);
+  min-height: 48px;
+
+  margin: 0 auto 8px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 7px 10px;
+
+  border-radius: 17px;
+
+  background: #f7f7ff;
+  border: 2px dashed #cbc7ff;
+
+  text-align: center;
+}
+
+.message {
+  font-size: clamp(15px, 3vw, 20px);
+  font-weight: 1000;
+  color: #5049b4;
+}
+
+.message.correct {
+  color: #e89a00;
+  animation: messagePop .4s ease;
+}
+
+.message.wrong {
+  color: #e54b70;
+  animation: messageShake .38s ease;
+}
+
+/* =========================================================
+   BOARD WRAPPER
+========================================================= */
+.board-wrap {
+  position: relative;
+  z-index: 2;
+
+  width: min(900px, 100%);
+  margin: 0 auto;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.odd-board {
+  width: min(100%, 720px);
+
+  display: grid;
+  gap: 8px;
+
+  padding: 11px;
+
+  border-radius: 25px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fafaff,
+      #f1efff
+    );
+
+  box-shadow:
+    inset 0 0 0 2px rgba(112, 98, 210, .05),
+    0 10px 25px rgba(66, 55, 135, .08);
+
+  transition: gap .2s ease;
+}
+
+.odd-board.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.odd-board.grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.odd-board.grid-5 {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.odd-board.grid-6 {
+  grid-template-columns: repeat(6, 1fr);
+  gap: 5px;
+}
+
+/* =========================================================
+   TILE
+========================================================= */
+.odd-tile {
+  position: relative;
+
+  width: 100%;
+  aspect-ratio: 1 / 1;
+
+  min-width: 0;
+  padding: 0;
+
+  border: 0;
+  border-radius: 18px;
+
+  cursor: pointer;
+
+  background:
+    radial-gradient(circle at 25% 18%, #ffffff, #eef0ff);
+
+  box-shadow:
+    0 5px 0 rgba(77, 65, 160, .08),
+    0 7px 14px rgba(64, 53, 133, .07);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  user-select: none;
+  -webkit-user-select: none;
+
+  transition:
+    transform .12s ease,
+    filter .12s ease,
+    box-shadow .12s ease;
+}
+
+.odd-tile:active {
+  transform: scale(.91) translateY(2px);
+}
+
+.tile-emoji {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 100%;
+  height: 100%;
+
+  line-height: 1;
+  font-size: clamp(30px, 7vw, 67px);
+
+  transform-origin: center;
+}
+
+.grid-5 .tile-emoji {
+  font-size: clamp(26px, 6vw, 55px);
+}
+
+.grid-6 .tile-emoji {
+  font-size: clamp(23px, 5vw, 46px);
+}
+
+.odd-tile.correct-tile {
+  z-index: 5;
+  animation: correctTile .55s cubic-bezier(.2,1.7,.4,1);
+}
+
+.odd-tile.wrong-tile {
+  animation: wrongTile .38s ease;
+}
+
+.odd-tile.sparkle::before,
+.odd-tile.sparkle::after {
+  content: "✨";
+
+  position: absolute;
+  z-index: 5;
+
+  font-size: clamp(16px, 3vw, 26px);
+
+  pointer-events: none;
+
+  animation: sparkle .7s ease forwards;
+}
+
+.odd-tile.sparkle::before {
+  top: -6px;
+  left: -4px;
+}
+
+.odd-tile.sparkle::after {
+  bottom: -4px;
+  right: -5px;
+  animation-delay: .08s;
+}
+
+/* =========================================================
+   CSS SHAPE TYPES
+========================================================= */
+.shape-wrap {
+  width: 70%;
+  height: 70%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transform-origin: center;
+}
+
+.shape-circle {
+  width: 62%;
+  aspect-ratio: 1;
+
+  border-radius: 50%;
+
+  background: #665cff;
+  border: 5px solid #4239c1;
+}
+
+.shape-circle.odd-small {
+  transform: scale(.84);
+}
+
+.shape-circle.odd-color {
+  background: #7368ff;
+}
+
+.shape-square {
+  width: 58%;
+  aspect-ratio: 1;
+
+  border-radius: 13px;
+
+  background: #ff7aa9;
+  border: 5px solid #e94d82;
+}
+
+.shape-square.odd-border {
+  border-width: 2px;
+}
+
+.shape-star {
+  font-size: clamp(38px, 7vw, 70px);
+  color: #ffd32d;
+  line-height: 1;
+}
+
+.shape-star.odd-rotate {
+  transform: rotate(22deg);
+}
+
+.shape-arrow {
+  font-size: clamp(42px, 8vw, 76px);
+  color: #4b48d2;
+  line-height: 1;
+}
+
+.shape-arrow.odd-arrow {
+  transform: rotate(180deg);
+}
+
+.eye-face {
+  width: 68%;
+  aspect-ratio: 1;
+
+  border-radius: 50%;
+
+  background: #ffd85d;
+
+  position: relative;
+
+  border: 4px solid #e8b72f;
+}
+
+.eye-face::before,
+.eye-face::after {
+  content: "";
+
+  position: absolute;
+  top: 29%;
+
+  width: 12%;
+  aspect-ratio: 1;
+
+  border-radius: 50%;
+  background: #453b4f;
+}
+
+.eye-face::before {
+  left: 25%;
+}
+
+.eye-face::after {
+  right: 25%;
+}
+
+.eye-face .mouth {
+  position: absolute;
+
+  width: 38%;
+  height: 18%;
+
+  left: 31%;
+  bottom: 22%;
+
+  border-bottom: 4px solid #6c3c44;
+  border-radius: 0 0 50% 50%;
+}
+
+.eye-face.odd-eyes::after {
+  height: 5%;
+  border-radius: 50%;
+}
+
+/* =========================================================
+   OVERLAYS
+========================================================= */
+.overlay {
+  position: absolute;
+  z-index: 30;
+
+  inset: 0;
+
+  display: none;
+  justify-content: center;
+  align-items: center;
+
+  padding:
+    max(20px, env(safe-area-inset-top))
+    max(18px, env(safe-area-inset-right))
+    max(20px, env(safe-area-inset-bottom))
+    max(18px, env(safe-area-inset-left));
+
+  background: rgba(39, 32, 85, .74);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.overlay.show {
+  display: flex;
+  animation: fadeIn .25s ease;
+}
+
+.overlay-card {
+  width: min(620px, 100%);
+
+  padding: 26px 19px;
+
+  background: white;
+  border-radius: 30px;
+
+  text-align: center;
+
+  box-shadow:
+    0 25px 70px rgba(0,0,0,.28);
+
+  animation: overlayPop .45s cubic-bezier(.2,1.5,.4,1);
+}
+
+.overlay-icon {
+  font-size: clamp(60px, 13vw, 100px);
+  line-height: 1;
+}
+
+.overlay-title {
+  margin: 9px 0 7px;
+
+  font-size: clamp(27px, 6vw, 43px);
+  line-height: 1.15;
+
+  font-weight: 1000;
+  color: #493fc6;
+}
+
+.overlay-desc {
+  font-size: clamp(14px, 3vw, 18px);
+  line-height: 1.55;
+
+  color: #746f87;
+  font-weight: 800;
+
+  margin-bottom: 18px;
+}
+
+.start-btn,
+.restart-btn {
+  width: min(350px, 100%);
+  min-height: 62px;
+
+  border: 0;
+  border-radius: 20px;
+
+  cursor: pointer;
+
+  color: white;
+
+  font-size: clamp(19px, 4vw, 25px);
+  font-weight: 1000;
+
+  background:
+    linear-gradient(
+      135deg,
+      #6659f4,
+      #ff66a6
+    );
+
+  box-shadow:
+    0 10px 22px rgba(95, 77, 220, .28);
+
+  transition: transform .14s ease;
+}
+
+.start-btn:active,
+.restart-btn:active {
+  transform: scale(.95);
+}
+
+.start-best {
+  margin-top: 16px;
+
+  padding: 11px;
+
+  border-radius: 16px;
+  background: #f5f4ff;
+
+  color: #655da8;
+  font-weight: 900;
+
+  line-height: 1.55;
+}
+
+/* =========================================================
+   COUNTDOWN / LEVEL / BONUS
+========================================================= */
+.center-popup {
+  position: absolute;
+  z-index: 24;
+
+  inset: 0;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  pointer-events: none;
+}
+
+.center-popup.show {
+  display: flex;
+}
+
+.popup-text {
+  padding: 18px 26px;
+
+  border-radius: 25px;
+
+  background: rgba(71, 59, 190, .93);
+
+  color: white;
+
+  font-size: clamp(38px, 10vw, 78px);
+  font-weight: 1000;
+
+  text-align: center;
+
+  box-shadow:
+    0 15px 42px rgba(40, 30, 122, .28);
+
+  animation: popupScale .45s ease;
+}
+
+.popup-text.bonus {
+  background:
+    linear-gradient(
+      135deg,
+      #ff9c35,
+      #ff4f91
+    );
+
+  text-shadow: 0 3px 0 rgba(0,0,0,.08);
+}
+
+/* =========================================================
+   FLOAT SCORE
+========================================================= */
+.float-score {
+  position: absolute;
+  z-index: 20;
+
+  left: 50%;
+  top: 45%;
+
+  transform: translate(-50%, -50%);
+
+  pointer-events: none;
+
+  font-size: clamp(28px, 7vw, 52px);
+  font-weight: 1000;
+
+  color: #f09500;
+
+  text-shadow:
+    0 3px 0 white,
+    0 7px 15px rgba(245, 142, 0, .24);
+
+  animation: floatScore .9s ease forwards;
+}
+
+/* =========================================================
+   BIG COMBO
+========================================================= */
+.big-combo {
+  position: absolute;
+  z-index: 21;
+
+  left: 50%;
+  top: 52%;
+
+  transform: translate(-50%, -50%);
+
+  pointer-events: none;
+
+  opacity: 0;
+
+  white-space: nowrap;
+
+  font-size: clamp(35px, 9vw, 75px);
+  font-weight: 1000;
+
+  color: #ff582f;
+
+  text-shadow:
+    0 4px 0 white,
+    0 8px 18px rgba(255, 80, 40, .28);
+}
+
+.big-combo.show {
+  animation: bigCombo .8s ease forwards;
+}
+
+/* =========================================================
+   GAME OVER
+========================================================= */
+.result-grid {
+  width: min(430px, 100%);
+
+  margin: 15px auto;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.result-item {
+  padding: 11px 7px;
+
+  border-radius: 17px;
+
+  background: #f5f4ff;
+
+  color: #514b9e;
+
+  font-size: clamp(13px, 3vw, 17px);
+  font-weight: 1000;
+}
+
+.new-record {
+  min-height: 30px;
+
+  margin: 7px 0;
+
+  color: #e49800;
+  font-size: clamp(19px, 4vw, 27px);
+  font-weight: 1000;
+
+  animation: recordGlow .65s ease infinite alternate;
+}
+
+/* =========================================================
+   PARTICLES
+========================================================= */
+.particle-layer {
+  position: absolute;
+  z-index: 50;
+
+  inset: 0;
+
+  overflow: hidden;
+
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+
+  top: -25px;
+
+  animation: particleFall linear forwards;
+
+  will-change: transform, opacity;
+}
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+@keyframes scoreBump {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.45); }
+  100% { transform: scale(1); }
+}
+
+@keyframes timerDanger {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.18) rotate(-2deg);
+  }
+}
+
+@keyframes comboPop {
+  0% { transform: scale(.7); }
+  65% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes messagePop {
+  0% {
+    opacity: .3;
+    transform: scale(.7);
+  }
+  65% {
+    transform: scale(1.16);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes messageShake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-4px); }
+}
+
+@keyframes correctTile {
+  0% { transform: scale(1); }
+  45% {
+    transform:
+      scale(1.25)
+      translateY(-8px)
+      rotate(-3deg);
+  }
+  75% {
+    transform:
+      scale(1.1)
+      translateY(-3px)
+      rotate(2deg);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes wrongTile {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  50% { transform: translateX(8px); }
+  75% { transform: translateX(-5px); }
+}
+
+@keyframes sparkle {
+  0% {
+    opacity: 0;
+    transform: scale(.3) rotate(0);
+  }
+  45% {
+    opacity: 1;
+    transform:
+      scale(1.3)
+      translateY(-8px)
+      rotate(90deg);
+  }
+  100% {
+    opacity: 0;
+    transform:
+      scale(.5)
+      translateY(-25px)
+      rotate(180deg);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes overlayPop {
+  0% {
+    opacity: 0;
+    transform: scale(.7);
+  }
+  70% {
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes popupScale {
+  0% {
+    opacity: 0;
+    transform: scale(.4);
+  }
+  70% {
+    transform: scale(1.13);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes floatScore {
+  0% {
+    opacity: 0;
+    transform:
+      translate(-50%, -30%)
+      scale(.6);
+  }
+
+  30% {
+    opacity: 1;
+    transform:
+      translate(-50%, -50%)
+      scale(1.2);
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      translate(-50%, -120%)
+      scale(.9);
+  }
+}
+
+@keyframes bigCombo {
+  0% {
+    opacity: 0;
+    transform:
+      translate(-50%, -50%)
+      scale(.4)
+      rotate(-7deg);
+  }
+  35% {
+    opacity: 1;
+    transform:
+      translate(-50%, -50%)
+      scale(1.2)
+      rotate(3deg);
+  }
+  72% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform:
+      translate(-50%, -70%)
+      scale(.9);
+  }
+}
+
+@keyframes recordGlow {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 8px #ffd548);
+  }
+}
+
+@keyframes particleFall {
+  0% {
+    opacity: 1;
+    transform:
+      translate3d(0, -20px, 0)
+      rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform:
+      translate3d(
+        var(--drift),
+        110vh,
+        0
+      )
+      rotate(var(--spin));
+  }
+}
+
+@keyframes shellShake {
+  0%,100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
+.game-shell.game-shake {
+  animation: shellShake .45s ease;
+}
+
+/* =========================================================
+   HOVER
+========================================================= */
+@media (hover:hover) and (pointer:fine) {
+  .odd-tile:hover {
+    transform: translateY(-3px) scale(1.035);
+    filter: brightness(1.03);
+
+    box-shadow:
+      0 7px 0 rgba(77, 65, 160, .08),
+      0 11px 18px rgba(64, 53, 133, .1);
+  }
+
+  .control-btn:hover,
+  .start-btn:hover,
+  .restart-btn:hover {
+    transform: translateY(-2px) scale(1.025);
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+@media (max-width: 650px) {
+  body {
+    padding: 0;
+  }
+
+  .game-shell {
+    width: 100%;
+    min-height: 100dvh;
+
+    border-radius: 0;
+
+    padding:
+      max(8px, env(safe-area-inset-top))
+      7px
+      max(9px, env(safe-area-inset-bottom))
+      7px;
+  }
+
+  .main-title {
+    font-size: clamp(24px, 7vw, 34px);
+  }
+
+  .korean-title {
+    font-size: 15px;
+    margin-bottom: 5px;
+  }
+
+  .top-controls {
+    margin-bottom: 4px;
+  }
+
+  .control-btn {
+    min-height: 34px;
+    padding: 5px 9px;
+    font-size: 10px;
+  }
+
+  .best-line {
+    margin-bottom: 4px;
+    min-height: 19px;
+  }
+
+  .stats {
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+
+  .stat-box {
+    padding: 6px 2px;
+    border-radius: 13px;
+  }
+
+  .stat-label {
+    font-size: 8px;
+  }
+
+  .stat-value {
+    font-size: clamp(12px, 3.6vw, 17px);
+  }
+
+  .sub-stats {
+    margin-bottom: 3px;
+    min-height: 22px;
+    gap: 7px;
+  }
+
+  .message-box {
+    min-height: 40px;
+    margin-bottom: 5px;
+    padding: 4px 6px;
+  }
+
+  .message {
+    font-size: 14px;
+  }
+
+  .odd-board {
+    padding: 6px;
+    gap: 5px;
+    border-radius: 18px;
+  }
+
+  .odd-board.grid-6 {
+    gap: 3px;
+  }
+
+  .odd-tile {
+    border-radius: 12px;
+  }
+
+  .tile-emoji {
+    font-size: clamp(28px, 9vw, 52px);
+  }
+
+  .grid-5 .tile-emoji {
+    font-size: clamp(24px, 7vw, 43px);
+  }
+
+  .grid-6 .tile-emoji {
+    font-size: clamp(20px, 6vw, 35px);
+  }
+
+  .shape-arrow,
+  .shape-star {
+    font-size: clamp(27px, 8vw, 48px);
+  }
+
+  .shape-circle {
+    border-width: 4px;
+  }
+
+  .shape-square {
+    border-width: 4px;
+  }
+
+  .overlay-card {
+    padding: 20px 14px;
+  }
+}
+
+/* =========================================================
+   SMALL PHONE HEIGHT
+========================================================= */
+@media (max-width: 430px) and (max-height: 760px) {
+  .main-title {
+    font-size: 22px;
+  }
+
+  .korean-title {
+    display: none;
+  }
+
+  .best-line {
+    font-size: 10px;
+  }
+
+  .top-controls {
+    margin-bottom: 2px;
+  }
+
+  .stats {
+    margin-bottom: 2px;
+  }
+
+  .stat-box {
+    padding: 4px 2px;
+  }
+
+  .sub-stats {
+    font-size: 12px;
+    min-height: 18px;
+  }
+
+  .message-box {
+    min-height: 34px;
+  }
+
+  .message {
+    font-size: 12px;
+  }
+
+  .odd-board {
+    padding: 4px;
+    gap: 4px;
+  }
+}
+
+/* =========================================================
+   LANDSCAPE MOBILE
+========================================================= */
+@media (orientation: landscape) and (max-height: 540px) {
+  body {
+    padding: 0;
+  }
+
+  .game-shell {
+    min-height: 100dvh;
+    border-radius: 0;
+
+    padding:
+      max(4px, env(safe-area-inset-top))
+      max(8px, env(safe-area-inset-right))
+      max(4px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left));
+  }
+
+  .title-area {
+    height: 27px;
+  }
+
+  .main-title {
+    font-size: 20px;
+  }
+
+  .korean-title {
+    display: none;
+  }
+
+  .top-controls {
+    position: absolute;
+    right: 9px;
+    top: 5px;
+  }
+
+  .control-btn {
+    min-height: 28px;
+    padding: 3px 8px;
+  }
+
+  .best-line {
+    position: absolute;
+    left: 8px;
+    top: 7px;
+    width: auto;
+    font-size: 9px;
+    text-align: left;
+  }
+
+  .stats {
+    max-width: 650px;
+    margin-bottom: 2px;
+    gap: 4px;
+  }
+
+  .stat-box {
+    padding: 2px;
+    border-radius: 10px;
+  }
+
+  .stat-label {
+    font-size: 7px;
+  }
+
+  .stat-value {
+    font-size: 12px;
+  }
+
+  .sub-stats {
+    min-height: 17px;
+    margin-bottom: 1px;
+  }
+
+  .life-display,
+  .combo-display {
+    font-size: 11px;
+  }
+
+  .message-box {
+    min-height: 27px;
+    margin-bottom: 2px;
+    padding: 1px 4px;
+  }
+
+  .message {
+    font-size: 11px;
+  }
+
+  .board-wrap {
+    max-width: 520px;
+  }
+
+  .odd-board {
+    padding: 4px;
+    gap: 3px;
+  }
+
+  .odd-board.grid-6 {
+    gap: 2px;
+  }
+
+  .odd-tile {
+    border-radius: 9px;
+  }
+
+  .tile-emoji {
+    font-size: clamp(22px, 8vh, 39px);
+  }
+
+  .grid-5 .tile-emoji,
+  .grid-6 .tile-emoji {
+    font-size: clamp(19px, 7vh, 32px);
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<main class="game-shell" id="gameShell">
+
+  <div class="particle-layer" id="particleLayer"></div>
+
+  <header class="title-area">
+    <h1 class="main-title">
+      👀 FIND THE ODD ONE!
+    </h1>
+
+    <div class="korean-title">
+      🔍 다른 그림을 찾아라!
+    </div>
+  </header>
+
+  <div class="top-controls">
+    <button
+      class="control-btn"
+      id="soundBtn"
+      type="button"
+    >
+      🔊 SOUND ON
+    </button>
+  </div>
+
+  <div class="best-line" id="bestLine">
+    👑 BEST SCORE : 0 · 🏆 BEST LEVEL : 0
+  </div>
+
+  <section class="stats">
+    <div class="stat-box">
+      <div class="stat-label">
+        🏆 SCORE
+      </div>
+      <div class="stat-value" id="scoreDisplay">
+        0
+      </div>
+    </div>
+
+    <div class="stat-box">
+      <div class="stat-label">
+        🔥 LEVEL
+      </div>
+      <div class="stat-value" id="levelDisplay">
+        1
+      </div>
+    </div>
+
+    <div class="stat-box">
+      <div class="stat-label">
+        ❤️ LIFE
+      </div>
+      <div class="stat-value" id="lifeNumber">
+        3
+      </div>
+    </div>
+
+    <div class="stat-box">
+      <div class="stat-label">
+        ⏱ TIME
+      </div>
+      <div class="stat-value" id="timeDisplay">
+        10.0
+      </div>
+    </div>
+  </section>
+
+  <div class="sub-stats">
+    <div class="life-display" id="lifeDisplay">
+      ❤️❤️❤️
+    </div>
+
+    <div class="combo-display" id="comboDisplay">
+      🔥 COMBO x0
+    </div>
+  </div>
+
+  <section class="message-box">
+    <div
+      class="message"
+      id="message"
+      aria-live="polite"
+    >
+      다른 그림을 찾아보세요!
+    </div>
+  </section>
+
+  <section class="board-wrap">
+    <div
+      class="odd-board grid-3"
+      id="oddBoard"
+      aria-label="다른 그림 찾기 게임판"
+    ></div>
+  </section>
+
+  <div class="big-combo" id="bigCombo">
+    🔥 COMBO!
+  </div>
+
+  <!-- 시작 화면 -->
+  <section class="overlay show" id="startOverlay">
+    <div class="overlay-card">
+
+      <div class="overlay-icon">
+        👀🔍
+      </div>
+
+      <div class="overlay-title">
+        다른 그림을 찾아라!
+      </div>
+
+      <div class="overlay-desc">
+        똑같아 보이는 그림 속에서<br>
+        하나뿐인 다른 그림을 찾아보세요!<br><br>
+        정답을 빨리 찾을수록 점수가 높아집니다.
+      </div>
+
+      <button
+        class="start-btn"
+        id="startBtn"
+        type="button"
+      >
+        ▶ GAME START
+      </button>
+
+      <div class="start-best" id="startBest">
+        👑 BEST SCORE : 0<br>
+        🏆 BEST LEVEL : 0
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 카운트다운/레벨 팝업 -->
+  <div class="center-popup" id="centerPopup">
+    <div class="popup-text" id="popupText">
+      READY...
+    </div>
+  </div>
+
+  <!-- 게임오버 -->
+  <section class="overlay" id="gameOverOverlay">
+    <div class="overlay-card">
+
+      <div class="overlay-icon">
+        💥😵💥
+      </div>
+
+      <div class="overlay-title">
+        GAME OVER
+      </div>
+
+      <div
+        class="new-record"
+        id="newRecordText"
+      ></div>
+
+      <div class="result-grid">
+
+        <div class="result-item">
+          🏆 SCORE<br>
+          <span id="resultScore">0</span>
+        </div>
+
+        <div class="result-item">
+          🔥 LEVEL<br>
+          <span id="resultLevel">1</span>
+        </div>
+
+        <div class="result-item">
+          ⚡ BEST COMBO<br>
+          <span id="resultCombo">0</span>
+        </div>
+
+        <div class="result-item">
+          👑 BEST SCORE<br>
+          <span id="resultBest">0</span>
+        </div>
+
+      </div>
+
+      <button
+        class="restart-btn"
+        id="restartBtn"
+        type="button"
+      >
+        🔄 다시 도전
+      </button>
+
+    </div>
+  </section>
+
+</main>
+
+
+<script>
+(() => {
+  "use strict";
+
+  /* =========================================================
+     문제 데이터
+
+     difficulty:
+     1 = 차이가 큼
+     2 = 중간
+     3 = 비슷함
+  ========================================================= */
+
+  const EMOJI_PROBLEMS = [
+    { normal: "🐶", odd: "🐕", difficulty: 1 },
+    { normal: "🐱", odd: "😺", difficulty: 1 },
+    { normal: "🍎", odd: "🍅", difficulty: 1 },
+    { normal: "🍓", odd: "🍒", difficulty: 1 },
+    { normal: "🌞", odd: "🌝", difficulty: 1 },
+    { normal: "⭐", odd: "🌟", difficulty: 1 },
+    { normal: "❤️", odd: "💜", difficulty: 1 },
+    { normal: "🚗", odd: "🚕", difficulty: 1 },
+    { normal: "⚽", odd: "🏀", difficulty: 1 },
+    { normal: "🐸", odd: "🐢", difficulty: 1 },
+
+    { normal: "😀", odd: "😃", difficulty: 2 },
+    { normal: "😐", odd: "😑", difficulty: 2 },
+    { normal: "🙂", odd: "🙃", difficulty: 2 },
+    { normal: "😄", odd: "😁", difficulty: 2 },
+    { normal: "😎", odd: "🤓", difficulty: 2 },
+    { normal: "🐻", odd: "🐻‍❄️", difficulty: 2 },
+    { normal: "🌕", odd: "🌖", difficulty: 2 },
+    { normal: "🍊", odd: "🍋", difficulty: 2 },
+    { normal: "🥕", odd: "🌽", difficulty: 2 },
+    { normal: "🐠", odd: "🐟", difficulty: 2 },
+
+    { normal: "😶", odd: "😐", difficulty: 3 },
+    { normal: "😌", odd: "😊", difficulty: 3 },
+    { normal: "😮", odd: "😯", difficulty: 3 },
+    { normal: "🟡", odd: "🟠", difficulty: 3 },
+    { normal: "🔵", odd: "🟣", difficulty: 3 },
+    { normal: "💙", odd: "💜", difficulty: 3 },
+    { normal: "🌑", odd: "🌚", difficulty: 3 }
+  ];
+
+  const CSS_PROBLEMS = [
+    "arrow",
+    "circleSize",
+    "circleColor",
+    "starRotate",
+    "squareBorder",
+    "eyes"
+  ];
+
+  /* =========================================================
+     상태
+  ========================================================= */
+
+  let score = 0;
+  let level = 1;
+  let lives = 3;
+
+  let combo = 0;
+  let bestCombo = 0;
+
+  let currentAnswer = -1;
+
+  let currentTime = 10;
+  let maxTime = 10;
+
+  let timerId = null;
+
+  let gameActive = false;
+  let inputLocked = true;
+
+  let soundEnabled = true;
+  let audioContext = null;
+
+  let lastDangerTick = -1;
+
+  /* =========================================================
+     DOM
+  ========================================================= */
+
+  const gameShell =
+    document.getElementById("gameShell");
+
+  const scoreDisplay =
+    document.getElementById("scoreDisplay");
+
+  const levelDisplay =
+    document.getElementById("levelDisplay");
+
+  const lifeNumber =
+    document.getElementById("lifeNumber");
+
+  const lifeDisplay =
+    document.getElementById("lifeDisplay");
+
+  const timeDisplay =
+    document.getElementById("timeDisplay");
+
+  const comboDisplay =
+    document.getElementById("comboDisplay");
+
+  const message =
+    document.getElementById("message");
+
+  const oddBoard =
+    document.getElementById("oddBoard");
+
+  const soundBtn =
+    document.getElementById("soundBtn");
+
+  const bestLine =
+    document.getElementById("bestLine");
+
+  const startBest =
+    document.getElementById("startBest");
+
+  const startOverlay =
+    document.getElementById("startOverlay");
+
+  const startBtn =
+    document.getElementById("startBtn");
+
+  const centerPopup =
+    document.getElementById("centerPopup");
+
+  const popupText =
+    document.getElementById("popupText");
+
+  const bigCombo =
+    document.getElementById("bigCombo");
+
+  const gameOverOverlay =
+    document.getElementById("gameOverOverlay");
+
+  const newRecordText =
+    document.getElementById("newRecordText");
+
+  const resultScore =
+    document.getElementById("resultScore");
+
+  const resultLevel =
+    document.getElementById("resultLevel");
+
+  const resultCombo =
+    document.getElementById("resultCombo");
+
+  const resultBest =
+    document.getElementById("resultBest");
+
+  const restartBtn =
+    document.getElementById("restartBtn");
+
+  const particleLayer =
+    document.getElementById("particleLayer");
+
+  /* =========================================================
+     UTILS
+  ========================================================= */
+
+  function sleep(ms) {
+    return new Promise(resolve => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  function randomItem(array) {
+    return array[
+      Math.floor(Math.random() * array.length)
+    ];
+  }
+
+  function restartAnimation(
+    element,
+    className
+  ) {
+    element.classList.remove(className);
+
+    void element.offsetWidth;
+
+    element.classList.add(className);
+  }
+
+  /* =========================================================
+     LOCAL STORAGE
+  ========================================================= */
+
+  function getBestScore() {
+    try {
+      return Number(
+        localStorage.getItem("odd_best_score")
+      ) || 0;
+    }
+    catch {
+      return 0;
+    }
+  }
+
+  function getBestLevel() {
+    try {
+      return Number(
+        localStorage.getItem("odd_best_level")
+      ) || 0;
+    }
+    catch {
+      return 0;
+    }
+  }
+
+  function saveRecords() {
+    const oldScore =
+      getBestScore();
+
+    const oldLevel =
+      getBestLevel();
+
+    let newRecord = false;
+
+    try {
+      if (score > oldScore) {
+        localStorage.setItem(
+          "odd_best_score",
+          String(score)
+        );
+
+        newRecord = true;
+      }
+
+      if (level > oldLevel) {
+        localStorage.setItem(
+          "odd_best_level",
+          String(level)
+        );
+
+        newRecord = true;
+      }
+    }
+    catch {
+      /* localStorage 사용 불가 환경에서도 게임 진행 */
+    }
+
+    return newRecord;
+  }
+
+  function updateBestInfo() {
+    const bestScore =
+      getBestScore();
+
+    const bestLevel =
+      getBestLevel();
+
+    bestLine.textContent =
+      `👑 BEST SCORE : ${bestScore} · 🏆 BEST LEVEL : ${bestLevel}`;
+
+    startBest.innerHTML =
+      `👑 BEST SCORE : ${bestScore}<br>` +
+      `🏆 BEST LEVEL : ${bestLevel}`;
+  }
+
+  /* =========================================================
+     AUDIO
+  ========================================================= */
+
+  function initAudio() {
+    if (!soundEnabled) return;
+
+    const AudioContextClass =
+      window.AudioContext ||
+      window.webkitAudioContext;
+
+    if (!AudioContextClass) return;
+
+    if (!audioContext) {
+      audioContext =
+        new AudioContextClass();
+    }
+
+    if (
+      audioContext.state === "suspended"
+    ) {
+      audioContext.resume().catch(() => {});
+    }
+  }
+
+  function playTone(
+    frequency,
+    duration = .1,
+    type = "sine",
+    volume = .03,
+    delay = 0
+  ) {
+    if (!soundEnabled) return;
+
+    initAudio();
+
+    if (!audioContext) return;
+
+    const start =
+      audioContext.currentTime + delay;
+
+    const oscillator =
+      audioContext.createOscillator();
+
+    const gain =
+      audioContext.createGain();
+
+    oscillator.type = type;
+
+    oscillator.frequency.setValueAtTime(
+      frequency,
+      start
+    );
+
+    gain.gain.setValueAtTime(
+      .0001,
+      start
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      volume,
+      start + .01
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      .0001,
+      start + duration
+    );
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+
+    oscillator.start(start);
+    oscillator.stop(
+      start + duration + .04
+    );
+  }
+
+  function soundClick() {
+    playTone(
+      420,
+      .06,
+      "square",
+      .022
+    );
+  }
+
+  function soundCorrect() {
+    playTone(
+      540,
+      .08,
+      "sine",
+      .04
+    );
+
+    playTone(
+      720,
+      .1,
+      "sine",
+      .04,
+      .07
+    );
+
+    playTone(
+      930,
+      .14,
+      "sine",
+      .04,
+      .14
+    );
+  }
+
+  function soundWrong() {
+    playTone(
+      300,
+      .1,
+      "triangle",
+      .03
+    );
+
+    playTone(
+      190,
+      .17,
+      "triangle",
+      .03,
+      .09
+    );
+  }
+
+  function soundCombo() {
+    playTone(
+      700,
+      .07,
+      "square",
+      .03
+    );
+
+    playTone(
+      890,
+      .08,
+      "square",
+      .03,
+      .06
+    );
+
+    playTone(
+      1080,
+      .12,
+      "square",
+      .035,
+      .12
+    );
+  }
+
+  function soundDanger() {
+    playTone(
+      880,
+      .05,
+      "square",
+      .018
+    );
+  }
+
+  function soundGameOver() {
+    playTone(
+      330,
+      .13,
+      "sawtooth",
+      .03
+    );
+
+    playTone(
+      250,
+      .18,
+      "sawtooth",
+      .03,
+      .12
+    );
+
+    playTone(
+      160,
+      .3,
+      "sawtooth",
+      .03,
+      .27
+    );
+  }
+
+  function soundRecord() {
+    const notes = [
+      523,
+      659,
+      784,
+      1047
+    ];
+
+    notes.forEach((note, index) => {
+      playTone(
+        note,
+        index === 3 ? .35 : .13,
+        "sine",
+        .05,
+        index * .1
+      );
+    });
+  }
+
+  /* =========================================================
+     GRID
+  ========================================================= */
+
+  function gridSizeForLevel() {
+    if (level <= 5) {
+      return 3;
+    }
+
+    if (level <= 10) {
+      return 4;
+    }
+
+    if (level <= 20) {
+      return 5;
+    }
+
+    return 6;
+  }
+
+  function totalTiles() {
+    const size =
+      gridSizeForLevel();
+
+    return size * size;
+  }
+
+  /* =========================================================
+     TIMER
+  ========================================================= */
+
+  function timeForLevel() {
+    /*
+      초반 약 10초
+      점차 감소
+      최소 4.3초
+    */
+    let time =
+      10 -
+      (level - 1) * .18;
+
+    if (level >= 11) {
+      time -= .3;
+    }
+
+    if (level >= 21) {
+      time -= .4;
+    }
+
+    if (isBonusLevel()) {
+      time =
+        Math.max(3.2, time - 2.0);
+    }
+
+    return Math.max(
+      4.3,
+      time
+    );
+  }
+
+  function startTimer() {
+    stopTimer();
+
+    maxTime =
+      timeForLevel();
+
+    currentTime =
+      maxTime;
+
+    lastDangerTick = -1;
+
+    updateTimeDisplay();
+
+    const startTime =
+      performance.now();
+
+    timerId =
+      setInterval(() => {
+        if (
+          !gameActive ||
+          inputLocked
+        ) {
+          return;
+        }
+
+        const elapsed =
+          (performance.now() -
+            startTime) / 1000;
+
+        currentTime =
+          Math.max(
+            0,
+            maxTime - elapsed
+          );
+
+        updateTimeDisplay();
+
+        if (currentTime <= 3) {
+          const tick =
+            Math.ceil(currentTime);
+
+          if (
+            tick !== lastDangerTick &&
+            tick > 0
+          ) {
+            lastDangerTick = tick;
+
+            soundDanger();
+          }
+        }
+
+        if (currentTime <= 0) {
+          handleTimeout();
+        }
+      }, 50);
+  }
+
+  function stopTimer() {
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    }
+  }
+
+  function updateTimeDisplay() {
+    timeDisplay.textContent =
+      currentTime.toFixed(1);
+
+    if (currentTime <= 3) {
+      timeDisplay.classList.add(
+        "timer-danger"
+      );
+    }
+    else {
+      timeDisplay.classList.remove(
+        "timer-danger"
+      );
+    }
+  }
+
+  /* =========================================================
+     BONUS
+  ========================================================= */
+
+  function isBonusLevel() {
+    return level % 5 === 0;
+  }
+
+  /* =========================================================
+     PROBLEM SELECTION
+  ========================================================= */
+
+  function selectProblem() {
+    /*
+      1~5 : 쉬운 이모지
+      6~10 : 쉬움 + 중간
+      11~15 : 중간
+      16~20 : 중간 + 비슷한 그림
+      21+ : 어려운 이모지 + CSS 문제
+    */
+
+    if (level <= 5) {
+      return {
+        type: "emoji",
+        data: randomItem(
+          EMOJI_PROBLEMS.filter(
+            p => p.difficulty === 1
+          )
+        )
+      };
+    }
+
+    if (level <= 10) {
+      return {
+        type: "emoji",
+        data: randomItem(
+          EMOJI_PROBLEMS.filter(
+            p => p.difficulty <= 2
+          )
+        )
+      };
+    }
+
+    if (level <= 15) {
+      return {
+        type: "emoji",
+        data: randomItem(
+          EMOJI_PROBLEMS.filter(
+            p => p.difficulty === 2
+          )
+        )
+      };
+    }
+
+    if (level <= 20) {
+      return {
+        type: "emoji",
+        data: randomItem(
+          EMOJI_PROBLEMS.filter(
+            p => p.difficulty >= 2
+          )
+        )
+      };
+    }
+
+    /*
+      고레벨에서는 CSS 문제도 섞음
+    */
+    if (Math.random() < .48) {
+      return {
+        type: "css",
+        data: randomItem(
+          CSS_PROBLEMS
+        )
+      };
+    }
+
+    return {
+      type: "emoji",
+      data: randomItem(
+        EMOJI_PROBLEMS.filter(
+          p => p.difficulty === 3
+        )
+      )
+    };
+  }
+
+  /* =========================================================
+     CREATE TILE CONTENT
+  ========================================================= */
+
+  function createEmojiContent(
+    emoji
+  ) {
+    const span =
+      document.createElement("span");
+
+    span.className =
+      "tile-emoji";
+
+    span.textContent =
+      emoji;
+
+    return span;
+  }
+
+  function createCssContent(
+    problem,
+    isOdd
+  ) {
+    const wrap =
+      document.createElement("span");
+
+    wrap.className =
+      "shape-wrap";
+
+    if (problem === "arrow") {
+      const el =
+        document.createElement("span");
+
+      el.className =
+        "shape-arrow";
+
+      el.textContent =
+        "➜";
+
+      if (isOdd) {
+        el.classList.add(
+          "odd-arrow"
+        );
+      }
+
+      wrap.appendChild(el);
+    }
+
+    else if (
+      problem === "circleSize"
+    ) {
+      const el =
+        document.createElement("span");
+
+      el.className =
+        "shape-circle";
+
+      if (isOdd) {
+        el.classList.add(
+          "odd-small"
+        );
+      }
+
+      wrap.appendChild(el);
+    }
+
+    else if (
+      problem === "circleColor"
+    ) {
+      const el =
+        document.createElement("span");
+
+      el.className =
+        "shape-circle";
+
+      if (isOdd) {
+        el.classList.add(
+          "odd-color"
+        );
+      }
+
+      wrap.appendChild(el);
+    }
+
+    else if (
+      problem === "starRotate"
+    ) {
+      const el =
+        document.createElement("span");
+
+      el.className =
+        "shape-star";
+
+      el.textContent =
+        "★";
+
+      if (isOdd) {
+        el.classList.add(
+          "odd-rotate"
+        );
+      }
+
+      wrap.appendChild(el);
+    }
+
+    else if (
+      problem === "squareBorder"
+    ) {
+      const el =
+        document.createElement("span");
+
+      el.className =
+        "shape-square";
+
+      if (isOdd) {
+        el.classList.add(
+          "odd-border"
+        );
+      }
+
+      wrap.appendChild(el);
+    }
+
+    else {
+      const face =
+        document.createElement("span");
+
+      face.className =
+        "eye-face";
+
+      if (isOdd) {
+        face.classList.add(
+          "odd-eyes"
+        );
+      }
+
+      const mouth =
+        document.createElement("span");
+
+      mouth.className =
+        "mouth";
+
+      face.appendChild(mouth);
+
+      wrap.appendChild(face);
+    }
+
+    return wrap;
+  }
+
+  /* =========================================================
+     CREATE BOARD
+  ========================================================= */
+
+  function createBoard() {
+    oddBoard.innerHTML = "";
+
+    const size =
+      gridSizeForLevel();
+
+    oddBoard.className =
+      `odd-board grid-${size}`;
+
+    const count =
+      size * size;
+
+    currentAnswer =
+      Math.floor(
+        Math.random() * count
+      );
+
+    const problem =
+      selectProblem();
+
+    for (
+      let index = 0;
+      index < count;
+      index++
+    ) {
+      const tile =
+        document.createElement("button");
+
+      tile.type = "button";
+
+      tile.className =
+        "odd-tile";
+
+      tile.dataset.index =
+        String(index);
+
+      const isOdd =
+        index === currentAnswer;
+
+      if (problem.type === "emoji") {
+        const value =
+          isOdd
+            ? problem.data.odd
+            : problem.data.normal;
+
+        tile.appendChild(
+          createEmojiContent(value)
+        );
+      }
+      else {
+        tile.appendChild(
+          createCssContent(
+            problem.data,
+            isOdd
+          )
+        );
+      }
+
+      tile.addEventListener(
+        "click",
+        () => {
+          handleTileClick(
+            tile,
+            index
+          );
+        }
+      );
+
+      oddBoard.appendChild(tile);
+    }
+  }
+
+  /* =========================================================
+     STATS
+  ========================================================= */
+
+  function updateStats() {
+    scoreDisplay.textContent =
+      score;
+
+    levelDisplay.textContent =
+      level;
+
+    lifeNumber.textContent =
+      lives;
+
+    lifeDisplay.textContent =
+      lives > 0
+        ? "❤️".repeat(lives)
+        : "💔";
+
+    if (combo <= 0) {
+      comboDisplay.textContent =
+        "🔥 COMBO x0";
+    }
+    else {
+      let prefix = "🔥";
+
+      if (combo >= 3) {
+        prefix = "🔥🔥";
+      }
+
+      if (combo >= 5) {
+        prefix = "⚡";
+      }
+
+      comboDisplay.textContent =
+        `${prefix} COMBO x${combo}`;
+
+      restartAnimation(
+        comboDisplay,
+        "pop"
+      );
+    }
+  }
+
+  /* =========================================================
+     POPUPS
+  ========================================================= */
+
+  async function showCenterPopup(
+    text,
+    duration = 550,
+    bonus = false
+  ) {
+    popupText.textContent =
+      text;
+
+    popupText.className =
+      bonus
+        ? "popup-text bonus"
+        : "popup-text";
+
+    centerPopup.classList.add(
+      "show"
+    );
+
+    restartAnimation(
+      popupText,
+      "popup-text"
+    );
+
+    await sleep(duration);
+
+    centerPopup.classList.remove(
+      "show"
+    );
+  }
+
+  async function showStartCountdown() {
+    const sequence = [
+      "READY...",
+      "3",
+      "2",
+      "1",
+      "GO! 🔥"
+    ];
+
+    for (
+      let i = 0;
+      i < sequence.length;
+      i++
+    ) {
+      await showCenterPopup(
+        sequence[i],
+        i === 0 ? 650 : 500
+      );
+
+      playTone(
+        i === 4 ? 700 : 360,
+        .07,
+        "square",
+        .02
+      );
+    }
+  }
+
+  async function showLevelPopup() {
+    if (isBonusLevel()) {
+      await showCenterPopup(
+        `🎁 BONUS STAGE!\nLEVEL ${level}`,
+        800,
+        true
+      );
+    }
+    else {
+      await showCenterPopup(
+        `LEVEL ${level}`,
+        420
+      );
+    }
+  }
+
+  /* =========================================================
+     GAME START
+  ========================================================= */
+
+  async function startGame() {
+    initAudio();
+
+    stopTimer();
+
+    score = 0;
+    level = 1;
+    lives = 3;
+    combo = 0;
+    bestCombo = 0;
+
+    gameActive = false;
+    inputLocked = true;
+
+    currentTime = 10;
+
+    gameOverOverlay.classList.remove(
+      "show"
+    );
+
+    startOverlay.classList.remove(
+      "show"
+    );
+
+    particleLayer.innerHTML = "";
+
+    message.className =
+      "message";
+
+    message.textContent =
+      "준비하세요!";
+
+    updateStats();
+
+    scoreDisplay.textContent = "0";
+    timeDisplay.textContent = "10.0";
+
+    await showStartCountdown();
+
+    gameActive = true;
+
+    await loadLevel();
+  }
+
+  /* =========================================================
+     LOAD LEVEL
+  ========================================================= */
+
+  async function loadLevel() {
+    if (!gameActive) return;
+
+    inputLocked = true;
+
+    stopTimer();
+
+    updateStats();
+
+    await showLevelPopup();
+
+    if (!gameActive) return;
+
+    createBoard();
+
+    message.className =
+      "message";
+
+    if (isBonusLevel()) {
+      message.textContent =
+        "🎁 빠르게 찾으면 BONUS +1000!";
+    }
+    else {
+      message.textContent =
+        "👀 하나뿐인 다른 그림을 찾아보세요!";
+    }
+
+    inputLocked = false;
+
+    startTimer();
+  }
+
+  /* =========================================================
+     TILE CLICK
+  ========================================================= */
+
+  async function handleTileClick(
+    tile,
+    index
+  ) {
+    initAudio();
+
+    if (
+      !gameActive ||
+      inputLocked
+    ) {
+      return;
+    }
+
+    /*
+      즉시 잠금.
+      빠르게 여러 번 누르는 것 방지
+    */
+    inputLocked = true;
+
+    soundClick();
+
+    if (index === currentAnswer) {
+      await handleCorrect(tile);
+    }
+    else {
+      await handleWrong(tile);
+    }
+  }
+
+  /* =========================================================
+     CORRECT
+  ========================================================= */
+
+  async function handleCorrect(tile) {
+    stopTimer();
+
+    tile.classList.add(
+      "correct-tile",
+      "sparkle"
+    );
+
+    message.className =
+      "message correct";
+
+    message.textContent =
+      Math.random() < .5
+        ? "🎉 CORRECT!"
+        : "✨ 찾았다!";
+
+    combo++;
+
+    if (combo > bestCombo) {
+      bestCombo = combo;
+    }
+
+    const timeRatio =
+      maxTime > 0
+        ? currentTime / maxTime
+        : 0;
+
+    let base =
+      100 +
+      level * 15;
+
+    let speedBonus =
+      Math.round(
+        timeRatio * 200
+      );
+
+    let comboBonus =
+      Math.max(
+        0,
+        (combo - 1) * 60
+      );
+
+    let bonusStageBonus =
+      isBonusLevel()
+        ? 1000
+        : 0;
+
+    let earned =
+      base +
+      speedBonus +
+      comboBonus +
+      bonusStageBonus;
+
+    score += earned;
+
+    scoreDisplay.textContent =
+      score;
+
+    restartAnimation(
+      scoreDisplay,
+      "bump"
+    );
+
+    updateStats();
+
+    showFloatingScore(
+      `+${earned}${timeRatio > .7 ? " ⚡" : ""}`
+    );
+
+    createParticles(
+      combo >= 3 ? 24 : 14
+    );
+
+    soundCorrect();
+
+    if (combo >= 3) {
+      showBigCombo();
+
+      soundCombo();
+    }
+
+    await sleep(620);
+
+    tile.classList.remove(
+      "correct-tile",
+      "sparkle"
+    );
+
+    level++;
+
+    await loadLevel();
+  }
+
+  /* =========================================================
+     WRONG
+  ========================================================= */
+
+  async function handleWrong(tile) {
+    tile.classList.add(
+      "wrong-tile"
+    );
+
+    message.className =
+      "message wrong";
+
+    message.textContent =
+      Math.random() < .5
+        ? "❌ WRONG!"
+        : "😵 다시 찾아봐!";
+
+    combo = 0;
+
+    lives--;
+
+    /*
+      오답 점수 감소
+    */
+    score =
+      Math.max(
+        0,
+        score - 50
+      );
+
+    updateStats();
+
+    soundWrong();
+
+    await sleep(420);
+
+    tile.classList.remove(
+      "wrong-tile"
+    );
+
+    if (lives <= 0) {
+      endGame();
+      return;
+    }
+
+    /*
+      같은 레벨에서 계속 찾도록 함.
+      타이머는 계속 진행.
+    */
+    message.className =
+      "message";
+
+    message.textContent =
+      "👀 아직 있어요! 다시 찾아보세요!";
+
+    /*
+      짧은 입력 잠금 후 다시 허용
+    */
+    await sleep(180);
+
+    inputLocked = false;
+  }
+
+  /* =========================================================
+     TIMEOUT
+  ========================================================= */
+
+  async function handleTimeout() {
+    if (
+      inputLocked ||
+      !gameActive
+    ) {
+      return;
+    }
+
+    inputLocked = true;
+
+    stopTimer();
+
+    combo = 0;
+    lives--;
+
+    updateStats();
+
+    message.className =
+      "message wrong";
+
+    message.textContent =
+      "⏰ TIME OUT!";
+
+    soundWrong();
+
+    restartAnimation(
+      gameShell,
+      "game-shake"
+    );
+
+    await sleep(700);
+
+    if (lives <= 0) {
+      endGame();
+      return;
+    }
+
+    /*
+      목숨이 남았으면 같은 레벨의
+      새로운 문제로 다시 도전
+    */
+    createBoard();
+
+    message.className =
+      "message";
+
+    message.textContent =
+      "❤️ 한 번 더! 다른 그림을 찾아보세요!";
+
+    inputLocked = false;
+
+    startTimer();
+  }
+
+  /* =========================================================
+     FLOAT SCORE
+  ========================================================= */
+
+  function showFloatingScore(text) {
+    const element =
+      document.createElement("div");
+
+    element.className =
+      "float-score";
+
+    element.textContent =
+      text;
+
+    gameShell.appendChild(
+      element
+    );
+
+    setTimeout(() => {
+      element.remove();
+    }, 1000);
+  }
+
+  /* =========================================================
+     BIG COMBO
+  ========================================================= */
+
+  function showBigCombo() {
+    let text =
+      `🔥 COMBO x${combo}!`;
+
+    if (combo >= 5) {
+      text =
+        `⚡ COMBO x${combo}!`;
+    }
+
+    bigCombo.textContent =
+      text;
+
+    restartAnimation(
+      bigCombo,
+      "show"
+    );
+  }
+
+  /* =========================================================
+     PARTICLES
+  ========================================================= */
+
+  function createParticles(
+    amount = 16,
+    record = false
+  ) {
+    const symbols =
+      record
+        ? ["🏆", "⭐", "✨", "🎉", "💫"]
+        : ["⭐", "✨", "💫", "🌟"];
+
+    for (
+      let i = 0;
+      i < amount;
+      i++
+    ) {
+      const particle =
+        document.createElement("span");
+
+      particle.className =
+        "particle";
+
+      particle.textContent =
+        randomItem(symbols);
+
+      particle.style.left =
+        Math.random() * 100 +
+        "%";
+
+      particle.style.fontSize =
+        (13 +
+          Math.random() * 18) +
+        "px";
+
+      particle.style.animationDuration =
+        (1.2 +
+          Math.random() * 1.4) +
+        "s";
+
+      particle.style.animationDelay =
+        Math.random() * .25 +
+        "s";
+
+      particle.style.setProperty(
+        "--drift",
+        (-140 +
+          Math.random() * 280) +
+        "px"
+      );
+
+      particle.style.setProperty(
+        "--spin",
+        (-600 +
+          Math.random() * 1200) +
+        "deg"
+      );
+
+      particleLayer.appendChild(
+        particle
+      );
+
+      setTimeout(() => {
+        particle.remove();
+      }, 3200);
+    }
+  }
+
+  /* =========================================================
+     GAME OVER
+  ========================================================= */
+
+  async function endGame() {
+    gameActive = false;
+    inputLocked = true;
+
+    stopTimer();
+
+    combo = 0;
+
+    updateStats();
+
+    message.className =
+      "message wrong";
+
+    message.textContent =
+      "💥 GAME OVER";
+
+    restartAnimation(
+      gameShell,
+      "game-shake"
+    );
+
+    soundGameOver();
+
+    const newRecord =
+      saveRecords();
+
+    updateBestInfo();
+
+    await sleep(700);
+
+    resultScore.textContent =
+      score;
+
+    resultLevel.textContent =
+      level;
+
+    resultCombo.textContent =
+      bestCombo;
+
+    resultBest.textContent =
+      getBestScore();
+
+    if (newRecord) {
+      newRecordText.textContent =
+        "🏆 NEW RECORD!";
+
+      createParticles(
+        70,
+        true
+      );
+
+      soundRecord();
+    }
+    else {
+      newRecordText.textContent =
+        "";
+    }
+
+    gameOverOverlay.classList.add(
+      "show"
+    );
+  }
+
+  /* =========================================================
+     SOUND BUTTON
+  ========================================================= */
+
+  soundBtn.addEventListener(
+    "click",
+    () => {
+      soundEnabled =
+        !soundEnabled;
+
+      if (soundEnabled) {
+        soundBtn.textContent =
+          "🔊 SOUND ON";
+
+        initAudio();
+
+        setTimeout(
+          soundClick,
+          20
+        );
+      }
+      else {
+        soundBtn.textContent =
+          "🔇 SOUND OFF";
+      }
+    }
+  );
+
+  /* =========================================================
+     START / RESTART
+  ========================================================= */
+
+  startBtn.addEventListener(
+    "click",
+    () => {
+      initAudio();
+      soundClick();
+      startGame();
+    }
+  );
+
+  restartBtn.addEventListener(
+    "click",
+    () => {
+      initAudio();
+      soundClick();
+      startGame();
+    }
+  );
+
+  /* =========================================================
+     iPHONE AUDIO UNLOCK
+  ========================================================= */
+
+  document.addEventListener(
+    "touchstart",
+    () => {
+      if (soundEnabled) {
+        initAudio();
+      }
+    },
+    {
+      passive: true,
+      once: true
+    }
+  );
+
+  document.addEventListener(
+    "pointerdown",
+    () => {
+      if (soundEnabled) {
+        initAudio();
+      }
+    },
+    {
+      once: true
+    }
+  );
+
+  /* =========================================================
+     DOUBLE TAP ZOOM 방지 보조
+  ========================================================= */
+
+  let lastTouchEnd = 0;
+
+  document.addEventListener(
+    "touchend",
+    event => {
+      const now =
+        Date.now();
+
+      if (
+        now - lastTouchEnd <= 300
+      ) {
+        event.preventDefault();
+      }
+
+      lastTouchEnd = now;
+    },
+    {
+      passive: false
+    }
+  );
+
+  /* =========================================================
+     초기화
+  ========================================================= */
+
+  updateBestInfo();
+  updateStats();
+
+})();
+</script>
+
+</body>
+</html>

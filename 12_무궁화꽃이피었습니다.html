@@ -1,0 +1,5007 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+>
+
+<meta name="theme-color" content="#68d9ff">
+
+<title>🌺 무궁화꽃이 피었습니다!</title>
+
+<style>
+:root {
+  --green:#27c96f;
+  --red:#ff435d;
+  --orange:#ff9b35;
+  --purple:#5c52dc;
+  --blue:#55c8f7;
+  --text:#302b4c;
+}
+
+* {
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+html,
+body {
+  margin:0;
+  padding:0;
+
+  width:100%;
+  height:100%;
+
+  overflow:hidden;
+
+  overscroll-behavior:none;
+  touch-action:none;
+
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+body {
+  min-height:100vh;
+  min-height:100dvh;
+
+  display:flex;
+  justify-content:center;
+
+  font-family:
+    "Arial Rounded MT Bold",
+    "Apple SD Gothic Neo",
+    "Noto Sans KR",
+    Arial,
+    sans-serif;
+
+  color:var(--text);
+
+  background:
+    linear-gradient(
+      135deg,
+      #63dcff,
+      #8278ef 55%,
+      #ff8cbb
+    );
+}
+
+button {
+  font-family:inherit;
+  user-select:none;
+  -webkit-user-select:none;
+  touch-action:none;
+}
+
+/* ======================================================
+   전체 게임
+====================================================== */
+
+.game {
+  position:relative;
+
+  width:min(1100px,100%);
+
+  min-height:100vh;
+  min-height:100dvh;
+
+  display:flex;
+  flex-direction:column;
+
+  padding:
+    max(5px,env(safe-area-inset-top))
+    max(6px,env(safe-area-inset-right))
+    max(6px,env(safe-area-inset-bottom))
+    max(6px,env(safe-area-inset-left));
+
+  background:white;
+
+  overflow:hidden;
+}
+
+/* ======================================================
+   제목
+====================================================== */
+
+.header {
+  flex:none;
+  position:relative;
+  z-index:10;
+
+  text-align:center;
+}
+
+.title {
+  margin:1px 0 0;
+
+  font-size:clamp(22px,4.4vw,42px);
+  line-height:1.08;
+
+  color:#4b41be;
+
+  text-shadow:
+    0 3px 0 white,
+    0 5px 12px rgba(60,50,140,.13);
+}
+
+.subtitle {
+  margin:2px 0 4px;
+
+  font-size:clamp(9px,2vw,14px);
+
+  font-weight:900;
+  letter-spacing:.1em;
+
+  color:#79738c;
+}
+
+/* ======================================================
+   점수판
+====================================================== */
+
+.stats {
+  flex:none;
+  position:relative;
+  z-index:10;
+
+  width:min(900px,100%);
+
+  margin:2px auto 4px;
+
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+
+  gap:5px;
+}
+
+.stat {
+  min-width:0;
+
+  padding:6px 3px;
+
+  border-radius:13px;
+
+  text-align:center;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fff,
+      #f2f1ff
+    );
+
+  box-shadow:
+    0 5px 13px rgba(55,45,120,.08);
+}
+
+.stat-label {
+  font-size:clamp(8px,1.8vw,11px);
+
+  font-weight:900;
+
+  color:#827c95;
+}
+
+.stat-value {
+  margin-top:1px;
+
+  font-size:clamp(13px,3vw,19px);
+
+  font-weight:1000;
+
+  color:#453da5;
+
+  white-space:nowrap;
+}
+
+.stat-value.bump {
+  animation:bump .4s ease;
+}
+
+/* ======================================================
+   진행도
+====================================================== */
+
+.progress-area {
+  flex:none;
+
+  width:min(900px,100%);
+
+  margin:0 auto 4px;
+
+  position:relative;
+  z-index:10;
+}
+
+.progress-track {
+  position:relative;
+
+  width:100%;
+  height:16px;
+
+  border-radius:999px;
+
+  overflow:hidden;
+
+  background:#e9e8f4;
+
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,.08);
+}
+
+.progress-fill {
+  width:0%;
+  height:100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      #50dc95,
+      #4acbf4,
+      #7768ea
+    );
+
+  transition:width .06s linear;
+}
+
+.progress-runner {
+  position:absolute;
+
+  top:50%;
+  left:1%;
+
+  transform:translate(-50%,-50%);
+
+  font-size:17px;
+
+  transition:left .06s linear;
+}
+
+/* ======================================================
+   운동장
+====================================================== */
+
+.field {
+  flex:1;
+  position:relative;
+
+  min-height:280px;
+
+  overflow:hidden;
+
+  border-radius:22px;
+
+  background:
+    linear-gradient(
+      to bottom,
+      #5ed5ff 0%,
+      #b9eeff 37%,
+      #98de79 37%,
+      #6cca66 50%,
+      #e7b36a 50%,
+      #d39a53 100%
+    );
+
+  box-shadow:
+    inset 0 0 0 3px rgba(255,255,255,.58),
+    0 8px 20px rgba(50,40,110,.12);
+
+  transform-origin:center;
+
+  transition:
+    box-shadow .18s ease,
+    filter .2s ease;
+}
+
+.field.go {
+  box-shadow:
+    inset 0 0 0 6px rgba(39,204,105,.85),
+    0 0 24px rgba(39,204,105,.32);
+}
+
+.field.stop {
+  box-shadow:
+    inset 0 0 0 7px rgba(255,55,78,.94),
+    0 0 28px rgba(255,55,78,.40);
+}
+
+.field.final {
+  animation:finalGlow .7s ease infinite alternate;
+}
+
+.field.shake {
+  animation:fieldShake .45s ease;
+}
+
+/* ======================================================
+   배경
+====================================================== */
+
+.sun {
+  position:absolute;
+
+  right:8%;
+  top:8%;
+
+  width:clamp(44px,7vw,72px);
+
+  aspect-ratio:1;
+
+  border-radius:50%;
+
+  background:#ffe46c;
+
+  box-shadow:
+    0 0 32px rgba(255,228,90,.7);
+}
+
+.cloud {
+  position:absolute;
+
+  width:85px;
+  height:25px;
+
+  border-radius:30px;
+
+  background:rgba(255,255,255,.9);
+}
+
+.cloud::before,
+.cloud::after {
+  content:"";
+
+  position:absolute;
+
+  border-radius:50%;
+
+  background:inherit;
+}
+
+.cloud::before {
+  width:36px;
+  height:36px;
+
+  left:15px;
+  top:-17px;
+}
+
+.cloud::after {
+  width:43px;
+  height:43px;
+
+  right:12px;
+  top:-21px;
+}
+
+.cloud1 {
+  left:8%;
+  top:13%;
+}
+
+.cloud2 {
+  left:58%;
+  top:23%;
+
+  transform:scale(.7);
+}
+
+.cloud3 {
+  left:31%;
+  top:29%;
+
+  transform:scale(.52);
+}
+
+.tree {
+  position:absolute;
+
+  bottom:47%;
+
+  width:55px;
+  height:96px;
+}
+
+.tree1 {
+  left:5%;
+}
+
+.tree2 {
+  right:5%;
+
+  transform:scale(.82);
+}
+
+.tree-trunk {
+  position:absolute;
+
+  left:21px;
+  bottom:0;
+
+  width:14px;
+  height:55px;
+
+  border-radius:5px;
+
+  background:#95613e;
+}
+
+.tree-top {
+  position:absolute;
+
+  top:0;
+  left:0;
+
+  width:58px;
+  height:58px;
+
+  border-radius:50%;
+
+  background:#45bd59;
+
+  box-shadow:
+    -16px 12px 0 #52c561,
+    17px 12px 0 #38aa4e;
+}
+
+.spectators {
+  position:absolute;
+
+  top:42%;
+  left:50%;
+
+  transform:translateX(-50%);
+
+  display:flex;
+
+  gap:clamp(12px,4vw,42px);
+
+  font-size:clamp(16px,3.5vw,29px);
+
+  opacity:.87;
+}
+
+/* ======================================================
+   결승선
+====================================================== */
+
+.finish-zone {
+  position:absolute;
+
+  top:46%;
+  left:8%;
+  right:8%;
+
+  height:10px;
+}
+
+.finish-line {
+  position:absolute;
+
+  left:0;
+  right:0;
+
+  height:7px;
+
+  border-radius:3px;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #fff 0,
+      #fff 18px,
+      #e94755 18px,
+      #e94755 36px
+    );
+}
+
+.finish-flag {
+  position:absolute;
+
+  top:-48px;
+
+  font-size:clamp(31px,6vw,50px);
+}
+
+.finish-flag.left {
+  left:-4px;
+}
+
+.finish-flag.right {
+  right:-4px;
+}
+
+.start-line {
+  position:absolute;
+
+  bottom:10%;
+  left:8%;
+  right:8%;
+
+  height:6px;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      white 0,
+      white 16px,
+      #555 16px,
+      #555 32px
+    );
+}
+
+/* ======================================================
+   신호등
+====================================================== */
+
+.signal {
+  position:absolute;
+
+  z-index:20;
+
+  left:50%;
+  top:3%;
+
+  transform:translateX(-50%);
+
+  min-width:min(90%,430px);
+
+  padding:7px 12px;
+
+  border-radius:17px;
+
+  color:white;
+
+  text-align:center;
+
+  font-size:clamp(18px,4.7vw,31px);
+
+  font-weight:1000;
+
+  box-shadow:
+    0 6px 16px rgba(0,0,0,.16);
+}
+
+.signal.ready {
+  background:rgba(76,67,182,.95);
+}
+
+.signal.green {
+  background:rgba(28,191,91,.95);
+}
+
+.signal.warning {
+  background:rgba(255,150,37,.96);
+
+  animation:warning .25s ease infinite alternate;
+}
+
+.signal.red {
+  background:rgba(235,50,72,.98);
+
+  animation:warning .3s ease infinite alternate;
+}
+
+/* ======================================================
+   노래
+====================================================== */
+
+.chant {
+  position:absolute;
+
+  z-index:19;
+
+  top:14%;
+  left:50%;
+
+  transform:translateX(-50%);
+
+  max-width:92%;
+
+  padding:5px 11px;
+
+  border-radius:12px;
+
+  background:rgba(255,255,255,.91);
+
+  color:#554c82;
+
+  font-size:clamp(11px,2.8vw,17px);
+
+  font-weight:1000;
+
+  white-space:nowrap;
+
+  box-shadow:
+    0 4px 12px rgba(0,0,0,.08);
+}
+
+.notes {
+  position:absolute;
+
+  z-index:18;
+
+  top:22%;
+  left:50%;
+
+  transform:translateX(-50%);
+
+  padding:3px 9px;
+
+  border-radius:999px;
+
+  background:rgba(255,255,255,.77);
+
+  color:#766aa4;
+
+  font-size:clamp(9px,2vw,13px);
+
+  font-weight:900;
+
+  opacity:0;
+
+  transition:opacity .15s ease;
+}
+
+.notes.show {
+  opacity:1;
+}
+
+.tempo-badge {
+  position:absolute;
+
+  z-index:18;
+
+  right:3%;
+  top:21%;
+
+  padding:4px 8px;
+
+  border-radius:999px;
+
+  background:rgba(255,255,255,.78);
+
+  color:#5c5790;
+
+  font-size:clamp(8px,2vw,12px);
+
+  font-weight:1000;
+}
+
+/* ======================================================
+   술래
+====================================================== */
+
+.teacher-wrap {
+  position:absolute;
+
+  z-index:12;
+
+  top:29%;
+  left:50%;
+
+  transform:translate(-50%,-50%);
+
+  width:clamp(68px,13vw,112px);
+  height:clamp(103px,18vw,158px);
+
+  perspective:800px;
+}
+
+.teacher {
+  position:relative;
+
+  width:100%;
+  height:100%;
+
+  transform-style:preserve-3d;
+
+  transform:rotateY(180deg);
+
+  transition:
+    transform .28s cubic-bezier(.2,.72,.2,1);
+}
+
+.teacher.facing {
+  transform:rotateY(0deg);
+}
+
+.teacher-head {
+  position:absolute;
+
+  left:24%;
+  top:5%;
+
+  width:52%;
+  aspect-ratio:1;
+
+  border-radius:50%;
+
+  background:#ffd0a9;
+
+  border:2px solid rgba(110,70,55,.14);
+
+  z-index:3;
+}
+
+.teacher-hair {
+  position:absolute;
+
+  left:22%;
+  top:4%;
+
+  width:56%;
+  height:24%;
+
+  border-radius:50% 50% 30% 30%;
+
+  background:#704b36;
+
+  z-index:4;
+}
+
+.flower {
+  position:absolute;
+
+  z-index:8;
+
+  left:50%;
+  top:-10%;
+
+  transform:translateX(-50%);
+
+  font-size:clamp(27px,5.5vw,45px);
+}
+
+.teacher-eyes {
+  position:absolute;
+
+  z-index:7;
+
+  top:24%;
+  left:0;
+
+  width:100%;
+
+  display:flex;
+  justify-content:center;
+
+  gap:24%;
+}
+
+.teacher-eye {
+  width:7px;
+  height:8px;
+
+  border-radius:50%;
+
+  background:#332a31;
+}
+
+.teacher-mouth {
+  position:absolute;
+
+  z-index:7;
+
+  top:40%;
+  left:39%;
+
+  width:22%;
+  height:8%;
+
+  border-bottom:3px solid #ad565e;
+
+  border-radius:0 0 50% 50%;
+}
+
+.teacher-body {
+  position:absolute;
+
+  z-index:2;
+
+  left:27%;
+  top:47%;
+
+  width:46%;
+  height:41%;
+
+  border-radius:22px 22px 13px 13px;
+
+  background:
+    linear-gradient(
+      #61ccff,
+      #567ddd
+    );
+}
+
+.teacher-arm {
+  position:absolute;
+
+  top:52%;
+
+  width:11%;
+  height:30%;
+
+  border-radius:20px;
+
+  background:#ffd0a9;
+}
+
+.teacher-arm.left {
+  left:18%;
+  transform:rotate(10deg);
+}
+
+.teacher-arm.right {
+  right:18%;
+  transform:rotate(-10deg);
+}
+
+.teacher:not(.facing) .teacher-eyes,
+.teacher:not(.facing) .teacher-mouth {
+  opacity:0;
+}
+
+/* ======================================================
+   플레이어
+====================================================== */
+
+.player-wrap {
+  position:absolute;
+
+  z-index:13;
+
+  left:50%;
+  bottom:11%;
+
+  width:clamp(48px,9vw,75px);
+  height:clamp(74px,14vw,110px);
+
+  transform:translateX(-50%);
+
+  transition:bottom .06s linear;
+}
+
+.player {
+  position:relative;
+
+  width:100%;
+  height:100%;
+}
+
+.player-head {
+  position:absolute;
+
+  z-index:3;
+
+  left:29%;
+  top:0;
+
+  width:42%;
+  aspect-ratio:1;
+
+  border-radius:50%;
+
+  background:#ffd0a8;
+
+  border:2px solid rgba(90,50,50,.13);
+}
+
+.player-hair {
+  position:absolute;
+
+  z-index:4;
+
+  left:28%;
+  top:0;
+
+  width:44%;
+  height:19%;
+
+  border-radius:50% 50% 30% 30%;
+
+  background:#45362f;
+}
+
+.player-body {
+  position:absolute;
+
+  z-index:2;
+
+  left:30%;
+  top:35%;
+
+  width:40%;
+  height:38%;
+
+  border-radius:14px 14px 8px 8px;
+
+  background:
+    linear-gradient(
+      #ff766d,
+      #f14d72
+    );
+}
+
+.player-arm,
+.player-leg {
+  position:absolute;
+
+  z-index:1;
+
+  transform-origin:top center;
+
+  border-radius:10px;
+}
+
+.player-arm {
+  top:40%;
+
+  width:9%;
+  height:30%;
+
+  background:#ffd0a8;
+}
+
+.player-arm.left {
+  left:24%;
+
+  transform:rotate(18deg);
+}
+
+.player-arm.right {
+  right:24%;
+
+  transform:rotate(-18deg);
+}
+
+.player-leg {
+  top:69%;
+
+  width:11%;
+  height:31%;
+
+  background:#3f51a0;
+}
+
+.player-leg.left {
+  left:35%;
+
+  transform:rotate(7deg);
+}
+
+.player-leg.right {
+  right:35%;
+
+  transform:rotate(-7deg);
+}
+
+.player.running {
+  animation:runBody .18s linear infinite alternate;
+}
+
+.player.running .player-arm.left {
+  animation:armLeft .22s linear infinite alternate;
+}
+
+.player.running .player-arm.right {
+  animation:armRight .22s linear infinite alternate;
+}
+
+.player.running .player-leg.left {
+  animation:legLeft .22s linear infinite alternate;
+}
+
+.player.running .player-leg.right {
+  animation:legRight .22s linear infinite alternate;
+}
+
+.player-wrap.caught {
+  animation:caught .5s ease;
+}
+
+.player-wrap.clear {
+  animation:clearJump .48s ease infinite alternate;
+}
+
+.player-wrap.clear .player-arm.left {
+  transform:rotate(-145deg);
+}
+
+.player-wrap.clear .player-arm.right {
+  transform:rotate(145deg);
+}
+
+/* ======================================================
+   먼지
+====================================================== */
+
+.dust-layer {
+  position:absolute;
+
+  inset:0;
+
+  z-index:11;
+
+  pointer-events:none;
+}
+
+.dust {
+  position:absolute;
+
+  width:10px;
+  height:10px;
+
+  border-radius:50%;
+
+  background:rgba(242,220,180,.78);
+
+  animation:dust .55s linear forwards;
+}
+
+/* ======================================================
+   버튼
+====================================================== */
+
+.controls {
+  flex:none;
+
+  width:min(900px,100%);
+
+  margin:6px auto 0;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  gap:7px;
+
+  position:relative;
+  z-index:25;
+}
+
+.run-btn {
+  width:min(450px,76%);
+
+  min-height:80px;
+
+  border:0;
+
+  border-radius:24px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffe772,
+      #ffad40
+    );
+
+  color:#523a24;
+
+  font-size:clamp(25px,6vw,38px);
+
+  font-weight:1000;
+
+  cursor:pointer;
+
+  box-shadow:
+    0 8px 0 #d9872c,
+    0 13px 21px rgba(120,78,20,.20);
+
+  transition:
+    transform .07s ease,
+    box-shadow .07s ease;
+}
+
+.run-btn.pressed {
+  transform:
+    translateY(5px)
+    scale(.985);
+
+  box-shadow:
+    0 3px 0 #d9872c,
+    0 6px 10px rgba(120,78,20,.16);
+}
+
+.run-btn.danger {
+  color:white;
+
+  background:
+    linear-gradient(
+      #ff7b84,
+      #ff405d
+    );
+}
+
+.sound-btn {
+  min-width:116px;
+
+  min-height:54px;
+
+  border:0;
+
+  border-radius:16px;
+
+  background:#eeedff;
+
+  color:#4d46a4;
+
+  font-size:11px;
+
+  font-weight:1000;
+
+  cursor:pointer;
+}
+
+/* ======================================================
+   Overlay
+====================================================== */
+
+.overlay {
+  position:absolute;
+
+  z-index:60;
+
+  inset:0;
+
+  display:none;
+  align-items:center;
+  justify-content:center;
+
+  padding:
+    max(18px,env(safe-area-inset-top))
+    max(15px,env(safe-area-inset-right))
+    max(18px,env(safe-area-inset-bottom))
+    max(15px,env(safe-area-inset-left));
+
+  background:rgba(40,34,83,.75);
+
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+
+.overlay.show {
+  display:flex;
+
+  animation:fade .25s ease;
+}
+
+.overlay-card {
+  width:min(640px,100%);
+
+  max-height:94dvh;
+
+  overflow:auto;
+
+  padding:24px 17px;
+
+  border-radius:28px;
+
+  background:white;
+
+  text-align:center;
+
+  box-shadow:
+    0 25px 70px rgba(0,0,0,.28);
+
+  animation:
+    overlayPop .4s cubic-bezier(.2,1.5,.4,1);
+}
+
+.overlay-emoji {
+  font-size:clamp(55px,13vw,95px);
+
+  line-height:1;
+}
+
+.overlay-title {
+  margin:9px 0 7px;
+
+  font-size:clamp(25px,6vw,42px);
+
+  line-height:1.17;
+
+  font-weight:1000;
+
+  color:#493fc0;
+}
+
+.overlay-desc {
+  margin:0 auto 15px;
+
+  font-size:clamp(13px,3vw,18px);
+
+  line-height:1.6;
+
+  font-weight:800;
+
+  color:#716b83;
+}
+
+.big-btn {
+  width:min(360px,100%);
+
+  min-height:62px;
+
+  border:0;
+
+  border-radius:20px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #6357ec,
+      #ff65a2
+    );
+
+  color:white;
+
+  font-size:clamp(19px,4vw,25px);
+
+  font-weight:1000;
+
+  cursor:pointer;
+
+  box-shadow:
+    0 9px 20px rgba(90,72,210,.28);
+}
+
+.big-btn:active {
+  transform:scale(.95);
+}
+
+.instructions {
+  width:min(470px,100%);
+
+  margin:14px auto;
+
+  display:grid;
+
+  gap:6px;
+}
+
+.instruction {
+  padding:8px;
+
+  border-radius:13px;
+
+  background:#f5f4ff;
+
+  color:#554fa1;
+
+  font-size:clamp(12px,2.7vw,15px);
+
+  font-weight:900;
+}
+
+.best-box {
+  margin-top:13px;
+
+  padding:10px;
+
+  border-radius:15px;
+
+  background:#f4f3ff;
+
+  color:#5c55a1;
+
+  line-height:1.55;
+
+  font-weight:900;
+}
+
+/* ======================================================
+   팝업
+====================================================== */
+
+.popup-layer {
+  position:absolute;
+
+  z-index:50;
+
+  inset:0;
+
+  display:none;
+  align-items:center;
+  justify-content:center;
+
+  pointer-events:none;
+}
+
+.popup-layer.show {
+  display:flex;
+}
+
+.popup {
+  max-width:90%;
+
+  padding:16px 23px;
+
+  border-radius:23px;
+
+  background:rgba(72,61,185,.95);
+
+  color:white;
+
+  text-align:center;
+
+  font-size:clamp(31px,8vw,67px);
+
+  font-weight:1000;
+
+  white-space:pre-line;
+
+  box-shadow:
+    0 14px 40px rgba(35,28,110,.28);
+
+  animation:popupIn .38s ease;
+}
+
+.popup.danger {
+  background:
+    linear-gradient(
+      135deg,
+      #ff435e,
+      #ff823d
+    );
+}
+
+.popup.clear {
+  background:
+    linear-gradient(
+      135deg,
+      #28cb7c,
+      #48bdf4
+    );
+}
+
+.popup.final {
+  background:
+    linear-gradient(
+      135deg,
+      #ff932d,
+      #ff4d96
+    );
+}
+
+/* ======================================================
+   결과
+====================================================== */
+
+.new-record {
+  min-height:28px;
+
+  margin:5px 0;
+
+  color:#e49600;
+
+  font-size:clamp(18px,4vw,26px);
+
+  font-weight:1000;
+}
+
+.result-grid {
+  width:min(470px,100%);
+
+  margin:14px auto;
+
+  display:grid;
+  grid-template-columns:1fr 1fr;
+
+  gap:7px;
+}
+
+.result {
+  padding:10px 5px;
+
+  border-radius:15px;
+
+  background:#f5f4ff;
+
+  color:#514b99;
+
+  font-weight:1000;
+
+  line-height:1.45;
+}
+
+/* ======================================================
+   파티클
+====================================================== */
+
+.particles {
+  position:absolute;
+
+  z-index:80;
+
+  inset:0;
+
+  overflow:hidden;
+
+  pointer-events:none;
+}
+
+.particle {
+  position:absolute;
+
+  top:-30px;
+
+  animation:particleFall linear forwards;
+}
+
+/* ======================================================
+   애니메이션
+====================================================== */
+
+@keyframes bump {
+  0% {
+    transform:scale(1);
+  }
+
+  50% {
+    transform:scale(1.45);
+  }
+
+  100% {
+    transform:scale(1);
+  }
+}
+
+@keyframes warning {
+  from {
+    transform:
+      translateX(-50%)
+      scale(1);
+  }
+
+  to {
+    transform:
+      translateX(-50%)
+      scale(1.07);
+  }
+}
+
+@keyframes runBody {
+  from {
+    transform:translateY(0);
+  }
+
+  to {
+    transform:translateY(-4px);
+  }
+}
+
+@keyframes armLeft {
+  from {
+    transform:rotate(55deg);
+  }
+
+  to {
+    transform:rotate(-55deg);
+  }
+}
+
+@keyframes armRight {
+  from {
+    transform:rotate(-55deg);
+  }
+
+  to {
+    transform:rotate(55deg);
+  }
+}
+
+@keyframes legLeft {
+  from {
+    transform:rotate(35deg);
+  }
+
+  to {
+    transform:rotate(-35deg);
+  }
+}
+
+@keyframes legRight {
+  from {
+    transform:rotate(-35deg);
+  }
+
+  to {
+    transform:rotate(35deg);
+  }
+}
+
+@keyframes caught {
+  0%,
+  100% {
+    transform:translateX(-50%);
+  }
+
+  20% {
+    transform:
+      translateX(calc(-50% - 12px))
+      rotate(-5deg);
+  }
+
+  40% {
+    transform:
+      translateX(calc(-50% + 12px))
+      rotate(5deg);
+  }
+
+  60% {
+    transform:
+      translateX(calc(-50% - 8px));
+  }
+
+  80% {
+    transform:
+      translateX(calc(-50% + 8px));
+  }
+}
+
+@keyframes clearJump {
+  from {
+    transform:
+      translateX(-50%)
+      translateY(0);
+  }
+
+  to {
+    transform:
+      translateX(-50%)
+      translateY(-22px);
+  }
+}
+
+@keyframes dust {
+  from {
+    opacity:.9;
+
+    transform:scale(.5);
+  }
+
+  to {
+    opacity:0;
+
+    transform:
+      scale(1.7)
+      translate(
+        var(--dx),
+        var(--dy)
+      );
+  }
+}
+
+@keyframes fieldShake {
+  0%,
+  100% {
+    transform:translateX(0);
+  }
+
+  20% {
+    transform:translateX(-8px);
+  }
+
+  40% {
+    transform:translateX(8px);
+  }
+
+  60% {
+    transform:translateX(-5px);
+  }
+
+  80% {
+    transform:translateX(5px);
+  }
+}
+
+@keyframes finalGlow {
+  from {
+    filter:saturate(1);
+  }
+
+  to {
+    filter:
+      saturate(1.3)
+      brightness(1.05);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity:0;
+  }
+
+  to {
+    opacity:1;
+  }
+}
+
+@keyframes overlayPop {
+  0% {
+    opacity:0;
+    transform:scale(.7);
+  }
+
+  70% {
+    transform:scale(1.04);
+  }
+
+  100% {
+    opacity:1;
+    transform:scale(1);
+  }
+}
+
+@keyframes popupIn {
+  0% {
+    opacity:0;
+    transform:scale(.45);
+  }
+
+  70% {
+    transform:scale(1.12);
+  }
+
+  100% {
+    opacity:1;
+    transform:scale(1);
+  }
+}
+
+@keyframes particleFall {
+  from {
+    opacity:1;
+
+    transform:
+      translate3d(0,-20px,0)
+      rotate(0deg);
+  }
+
+  to {
+    opacity:0;
+
+    transform:
+      translate3d(
+        var(--drift),
+        110vh,
+        0
+      )
+      rotate(var(--spin));
+  }
+}
+
+/* ======================================================
+   모바일
+====================================================== */
+
+@media (max-width:650px) {
+
+  .title {
+    font-size:22px;
+  }
+
+  .subtitle {
+    font-size:8px;
+  }
+
+  .stats {
+    gap:3px;
+  }
+
+  .stat {
+    padding:4px 2px;
+
+    border-radius:10px;
+  }
+
+  .stat-label {
+    font-size:7px;
+  }
+
+  .stat-value {
+    font-size:12px;
+  }
+
+  .progress-track {
+    height:12px;
+  }
+
+  .progress-runner {
+    font-size:13px;
+  }
+
+  .field {
+    min-height:245px;
+
+    border-radius:16px;
+  }
+
+  .signal {
+    padding:5px 8px;
+
+    border-radius:12px;
+
+    font-size:clamp(17px,5vw,24px);
+  }
+
+  .chant {
+    font-size:10px;
+  }
+
+  .notes {
+    font-size:9px;
+  }
+
+  .tempo-badge {
+    top:21%;
+
+    font-size:8px;
+  }
+
+  .teacher-wrap {
+    top:30%;
+  }
+
+  .run-btn {
+    width:calc(100% - 96px);
+
+    min-height:70px;
+
+    border-radius:20px;
+
+    font-size:26px;
+  }
+
+  .sound-btn {
+    min-width:89px;
+
+    min-height:50px;
+
+    font-size:9px;
+  }
+}
+
+@media (max-width:430px) and (max-height:730px) {
+
+  .subtitle {
+    display:none;
+  }
+
+  .title {
+    font-size:19px;
+  }
+
+  .stat {
+    padding:3px 1px;
+  }
+
+  .field {
+    min-height:215px;
+  }
+
+  .notes,
+  .tempo-badge {
+    display:none;
+  }
+
+  .chant {
+    font-size:9px;
+  }
+
+  .run-btn {
+    min-height:59px;
+
+    font-size:22px;
+  }
+
+  .sound-btn {
+    min-height:44px;
+  }
+}
+
+/* ======================================================
+   가로 모드
+====================================================== */
+
+@media (orientation:landscape) and (max-height:540px) {
+
+  .game {
+    display:grid;
+
+    grid-template-columns:1fr 170px;
+    grid-template-rows:24px 34px 1fr;
+
+    gap:3px;
+
+    padding:
+      max(3px,env(safe-area-inset-top))
+      max(6px,env(safe-area-inset-right))
+      max(3px,env(safe-area-inset-bottom))
+      max(6px,env(safe-area-inset-left));
+  }
+
+  .header {
+    grid-column:1/-1;
+  }
+
+  .title {
+    font-size:19px;
+  }
+
+  .subtitle {
+    display:none;
+  }
+
+  .stats {
+    grid-column:1/-1;
+
+    max-width:650px;
+
+    margin:0 auto;
+  }
+
+  .stat {
+    padding:2px;
+  }
+
+  .stat-label {
+    font-size:6px;
+  }
+
+  .stat-value {
+    font-size:11px;
+  }
+
+  .progress-area {
+    position:absolute;
+
+    z-index:30;
+
+    top:31px;
+    left:7px;
+
+    width:165px;
+  }
+
+  .progress-track {
+    height:9px;
+  }
+
+  .field {
+    grid-column:1;
+
+    min-height:0;
+    height:100%;
+
+    border-radius:13px;
+  }
+
+  .controls {
+    grid-column:2;
+
+    width:100%;
+    height:100%;
+
+    margin:0;
+
+    flex-direction:column;
+  }
+
+  .run-btn {
+    width:100%;
+
+    min-height:0;
+
+    flex:1;
+
+    border-radius:17px;
+
+    font-size:23px;
+  }
+
+  .sound-btn {
+    width:100%;
+
+    min-height:36px;
+  }
+
+  .signal {
+    min-width:46%;
+
+    padding:3px 7px;
+
+    font-size:16px;
+  }
+
+  .chant {
+    top:16%;
+
+    font-size:8px;
+  }
+
+  .notes,
+  .tempo-badge {
+    display:none;
+  }
+
+  .teacher-wrap {
+    top:31%;
+
+    width:60px;
+    height:91px;
+  }
+
+  .player-wrap {
+    width:42px;
+    height:65px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<main class="game">
+
+  <div
+    class="particles"
+    id="particles"
+  ></div>
+
+  <header class="header">
+
+    <h1 class="title">
+      🌺 무궁화꽃이 피었습니다!
+    </h1>
+
+    <div class="subtitle">
+      RED LIGHT, GREEN LIGHT
+    </div>
+
+  </header>
+
+  <section class="stats">
+
+    <div class="stat">
+      <div class="stat-label">
+        🏆 SCORE
+      </div>
+
+      <div
+        class="stat-value"
+        id="score"
+      >
+        0
+      </div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">
+        🌺 LEVEL
+      </div>
+
+      <div
+        class="stat-value"
+        id="level"
+      >
+        1
+      </div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">
+        ❤️ LIFE
+      </div>
+
+      <div
+        class="stat-value"
+        id="lives"
+      >
+        ❤️❤️❤️
+      </div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">
+        🏁 GOAL
+      </div>
+
+      <div
+        class="stat-value"
+        id="goal"
+      >
+        0%
+      </div>
+    </div>
+
+  </section>
+
+  <section class="progress-area">
+
+    <div class="progress-track">
+
+      <div
+        class="progress-fill"
+        id="progressFill"
+      ></div>
+
+      <div
+        class="progress-runner"
+        id="progressRunner"
+      >
+        🏃
+      </div>
+
+    </div>
+
+  </section>
+
+  <section
+    class="field"
+    id="field"
+  >
+
+    <div class="sun"></div>
+
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div>
+    <div class="cloud cloud3"></div>
+
+    <div class="tree tree1">
+      <div class="tree-trunk"></div>
+      <div class="tree-top"></div>
+    </div>
+
+    <div class="tree tree2">
+      <div class="tree-trunk"></div>
+      <div class="tree-top"></div>
+    </div>
+
+    <div class="spectators">
+      <span>🧒</span>
+      <span>👧</span>
+      <span>👦</span>
+      <span>🧑</span>
+      <span>👧</span>
+    </div>
+
+    <div class="finish-zone">
+
+      <div class="finish-line"></div>
+
+      <div class="finish-flag left">
+        🏁
+      </div>
+
+      <div class="finish-flag right">
+        🏁
+      </div>
+
+    </div>
+
+    <div class="start-line"></div>
+
+    <div
+      class="signal ready"
+      id="signal"
+    >
+      준비하세요!
+    </div>
+
+    <div
+      class="chant"
+      id="chant"
+    >
+      🌺 노래가 나올 때 달리세요!
+    </div>
+
+    <div
+      class="notes"
+      id="notes"
+    >
+      ♪ 미 라 라 라 솔 라 라 미 미 솔 ♪
+    </div>
+
+    <div
+      class="tempo-badge"
+      id="tempoBadge"
+    >
+      🎵 박자 : ?
+    </div>
+
+    <!-- 술래 -->
+
+    <div class="teacher-wrap">
+
+      <div
+        class="teacher"
+        id="teacher"
+      >
+
+        <div class="flower">
+          🌻
+        </div>
+
+        <div class="teacher-hair"></div>
+        <div class="teacher-head"></div>
+
+        <div class="teacher-eyes">
+          <span class="teacher-eye"></span>
+          <span class="teacher-eye"></span>
+        </div>
+
+        <div class="teacher-mouth"></div>
+
+        <div class="teacher-body"></div>
+
+        <div class="teacher-arm left"></div>
+        <div class="teacher-arm right"></div>
+
+      </div>
+
+    </div>
+
+    <!-- 플레이어 -->
+
+    <div
+      class="player-wrap"
+      id="playerWrap"
+    >
+
+      <div
+        class="player"
+        id="player"
+      >
+
+        <div class="player-head"></div>
+        <div class="player-hair"></div>
+
+        <div class="player-body"></div>
+
+        <div class="player-arm left"></div>
+        <div class="player-arm right"></div>
+
+        <div class="player-leg left"></div>
+        <div class="player-leg right"></div>
+
+      </div>
+
+    </div>
+
+    <div
+      class="dust-layer"
+      id="dustLayer"
+    ></div>
+
+  </section>
+
+  <section class="controls">
+
+    <button
+      class="run-btn"
+      id="runBtn"
+      type="button"
+    >
+      🏃 RUN
+    </button>
+
+    <button
+      class="sound-btn"
+      id="soundBtn"
+      type="button"
+    >
+      🔊 SOUND ON
+    </button>
+
+  </section>
+
+  <!-- 시작 화면 -->
+
+  <section
+    class="overlay show"
+    id="startOverlay"
+  >
+
+    <div class="overlay-card">
+
+      <div class="overlay-emoji">
+        🌺🏃🌻
+      </div>
+
+      <div class="overlay-title">
+        무궁화꽃이 피었습니다
+      </div>
+
+      <div class="overlay-desc">
+
+        노래가 나오는 동안 달리세요!<br><br>
+
+        <b>
+          🎵 미-라-라-라-솔-라-라-미-미-솔
+        </b>
+
+        <br><br>
+
+        노래 속도는 매번 랜덤으로 달라집니다.<br>
+        느리다가 갑자기 빨라질 수도 있어요!<br><br>
+
+        마지막 <b>솔</b>이 끝난 후 술래가 돌아봅니다.
+
+      </div>
+
+      <div class="instructions">
+
+        <div class="instruction">
+          🟢 GO : RUN을 누르고 달리기
+        </div>
+
+        <div class="instruction">
+          🎵 매번 노래 속도가 랜덤
+        </div>
+
+        <div class="instruction">
+          ⚠️ 마지막 솔 : 멈출 준비
+        </div>
+
+        <div class="instruction">
+          🔴 STOP : RUN을 누르면 잡힘
+        </div>
+
+        <div class="instruction">
+          💻 PC : SPACE 또는 ↑
+        </div>
+
+      </div>
+
+      <button
+        class="big-btn"
+        id="startBtn"
+        type="button"
+      >
+        ▶ GAME START
+      </button>
+
+      <div
+        class="best-box"
+        id="bestBox"
+      >
+        👑 BEST SCORE : 0<br>
+        🏆 BEST LEVEL : 0
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- 중앙 팝업 -->
+
+  <div
+    class="popup-layer"
+    id="popupLayer"
+  >
+
+    <div
+      class="popup"
+      id="popup"
+    >
+      READY...
+    </div>
+
+  </div>
+
+  <!-- 결과 -->
+
+  <section
+    class="overlay"
+    id="resultOverlay"
+  >
+
+    <div class="overlay-card">
+
+      <div
+        class="overlay-emoji"
+        id="resultEmoji"
+      >
+        💥😵
+      </div>
+
+      <div
+        class="overlay-title"
+        id="resultTitle"
+      >
+        GAME OVER
+      </div>
+
+      <div
+        class="overlay-desc"
+        id="resultDesc"
+      ></div>
+
+      <div
+        class="new-record"
+        id="newRecord"
+      ></div>
+
+      <div class="result-grid">
+
+        <div class="result">
+          🏆 SCORE<br>
+          <span id="resultScore">
+            0
+          </span>
+        </div>
+
+        <div class="result">
+          🌺 LEVEL<br>
+          <span id="resultLevel">
+            1
+          </span>
+        </div>
+
+        <div class="result">
+          ✨ PERFECT<br>
+          <span id="resultPerfect">
+            0
+          </span>
+        </div>
+
+        <div class="result">
+          ⏱ TIME<br>
+          <span id="resultTime">
+            00:00
+          </span>
+        </div>
+
+      </div>
+
+      <button
+        class="big-btn"
+        id="restartBtn"
+        type="button"
+      >
+        🔄 다시 도전
+      </button>
+
+    </div>
+
+  </section>
+
+</main>
+
+<script>
+(() => {
+"use strict";
+
+/* =========================================================
+   상태
+========================================================= */
+
+const STATE = {
+  READY:"READY",
+  GO:"GO",
+  WARNING:"WARNING",
+  TURNING:"TURNING",
+  STOP:"STOP",
+  CAUGHT:"CAUGHT",
+  CLEAR:"CLEAR",
+  GAMEOVER:"GAMEOVER",
+  WIN:"WIN"
+};
+
+let state = STATE.READY;
+
+let level = 1;
+let lives = 3;
+let score = 0;
+
+let progress = 0;
+let maxProgress = 0;
+
+let perfectCount = 0;
+let perfectStreak = 0;
+
+let stageCaught = false;
+
+let runHeld = false;
+let moving = false;
+
+let gameActive = false;
+
+let gameStart = 0;
+let stageStart = 0;
+
+let lastFrame = 0;
+let lastDust = 0;
+let lastStep = 0;
+
+/*
+  이전 상태 타이머 무효화용
+*/
+let token = 0;
+
+let timers = [];
+
+/* =========================================================
+   DOM
+========================================================= */
+
+const field =
+  document.getElementById("field");
+
+const teacher =
+  document.getElementById("teacher");
+
+const playerWrap =
+  document.getElementById("playerWrap");
+
+const player =
+  document.getElementById("player");
+
+const runBtn =
+  document.getElementById("runBtn");
+
+const soundBtn =
+  document.getElementById("soundBtn");
+
+const scoreEl =
+  document.getElementById("score");
+
+const levelEl =
+  document.getElementById("level");
+
+const livesEl =
+  document.getElementById("lives");
+
+const goalEl =
+  document.getElementById("goal");
+
+const progressFill =
+  document.getElementById("progressFill");
+
+const progressRunner =
+  document.getElementById("progressRunner");
+
+const signal =
+  document.getElementById("signal");
+
+const chant =
+  document.getElementById("chant");
+
+const notes =
+  document.getElementById("notes");
+
+const tempoBadge =
+  document.getElementById("tempoBadge");
+
+const dustLayer =
+  document.getElementById("dustLayer");
+
+const particles =
+  document.getElementById("particles");
+
+const startOverlay =
+  document.getElementById("startOverlay");
+
+const startBtn =
+  document.getElementById("startBtn");
+
+const bestBox =
+  document.getElementById("bestBox");
+
+const popupLayer =
+  document.getElementById("popupLayer");
+
+const popup =
+  document.getElementById("popup");
+
+const resultOverlay =
+  document.getElementById("resultOverlay");
+
+const resultEmoji =
+  document.getElementById("resultEmoji");
+
+const resultTitle =
+  document.getElementById("resultTitle");
+
+const resultDesc =
+  document.getElementById("resultDesc");
+
+const newRecord =
+  document.getElementById("newRecord");
+
+const resultScore =
+  document.getElementById("resultScore");
+
+const resultLevel =
+  document.getElementById("resultLevel");
+
+const resultPerfect =
+  document.getElementById("resultPerfect");
+
+const resultTime =
+  document.getElementById("resultTime");
+
+const restartBtn =
+  document.getElementById("restartBtn");
+
+/* =========================================================
+   유틸
+========================================================= */
+
+function clamp(value,min,max) {
+
+  return Math.max(
+    min,
+    Math.min(max,value)
+  );
+}
+
+function rand(min,max) {
+
+  return (
+    min +
+    Math.random() *
+    (max-min)
+  );
+}
+
+function formatTime(ms) {
+
+  const total =
+    Math.floor(ms/1000);
+
+  const min =
+    Math.floor(total/60);
+
+  const sec =
+    total%60;
+
+  return (
+    String(min).padStart(2,"0") +
+    ":" +
+    String(sec).padStart(2,"0")
+  );
+}
+
+function addTimer(fn,delay) {
+
+  const id =
+    setTimeout(() => {
+
+      const index =
+        timers.indexOf(id);
+
+      if(index >= 0) {
+        timers.splice(index,1);
+      }
+
+      fn();
+
+    },delay);
+
+  timers.push(id);
+
+  return id;
+}
+
+function clearTimers() {
+
+  timers.forEach(id => {
+    clearTimeout(id);
+  });
+
+  timers = [];
+}
+
+function nextToken() {
+
+  token++;
+
+  return token;
+}
+
+function restartAnimation(el,cls) {
+
+  el.classList.remove(cls);
+
+  void el.offsetWidth;
+
+  el.classList.add(cls);
+}
+
+/* =========================================================
+   사운드
+========================================================= */
+
+let soundOn = true;
+let audio = null;
+
+function initAudio() {
+
+  if(!soundOn) return;
+
+  const AC =
+    window.AudioContext ||
+    window.webkitAudioContext;
+
+  if(!AC) return;
+
+  if(!audio) {
+    audio = new AC();
+  }
+
+  if(audio.state === "suspended") {
+    audio.resume().catch(()=>{});
+  }
+}
+
+function tone(
+  frequency,
+  duration=.15,
+  type="sine",
+  volume=.03
+) {
+
+  if(!soundOn) return;
+
+  initAudio();
+
+  if(!audio) return;
+
+  const now =
+    audio.currentTime;
+
+  const osc =
+    audio.createOscillator();
+
+  const gain =
+    audio.createGain();
+
+  osc.type =
+    type;
+
+  osc.frequency.setValueAtTime(
+    frequency,
+    now
+  );
+
+  gain.gain.setValueAtTime(
+    .0001,
+    now
+  );
+
+  gain.gain.exponentialRampToValueAtTime(
+    volume,
+    now+.01
+  );
+
+  gain.gain.exponentialRampToValueAtTime(
+    .0001,
+    now+duration
+  );
+
+  osc.connect(gain);
+
+  gain.connect(
+    audio.destination
+  );
+
+  osc.start(now);
+
+  osc.stop(
+    now +
+    duration +
+    .03
+  );
+}
+
+/* =========================================================
+   계이름
+
+   미 라 라 라 솔 라 라 미 미 솔
+========================================================= */
+
+const FREQ = {
+  MI:329.63,
+  SOL:392.00,
+  LA:440.00
+};
+
+const MELODY = [
+  "MI",
+  "LA",
+  "LA",
+  "LA",
+  "SOL",
+  "LA",
+  "LA",
+  "MI",
+  "MI",
+  "SOL"
+];
+
+const KOREAN_NOTES = [
+  "미",
+  "라",
+  "라",
+  "라",
+  "솔",
+  "라",
+  "라",
+  "미",
+  "미",
+  "솔"
+];
+
+/* =========================================================
+   레벨 설정
+========================================================= */
+
+function getLevelConfig() {
+
+  if(level <= 3) {
+
+    return {
+      speed:18,
+      grace:190,
+      stopMin:1100,
+      stopMax:1700
+    };
+  }
+
+  if(level <= 6) {
+
+    return {
+      speed:17,
+      grace:155,
+      stopMin:1150,
+      stopMax:2050
+    };
+  }
+
+  if(level <= 9) {
+
+    return {
+      speed:16,
+      grace:120,
+      stopMin:1200,
+      stopMax:2200
+    };
+  }
+
+  return {
+    speed:15.5,
+    grace:95,
+    stopMin:1250,
+    stopMax:2300
+  };
+}
+
+/* =========================================================
+   ★ 랜덤 템포 시스템
+
+   노래가 시작될 때마다
+   속도를 새로 뽑습니다.
+========================================================= */
+
+function chooseTempo() {
+
+  const r =
+    Math.random();
+
+  let type = "NORMAL";
+
+  /*
+    LEVEL 1~3
+  */
+  if(level <= 3) {
+
+    if(r < .25) {
+      type = "SLOW";
+    }
+    else if(r < .75) {
+      type = "NORMAL";
+    }
+    else {
+      type = "FAST";
+    }
+  }
+
+  /*
+    LEVEL 4~6
+  */
+  else if(level <= 6) {
+
+    if(r < .20) {
+      type = "SLOW";
+    }
+    else if(r < .52) {
+      type = "NORMAL";
+    }
+    else if(r < .88) {
+      type = "FAST";
+    }
+    else {
+      type = "VERY_FAST";
+    }
+  }
+
+  /*
+    LEVEL 7~9
+  */
+  else if(level <= 9) {
+
+    if(r < .15) {
+      type = "SLOW";
+    }
+    else if(r < .38) {
+      type = "NORMAL";
+    }
+    else if(r < .74) {
+      type = "FAST";
+    }
+    else {
+      type = "VERY_FAST";
+    }
+  }
+
+  /*
+    LEVEL 10
+    아주 느림과 매우 빠름도 섞음
+  */
+  else {
+
+    if(r < .20) {
+      type = "VERY_SLOW";
+    }
+    else if(r < .36) {
+      type = "SLOW";
+    }
+    else if(r < .52) {
+      type = "NORMAL";
+    }
+    else if(r < .72) {
+      type = "FAST";
+    }
+    else {
+      type = "VERY_FAST";
+    }
+  }
+
+  let beat;
+
+  switch(type) {
+
+    case "VERY_SLOW":
+
+      beat =
+        rand(500,590);
+
+      break;
+
+    case "SLOW":
+
+      beat =
+        rand(400,490);
+
+      break;
+
+    case "FAST":
+
+      beat =
+        rand(220,290);
+
+      break;
+
+    case "VERY_FAST":
+
+      beat =
+        rand(165,215);
+
+      break;
+
+    default:
+
+      beat =
+        rand(300,390);
+  }
+
+  return {
+    type,
+    beat
+  };
+}
+
+/* =========================================================
+   템포 표시
+========================================================= */
+
+function tempoLabel(type) {
+
+  switch(type) {
+
+    case "VERY_SLOW":
+      return "🐢 아주 느림";
+
+    case "SLOW":
+      return "🐢 느림";
+
+    case "NORMAL":
+      return "🎵 보통";
+
+    case "FAST":
+      return "⚡ 빠름";
+
+    case "VERY_FAST":
+      return "🔥 매우 빠름";
+
+    default:
+      return "🎵 보통";
+  }
+}
+
+/* =========================================================
+   UI
+========================================================= */
+
+function updateUI() {
+
+  scoreEl.textContent =
+    score.toLocaleString();
+
+  levelEl.textContent =
+    level;
+
+  livesEl.textContent =
+    lives > 0
+      ? "❤️".repeat(lives)
+      : "💔";
+
+  const percent =
+    Math.round(progress);
+
+  goalEl.textContent =
+    percent + "%";
+
+  progressFill.style.width =
+    percent + "%";
+
+  progressRunner.style.left =
+    clamp(percent,1,99) +
+    "%";
+}
+
+function setPlayerPosition() {
+
+  const bottom =
+    11 +
+    progress * .38;
+
+  playerWrap.style.bottom =
+    bottom + "%";
+}
+
+function setSignal(
+  text,
+  type
+) {
+
+  signal.textContent =
+    text;
+
+  signal.className =
+    "signal " + type;
+}
+
+function updateRunning() {
+
+  if(moving) {
+
+    player.classList.add(
+      "running"
+    );
+  }
+  else {
+
+    player.classList.remove(
+      "running"
+    );
+  }
+
+  if(runHeld) {
+
+    runBtn.classList.add(
+      "pressed"
+    );
+  }
+  else {
+
+    runBtn.classList.remove(
+      "pressed",
+      "danger"
+    );
+  }
+}
+
+/* =========================================================
+   팝업
+========================================================= */
+
+function showPopup(
+  text,
+  type=""
+) {
+
+  popup.textContent =
+    text;
+
+  popup.className =
+    "popup";
+
+  if(type) {
+    popup.classList.add(type);
+  }
+
+  popupLayer.classList.add(
+    "show"
+  );
+
+  restartAnimation(
+    popup,
+    "popup"
+  );
+}
+
+function hidePopup() {
+
+  popupLayer.classList.remove(
+    "show"
+  );
+}
+
+/* =========================================================
+   최고 기록
+========================================================= */
+
+function getBestScore() {
+
+  try {
+
+    return Number(
+      localStorage.getItem(
+        "mugunghwaBestScore3"
+      )
+    ) || 0;
+  }
+  catch {
+
+    return 0;
+  }
+}
+
+function getBestLevel() {
+
+  try {
+
+    return Number(
+      localStorage.getItem(
+        "mugunghwaBestLevel3"
+      )
+    ) || 0;
+  }
+  catch {
+
+    return 0;
+  }
+}
+
+function updateBest() {
+
+  bestBox.innerHTML =
+    "👑 BEST SCORE : " +
+    getBestScore().toLocaleString() +
+    "<br>" +
+    "🏆 BEST LEVEL : " +
+    getBestLevel();
+}
+
+function saveRecord() {
+
+  let record = false;
+
+  try {
+
+    if(
+      score >
+      getBestScore()
+    ) {
+
+      localStorage.setItem(
+        "mugunghwaBestScore3",
+        String(score)
+      );
+
+      record = true;
+    }
+
+    if(
+      level >
+      getBestLevel()
+    ) {
+
+      localStorage.setItem(
+        "mugunghwaBestLevel3",
+        String(level)
+      );
+
+      record = true;
+    }
+  }
+  catch {}
+
+  return record;
+}
+
+/* =========================================================
+   먼지
+========================================================= */
+
+function createDust() {
+
+  const now =
+    performance.now();
+
+  if(
+    now -
+    lastDust <
+    110
+  ) {
+    return;
+  }
+
+  lastDust = now;
+
+  const fieldRect =
+    field.getBoundingClientRect();
+
+  const playerRect =
+    playerWrap.getBoundingClientRect();
+
+  const dust =
+    document.createElement(
+      "span"
+    );
+
+  dust.className =
+    "dust";
+
+  dust.style.left =
+    (
+      playerRect.left -
+      fieldRect.left +
+      playerRect.width*.45
+    ) +
+    "px";
+
+  dust.style.top =
+    (
+      playerRect.bottom -
+      fieldRect.top -
+      9
+    ) +
+    "px";
+
+  dust.style.setProperty(
+    "--dx",
+    rand(-28,28) +
+    "px"
+  );
+
+  dust.style.setProperty(
+    "--dy",
+    rand(8,20) +
+    "px"
+  );
+
+  dustLayer.appendChild(
+    dust
+  );
+
+  setTimeout(() => {
+
+    dust.remove();
+
+  },650);
+}
+
+/* =========================================================
+   파티클
+========================================================= */
+
+function confetti(
+  amount=35
+) {
+
+  const symbols = [
+    "⭐",
+    "✨",
+    "🎉",
+    "🌺",
+    "💫"
+  ];
+
+  for(
+    let i=0;
+    i<amount;
+    i++
+  ) {
+
+    const p =
+      document.createElement(
+        "span"
+      );
+
+    p.className =
+      "particle";
+
+    p.textContent =
+      symbols[
+        Math.floor(
+          Math.random() *
+          symbols.length
+        )
+      ];
+
+    p.style.left =
+      rand(0,100) +
+      "%";
+
+    p.style.fontSize =
+      rand(12,28) +
+      "px";
+
+    p.style.animationDuration =
+      rand(1.7,3.2) +
+      "s";
+
+    p.style.animationDelay =
+      rand(0,.35) +
+      "s";
+
+    p.style.setProperty(
+      "--drift",
+      rand(-150,150) +
+      "px"
+    );
+
+    p.style.setProperty(
+      "--spin",
+      rand(-720,720) +
+      "deg"
+    );
+
+    particles.appendChild(p);
+
+    setTimeout(() => {
+
+      p.remove();
+
+    },4000);
+  }
+}
+
+/* =========================================================
+   입력
+========================================================= */
+
+function pressRun(event) {
+
+  if(event) {
+    event.preventDefault();
+  }
+
+  initAudio();
+
+  if(!gameActive) {
+    return;
+  }
+
+  if(
+    state === STATE.CAUGHT ||
+    state === STATE.CLEAR ||
+    state === STATE.GAMEOVER ||
+    state === STATE.WIN ||
+    state === STATE.READY
+  ) {
+    return;
+  }
+
+  runHeld = true;
+
+  updateRunning();
+
+  /*
+    STOP 상태에서 RUN을 누르면 즉시 잡힘
+  */
+
+  if(
+    state === STATE.STOP
+  ) {
+
+    runBtn.classList.add(
+      "danger"
+    );
+
+    caught();
+  }
+}
+
+function releaseRun(event) {
+
+  if(event) {
+    event.preventDefault();
+  }
+
+  runHeld = false;
+  moving = false;
+
+  updateRunning();
+}
+
+/* Pointer */
+
+runBtn.addEventListener(
+  "pointerdown",
+  event => {
+
+    try {
+
+      runBtn.setPointerCapture(
+        event.pointerId
+      );
+    }
+    catch {}
+
+    pressRun(event);
+  }
+);
+
+runBtn.addEventListener(
+  "pointerup",
+  releaseRun
+);
+
+runBtn.addEventListener(
+  "pointercancel",
+  releaseRun
+);
+
+runBtn.addEventListener(
+  "lostpointercapture",
+  releaseRun
+);
+
+window.addEventListener(
+  "pointerup",
+  releaseRun
+);
+
+window.addEventListener(
+  "pointercancel",
+  releaseRun
+);
+
+window.addEventListener(
+  "blur",
+  () => {
+
+    releaseRun();
+
+  }
+);
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+
+    if(document.hidden) {
+
+      releaseRun();
+
+    }
+  }
+);
+
+/* 키보드 */
+
+window.addEventListener(
+  "keydown",
+  event => {
+
+    if(
+      event.code === "Space" ||
+      event.code === "ArrowUp"
+    ) {
+
+      event.preventDefault();
+
+      if(!event.repeat) {
+
+        pressRun(event);
+
+      }
+    }
+  }
+);
+
+window.addEventListener(
+  "keyup",
+  event => {
+
+    if(
+      event.code === "Space" ||
+      event.code === "ArrowUp"
+    ) {
+
+      event.preventDefault();
+
+      releaseRun(event);
+    }
+  }
+);
+
+/* =========================================================
+   게임 루프
+========================================================= */
+
+function loop(time) {
+
+  requestAnimationFrame(
+    loop
+  );
+
+  if(!gameActive) {
+
+    lastFrame =
+      time;
+
+    return;
+  }
+
+  if(!lastFrame) {
+
+    lastFrame =
+      time;
+  }
+
+  const delta =
+    Math.min(
+      40,
+      time-lastFrame
+    ) /
+    1000;
+
+  lastFrame =
+    time;
+
+  moving =
+    false;
+
+  /*
+    GO / WARNING 상태만 실제 이동
+  */
+
+  if(
+    runHeld &&
+    (
+      state === STATE.GO ||
+      state === STATE.WARNING
+    )
+  ) {
+
+    const c =
+      getLevelConfig();
+
+    const before =
+      progress;
+
+    progress +=
+      c.speed *
+      delta;
+
+    progress =
+      clamp(
+        progress,
+        0,
+        100
+      );
+
+    const moved =
+      progress -
+      before;
+
+    if(
+      moved >
+      .0001
+    ) {
+
+      moving =
+        true;
+
+      score +=
+        Math.max(
+          1,
+          Math.round(
+            moved*2
+          )
+        );
+
+      maxProgress =
+        Math.max(
+          maxProgress,
+          progress
+        );
+
+      createDust();
+
+      if(
+        time -
+        lastStep >
+        220
+      ) {
+
+        lastStep =
+          time;
+
+        tone(
+          rand(130,175),
+          .035,
+          "triangle",
+          .011
+        );
+      }
+
+      updateUI();
+
+      setPlayerPosition();
+    }
+
+    /*
+      결승선 도착
+    */
+
+    if(
+      progress >= 100 &&
+      state !== STATE.CLEAR
+    ) {
+
+      clearStage();
+
+      return;
+    }
+  }
+
+  /*
+    STOP 상태에서 RUN 계속 누름
+  */
+
+  if(
+    state === STATE.STOP &&
+    runHeld
+  ) {
+
+    caught();
+
+    return;
+  }
+
+  updateRunning();
+}
+
+/* =========================================================
+   ★ GO + 랜덤 박자 음악
+========================================================= */
+
+function startGo() {
+
+  if(!gameActive) return;
+
+  if(
+    state === STATE.CAUGHT ||
+    state === STATE.CLEAR ||
+    state === STATE.GAMEOVER ||
+    state === STATE.WIN
+  ) {
+    return;
+  }
+
+  clearTimers();
+
+  const myToken =
+    nextToken();
+
+  state =
+    STATE.GO;
+
+  teacher.classList.remove(
+    "facing"
+  );
+
+  field.classList.remove(
+    "stop"
+  );
+
+  field.classList.add(
+    "go"
+  );
+
+  setSignal(
+    "🟢 GO!",
+    "green"
+  );
+
+  chant.textContent =
+    "무궁화꽃이 피었습니다~ 🌺";
+
+  notes.classList.add(
+    "show"
+  );
+
+  /*
+    ★ 이번 노래의 기본 속도 결정
+  */
+
+  const tempo =
+    chooseTempo();
+
+  const baseBeat =
+    tempo.beat;
+
+  tempoBadge.textContent =
+    "🎵 박자 : " +
+    tempoLabel(
+      tempo.type
+    );
+
+  let noteIndex =
+    0;
+
+  function playNextNote() {
+
+    if(
+      !gameActive ||
+      myToken !== token
+    ) {
+      return;
+    }
+
+    /*
+      모든 음 끝
+    */
+
+    if(
+      noteIndex >=
+      MELODY.length
+    ) {
+
+      notes.classList.remove(
+        "show"
+      );
+
+      /*
+        마지막 솔까지 끝난 뒤
+        술래가 돌아봄
+      */
+
+      addTimer(() => {
+
+        if(
+          !gameActive ||
+          myToken !== token
+        ) {
+          return;
+        }
+
+        startStop(
+          myToken
+        );
+
+      },70);
+
+      return;
+    }
+
+    const noteName =
+      MELODY[
+        noteIndex
+      ];
+
+    /*
+      ★ 음마다 ±15% 정도
+      길이를 랜덤 변화.
+
+      그래서 같은 노래 안에서도
+      완전히 기계적으로 일정하지 않음.
+    */
+
+    let thisBeat =
+      baseBeat *
+      rand(
+        .85,
+        1.15
+      );
+
+    /*
+      가끔 한 음만 살짝 길게
+    */
+
+    if(
+      Math.random() <
+      .10
+    ) {
+
+      thisBeat *=
+        rand(
+          1.12,
+          1.28
+        );
+    }
+
+    /*
+      너무 극단적으로 되지 않게 제한
+    */
+
+    thisBeat =
+      clamp(
+        thisBeat,
+        145,
+        650
+      );
+
+    tone(
+      FREQ[noteName],
+      thisBeat/1000*.72,
+      "sine",
+      .035
+    );
+
+    notes.textContent =
+      "♪ " +
+      KOREAN_NOTES
+        .slice(
+          0,
+          noteIndex+1
+        )
+        .join(" ") +
+      " ♪";
+
+    /*
+      마지막 SOL
+    */
+
+    if(
+      noteIndex ===
+      MELODY.length-1
+    ) {
+
+      state =
+        STATE.WARNING;
+
+      setSignal(
+        "⚠️ 멈출 준비!",
+        "warning"
+      );
+
+      chant.textContent =
+        "마지막 솔! 이제 멈춰요! ⚠️";
+    }
+
+    noteIndex++;
+
+    addTimer(
+      playNextNote,
+      thisBeat
+    );
+  }
+
+  playNextNote();
+}
+
+/* =========================================================
+   STOP
+========================================================= */
+
+function startStop(
+  goToken
+) {
+
+  if(
+    !gameActive ||
+    goToken !== token
+  ) {
+    return;
+  }
+
+  state =
+    STATE.TURNING;
+
+  teacher.classList.add(
+    "facing"
+  );
+
+  field.classList.remove(
+    "go"
+  );
+
+  field.classList.add(
+    "stop"
+  );
+
+  setSignal(
+    "🔴 STOP!",
+    "red"
+  );
+
+  chant.textContent =
+    "꼼짝 마! 👀";
+
+  tone(
+    210,
+    .12,
+    "sawtooth",
+    .035
+  );
+
+  const c =
+    getLevelConfig();
+
+  /*
+    반응시간
+  */
+
+  addTimer(() => {
+
+    if(
+      !gameActive ||
+      goToken !== token ||
+      state !== STATE.TURNING
+    ) {
+      return;
+    }
+
+    state =
+      STATE.STOP;
+
+    if(runHeld) {
+
+      caught();
+
+      return;
+    }
+
+  },c.grace);
+
+  /*
+    STOP 유지시간
+  */
+
+  const stopTime =
+    rand(
+      c.stopMin,
+      c.stopMax
+    );
+
+  addTimer(() => {
+
+    if(
+      !gameActive ||
+      goToken !== token
+    ) {
+      return;
+    }
+
+    if(
+      state !== STATE.STOP
+    ) {
+      return;
+    }
+
+    score +=
+      35 +
+      level*5;
+
+    updateUI();
+
+    teacher.classList.remove(
+      "facing"
+    );
+
+    field.classList.remove(
+      "stop"
+    );
+
+    setSignal(
+      "🌺 다시 준비!",
+      "ready"
+    );
+
+    chant.textContent =
+      "다음 노래는 어떤 속도일까요? 🎵";
+
+    /*
+      다음 노래도
+      새로운 랜덤 속도로 시작
+    */
+
+    addTimer(() => {
+
+      if(
+        !gameActive ||
+        goToken !== token
+      ) {
+        return;
+      }
+
+      startGo();
+
+    },rand(200,460));
+
+  },stopTime);
+}
+
+/* =========================================================
+   잡힘
+========================================================= */
+
+function caught() {
+
+  if(
+    !gameActive ||
+    state === STATE.CAUGHT ||
+    state === STATE.CLEAR ||
+    state === STATE.GAMEOVER ||
+    state === STATE.WIN
+  ) {
+    return;
+  }
+
+  clearTimers();
+
+  nextToken();
+
+  state =
+    STATE.CAUGHT;
+
+  runHeld =
+    false;
+
+  moving =
+    false;
+
+  updateRunning();
+
+  stageCaught =
+    true;
+
+  perfectStreak =
+    0;
+
+  lives--;
+
+  progress -=
+    rand(
+      10,
+      16
+    );
+
+  progress =
+    Math.max(
+      0,
+      progress
+    );
+
+  updateUI();
+
+  setPlayerPosition();
+
+  notes.classList.remove(
+    "show"
+  );
+
+  teacher.classList.add(
+    "facing"
+  );
+
+  field.classList.remove(
+    "go"
+  );
+
+  field.classList.add(
+    "stop"
+  );
+
+  setSignal(
+    "🚨 움직였다!",
+    "red"
+  );
+
+  chant.textContent =
+    "술래에게 들켰어요! 😵";
+
+  restartAnimation(
+    field,
+    "shake"
+  );
+
+  restartAnimation(
+    playerWrap,
+    "caught"
+  );
+
+  tone(
+    180,
+    .16,
+    "sawtooth",
+    .04
+  );
+
+  setTimeout(() => {
+
+    tone(
+      110,
+      .25,
+      "sawtooth",
+      .04
+    );
+
+  },120);
+
+  showPopup(
+    "🚨 움직였다!",
+    "danger"
+  );
+
+  /*
+    목숨 0
+  */
+
+  if(
+    lives <= 0
+  ) {
+
+    addTimer(() => {
+
+      hidePopup();
+
+      gameOver();
+
+    },1100);
+
+    return;
+  }
+
+  /*
+    목숨 남음 -> 다시 시작
+  */
+
+  addTimer(() => {
+
+    if(
+      !gameActive ||
+      state !== STATE.CAUGHT
+    ) {
+      return;
+    }
+
+    hidePopup();
+
+    playerWrap.classList.remove(
+      "caught"
+    );
+
+    teacher.classList.remove(
+      "facing"
+    );
+
+    field.classList.remove(
+      "stop"
+    );
+
+    setSignal(
+      "🟢 다시 준비!",
+      "green"
+    );
+
+    chant.textContent =
+      "다시 시작합니다! 🌺";
+
+    state =
+      STATE.READY;
+
+    addTimer(() => {
+
+      if(
+        !gameActive ||
+        state !== STATE.READY
+      ) {
+        return;
+      }
+
+      startGo();
+
+    },500);
+
+  },1100);
+}
+
+/* =========================================================
+   클리어
+========================================================= */
+
+function clearStage() {
+
+  if(
+    !gameActive ||
+    state === STATE.CLEAR ||
+    state === STATE.GAMEOVER ||
+    state === STATE.WIN
+  ) {
+    return;
+  }
+
+  clearTimers();
+
+  nextToken();
+
+  state =
+    STATE.CLEAR;
+
+  runHeld =
+    false;
+
+  moving =
+    false;
+
+  updateRunning();
+
+  progress =
+    100;
+
+  updateUI();
+
+  setPlayerPosition();
+
+  /*
+    빠른 클리어 보너스
+  */
+
+  const elapsed =
+    performance.now() -
+    stageStart;
+
+  const speedBonus =
+    Math.max(
+      100,
+      700 -
+      Math.floor(
+        elapsed/40
+      )
+    );
+
+  score +=
+    speedBonus;
+
+  /*
+    퍼펙트
+  */
+
+  if(
+    !stageCaught
+  ) {
+
+    perfectCount++;
+
+    perfectStreak++;
+
+    score +=
+      500;
+
+    if(
+      perfectStreak >= 3
+    ) {
+
+      score +=
+        400;
+    }
+  }
+  else {
+
+    perfectStreak =
+      0;
+  }
+
+  updateUI();
+
+  teacher.classList.remove(
+    "facing"
+  );
+
+  field.classList.remove(
+    "go",
+    "stop"
+  );
+
+  playerWrap.classList.add(
+    "clear"
+  );
+
+  setSignal(
+    "🏁 CLEAR!",
+    "green"
+  );
+
+  chant.textContent =
+    !stageCaught
+      ? "✨ PERFECT! +500"
+      : "🎉 스테이지 클리어!";
+
+  notes.classList.remove(
+    "show"
+  );
+
+  confetti(
+    42
+  );
+
+  tone(
+    523,
+    .12,
+    "sine",
+    .04
+  );
+
+  setTimeout(() => {
+
+    tone(
+      659,
+      .12,
+      "sine",
+      .04
+    );
+
+  },100);
+
+  setTimeout(() => {
+
+    tone(
+      784,
+      .18,
+      "sine",
+      .05
+    );
+
+  },200);
+
+  showPopup(
+    !stageCaught
+      ? "🏁 CLEAR!\n✨ PERFECT!"
+      : "🏁 CLEAR!",
+    "clear"
+  );
+
+  /*
+    LEVEL 10 클리어
+  */
+
+  if(
+    level >= 10
+  ) {
+
+    addTimer(() => {
+
+      hidePopup();
+
+      playerWrap.classList.remove(
+        "clear"
+      );
+
+      winGame();
+
+    },1400);
+
+    return;
+  }
+
+  /*
+    다음 단계
+  */
+
+  addTimer(() => {
+
+    if(
+      !gameActive ||
+      state !== STATE.CLEAR
+    ) {
+      return;
+    }
+
+    hidePopup();
+
+    playerWrap.classList.remove(
+      "clear"
+    );
+
+    level++;
+
+    progress =
+      0;
+
+    stageCaught =
+      false;
+
+    updateUI();
+
+    setPlayerPosition();
+
+    state =
+      STATE.READY;
+
+    teacher.classList.remove(
+      "facing"
+    );
+
+    field.classList.remove(
+      "go",
+      "stop"
+    );
+
+    /*
+      FINAL
+    */
+
+    if(
+      level === 10
+    ) {
+
+      field.classList.add(
+        "final"
+      );
+
+      setSignal(
+        "🔥 FINAL STAGE!",
+        "warning"
+      );
+
+      chant.textContent =
+        "느린 노래와 빠른 노래가 랜덤!";
+
+      showPopup(
+        "🔥 FINAL STAGE!\nLEVEL 10",
+        "final"
+      );
+    }
+    else {
+
+      field.classList.remove(
+        "final"
+      );
+
+      setSignal(
+        "🌺 LEVEL " + level,
+        "ready"
+      );
+
+      chant.textContent =
+        "이번에는 어떤 박자가 나올까요? 🎵";
+
+      showPopup(
+        "🌺 LEVEL " + level
+      );
+    }
+
+    addTimer(() => {
+
+      if(
+        !gameActive ||
+        state !== STATE.READY
+      ) {
+        return;
+      }
+
+      hidePopup();
+
+      stageStart =
+        performance.now();
+
+      /*
+        ★ 다음 레벨도
+        새 랜덤 템포
+      */
+
+      startGo();
+
+    },900);
+
+  },1400);
+}
+
+/* =========================================================
+   게임 초기화
+========================================================= */
+
+function resetGame() {
+
+  clearTimers();
+
+  nextToken();
+
+  state =
+    STATE.READY;
+
+  gameActive =
+    false;
+
+  level =
+    1;
+
+  lives =
+    3;
+
+  score =
+    0;
+
+  progress =
+    0;
+
+  maxProgress =
+    0;
+
+  perfectCount =
+    0;
+
+  perfectStreak =
+    0;
+
+  stageCaught =
+    false;
+
+  runHeld =
+    false;
+
+  moving =
+    false;
+
+  lastFrame =
+    0;
+
+  particles.innerHTML =
+    "";
+
+  dustLayer.innerHTML =
+    "";
+
+  field.classList.remove(
+    "go",
+    "stop",
+    "final",
+    "shake"
+  );
+
+  teacher.classList.remove(
+    "facing"
+  );
+
+  playerWrap.classList.remove(
+    "caught",
+    "clear"
+  );
+
+  notes.classList.remove(
+    "show"
+  );
+
+  tempoBadge.textContent =
+    "🎵 박자 : ?";
+
+  updateUI();
+
+  setPlayerPosition();
+
+  updateRunning();
+}
+
+/* =========================================================
+   게임 시작
+========================================================= */
+
+function startGame() {
+
+  resetGame();
+
+  startOverlay.classList.remove(
+    "show"
+  );
+
+  resultOverlay.classList.remove(
+    "show"
+  );
+
+  initAudio();
+
+  const myToken =
+    nextToken();
+
+  showPopup(
+    "READY..."
+  );
+
+  tone(
+    420,
+    .08,
+    "square",
+    .025
+  );
+
+  addTimer(() => {
+
+    if(
+      myToken !== token
+    ) {
+      return;
+    }
+
+    showPopup(
+      "3"
+    );
+
+    tone(
+      360,
+      .07,
+      "square",
+      .02
+    );
+
+  },650);
+
+  addTimer(() => {
+
+    if(
+      myToken !== token
+    ) {
+      return;
+    }
+
+    showPopup(
+      "2"
+    );
+
+    tone(
+      360,
+      .07,
+      "square",
+      .02
+    );
+
+  },1150);
+
+  addTimer(() => {
+
+    if(
+      myToken !== token
+    ) {
+      return;
+    }
+
+    showPopup(
+      "1"
+    );
+
+    tone(
+      360,
+      .07,
+      "square",
+      .02
+    );
+
+  },1650);
+
+  addTimer(() => {
+
+    if(
+      myToken !== token
+    ) {
+      return;
+    }
+
+    showPopup(
+      "GO! 🏃💨",
+      "clear"
+    );
+
+    tone(
+      700,
+      .13,
+      "square",
+      .03
+    );
+
+  },2150);
+
+  addTimer(() => {
+
+    if(
+      myToken !== token
+    ) {
+      return;
+    }
+
+    hidePopup();
+
+    gameActive =
+      true;
+
+    gameStart =
+      performance.now();
+
+    stageStart =
+      performance.now();
+
+    state =
+      STATE.READY;
+
+    startGo();
+
+  },2700);
+}
+
+/* =========================================================
+   GAME OVER
+========================================================= */
+
+function gameOver() {
+
+  clearTimers();
+
+  nextToken();
+
+  state =
+    STATE.GAMEOVER;
+
+  gameActive =
+    false;
+
+  runHeld =
+    false;
+
+  moving =
+    false;
+
+  updateRunning();
+
+  teacher.classList.add(
+    "facing"
+  );
+
+  field.classList.remove(
+    "go",
+    "stop",
+    "final"
+  );
+
+  const record =
+    saveRecord();
+
+  updateBest();
+
+  resultEmoji.textContent =
+    "💥😵💥";
+
+  resultTitle.textContent =
+    "GAME OVER";
+
+  resultDesc.innerHTML =
+    "술래에게 들켰습니다! 😵<br>" +
+    "🏁 최고 진행 거리 : " +
+    Math.round(
+      maxProgress
+    ) +
+    "%";
+
+  resultScore.textContent =
+    score.toLocaleString();
+
+  resultLevel.textContent =
+    level;
+
+  resultPerfect.textContent =
+    perfectCount;
+
+  resultTime.textContent =
+    formatTime(
+      gameStart
+        ? performance.now() -
+          gameStart
+        : 0
+    );
+
+  newRecord.textContent =
+    record
+      ? "🏆 NEW RECORD!"
+      : "";
+
+  resultOverlay.classList.add(
+    "show"
+  );
+}
+
+/* =========================================================
+   최종 승리
+========================================================= */
+
+function winGame() {
+
+  clearTimers();
+
+  nextToken();
+
+  state =
+    STATE.WIN;
+
+  gameActive =
+    false;
+
+  runHeld =
+    false;
+
+  moving =
+    false;
+
+  score +=
+    2000;
+
+  updateUI();
+
+  updateRunning();
+
+  confetti(
+    80
+  );
+
+  const record =
+    saveRecord();
+
+  updateBest();
+
+  resultEmoji.textContent =
+    "🏆🌺🏆";
+
+  resultTitle.textContent =
+    "YOU WIN!";
+
+  resultDesc.innerHTML =
+    "🌺 무궁화꽃이 피었습니다 MASTER! 🌺<br>" +
+    "10단계를 모두 통과했습니다!";
+
+  resultScore.textContent =
+    score.toLocaleString();
+
+  resultLevel.textContent =
+    "10 CLEAR";
+
+  resultPerfect.textContent =
+    perfectCount;
+
+  resultTime.textContent =
+    formatTime(
+      performance.now() -
+      gameStart
+    );
+
+  newRecord.textContent =
+    record
+      ? "🏆 NEW RECORD!"
+      : "";
+
+  resultOverlay.classList.add(
+    "show"
+  );
+
+  tone(
+    523,
+    .12,
+    "sine",
+    .05
+  );
+
+  setTimeout(() => {
+
+    tone(
+      659,
+      .13,
+      "sine",
+      .05
+    );
+
+  },110);
+
+  setTimeout(() => {
+
+    tone(
+      784,
+      .14,
+      "sine",
+      .05
+    );
+
+  },220);
+
+  setTimeout(() => {
+
+    tone(
+      1047,
+      .4,
+      "sine",
+      .06
+    );
+
+  },340);
+}
+
+/* =========================================================
+   SOUND
+========================================================= */
+
+soundBtn.addEventListener(
+  "click",
+  event => {
+
+    event.preventDefault();
+
+    soundOn =
+      !soundOn;
+
+    soundBtn.textContent =
+      soundOn
+        ? "🔊 SOUND ON"
+        : "🔇 SOUND OFF";
+
+    if(soundOn) {
+
+      initAudio();
+
+      tone(
+        520,
+        .08,
+        "sine",
+        .025
+      );
+    }
+  }
+);
+
+/* =========================================================
+   START
+========================================================= */
+
+startBtn.addEventListener(
+  "click",
+  () => {
+
+    initAudio();
+
+    startGame();
+  }
+);
+
+restartBtn.addEventListener(
+  "click",
+  () => {
+
+    initAudio();
+
+    startGame();
+  }
+);
+
+/* =========================================================
+   iPhone Audio
+========================================================= */
+
+document.addEventListener(
+  "pointerdown",
+  () => {
+
+    initAudio();
+
+  },
+  {
+    once:true
+  }
+);
+
+document.addEventListener(
+  "touchstart",
+  () => {
+
+    initAudio();
+
+  },
+  {
+    passive:true,
+    once:true
+  }
+);
+
+/* =========================================================
+   확대 방지
+========================================================= */
+
+document.addEventListener(
+  "gesturestart",
+  event => {
+
+    event.preventDefault();
+
+  }
+);
+
+document.addEventListener(
+  "contextmenu",
+  event => {
+
+    event.preventDefault();
+
+  }
+);
+
+let lastTouchEnd =
+  0;
+
+document.addEventListener(
+  "touchend",
+  event => {
+
+    const now =
+      Date.now();
+
+    if(
+      now -
+      lastTouchEnd <
+      300
+    ) {
+
+      event.preventDefault();
+    }
+
+    lastTouchEnd =
+      now;
+
+  },
+  {
+    passive:false
+  }
+);
+
+/* =========================================================
+   시작
+========================================================= */
+
+updateBest();
+
+updateUI();
+
+setPlayerPosition();
+
+requestAnimationFrame(
+  loop
+);
+
+})();
+</script>
+
+</body>
+</html>
