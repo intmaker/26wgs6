@@ -1,0 +1,4031 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+>
+<meta name="theme-color" content="#79c9ff">
+
+<title>⌨️ WORD DROP TYPING</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    font-family:
+        "Apple SD Gothic Neo",
+        "Noto Sans KR",
+        Arial,
+        sans-serif;
+
+    background: #dff5ff;
+}
+
+button,
+input {
+    font: inherit;
+}
+
+button {
+    border: none;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+#app {
+    position: relative;
+
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+
+    min-height: 100svh;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            180deg,
+            #77caff 0%,
+            #a9e1ff 45%,
+            #e9faff 100%
+        );
+}
+
+
+/* =========================================
+   배경
+========================================= */
+
+.background {
+    position: absolute;
+    inset: 0;
+
+    overflow: hidden;
+    pointer-events: none;
+
+    z-index: 0;
+}
+
+.cloud {
+    position: absolute;
+
+    width: 120px;
+    height: 42px;
+
+    border-radius: 50px;
+
+    background: rgba(255,255,255,.68);
+
+    animation: cloudMove linear infinite;
+}
+
+.cloud::before,
+.cloud::after {
+    content: "";
+
+    position: absolute;
+
+    border-radius: 50%;
+
+    background: inherit;
+}
+
+.cloud::before {
+    width: 55px;
+    height: 55px;
+
+    left: 18px;
+    top: -24px;
+}
+
+.cloud::after {
+    width: 67px;
+    height: 67px;
+
+    right: 15px;
+    top: -34px;
+}
+
+.cloud1 {
+    top: 17%;
+    animation-duration: 30s;
+}
+
+.cloud2 {
+    top: 40%;
+    animation-duration: 40s;
+    animation-delay: -18s;
+
+    transform: scale(.75);
+
+    opacity: .7;
+}
+
+.cloud3 {
+    top: 67%;
+    animation-duration: 35s;
+    animation-delay: -7s;
+
+    transform: scale(1.2);
+
+    opacity: .45;
+}
+
+@keyframes cloudMove {
+    from {
+        left: -180px;
+    }
+
+    to {
+        left: calc(100% + 200px);
+    }
+}
+
+.star {
+    position: absolute;
+
+    opacity: .35;
+
+    animation: starFloat 5s ease-in-out infinite alternate;
+}
+
+.star1 {
+    left: 8%;
+    top: 55%;
+}
+
+.star2 {
+    right: 12%;
+    top: 27%;
+
+    animation-delay: -2s;
+}
+
+.star3 {
+    left: 25%;
+    top: 80%;
+
+    animation-delay: -4s;
+}
+
+@keyframes starFloat {
+    from {
+        transform: translateY(-8px) rotate(-10deg);
+    }
+
+    to {
+        transform: translateY(12px) rotate(12deg);
+    }
+}
+
+
+/* =========================================
+   화면 공통
+========================================= */
+
+.screen {
+    position: absolute;
+    inset: 0;
+
+    display: none;
+
+    width: 100%;
+    height: 100%;
+
+    z-index: 10;
+}
+
+.screen.active {
+    display: flex;
+}
+
+
+/* =========================================
+   시작 화면
+========================================= */
+
+#startScreen {
+    align-items: center;
+    justify-content: center;
+
+    overflow-y: auto;
+
+    padding:
+        max(18px, env(safe-area-inset-top))
+        18px
+        max(18px, env(safe-area-inset-bottom));
+}
+
+.start-card {
+    width: min(620px, 95vw);
+
+    padding: 34px 28px;
+
+    border: 4px solid rgba(255,255,255,.85);
+
+    border-radius: 34px;
+
+    background: rgba(255,255,255,.9);
+
+    box-shadow:
+        0 20px 45px rgba(44, 89, 147, .18);
+
+    text-align: center;
+}
+
+.keyboard-icon {
+    font-size: clamp(55px, 11vw, 80px);
+
+    animation: bounce 1.7s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.start-title {
+    margin: 8px 0 0;
+
+    color: #365698;
+
+    font-size: clamp(30px, 7vw, 53px);
+
+    line-height: 1.05;
+
+    font-weight: 1000;
+}
+
+.start-subtitle {
+    margin: 15px 0 0;
+
+    color: #5972a5;
+
+    font-size: clamp(17px, 4vw, 22px);
+
+    font-weight: 900;
+}
+
+.start-info {
+    margin: 22px auto;
+
+    padding: 15px 18px;
+
+    max-width: 450px;
+
+    border-radius: 18px;
+
+    background: #edf7ff;
+
+    color: #4d658c;
+
+    font-size: 15px;
+
+    line-height: 1.55;
+
+    font-weight: 800;
+}
+
+.language-buttons {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 14px;
+}
+
+.language-button {
+    min-height: 72px;
+
+    padding: 14px;
+
+    border-radius: 21px;
+
+    color: white;
+
+    font-size: clamp(18px, 4vw, 23px);
+
+    font-weight: 1000;
+
+    box-shadow: 0 8px 0 rgba(0,0,0,.13);
+
+    transition: transform .1s;
+}
+
+.language-button:active {
+    transform: translateY(5px);
+
+    box-shadow: 0 3px 0 rgba(0,0,0,.12);
+}
+
+.ko-button {
+    background:
+        linear-gradient(
+            135deg,
+            #ff637f,
+            #ff9165
+        );
+}
+
+.en-button {
+    background:
+        linear-gradient(
+            135deg,
+            #607aff,
+            #58a8ff
+        );
+}
+
+.best-box {
+    display: flex;
+
+    gap: 10px;
+
+    flex-wrap: wrap;
+
+    margin-top: 27px;
+}
+
+.best-item {
+    flex: 1;
+
+    min-width: 180px;
+
+    padding: 11px;
+
+    border-radius: 14px;
+
+    border: 2px solid #e0ebff;
+
+    background: white;
+
+    color: #5b7097;
+
+    font-size: 14px;
+
+    font-weight: 900;
+}
+
+.best-score {
+    color: #ff6e42;
+
+    font-size: 19px;
+}
+
+
+/* =========================================
+   게임 화면
+========================================= */
+
+#gameScreen {
+    flex-direction: column;
+}
+
+.top-panel {
+    position: relative;
+
+    flex: 0 0 auto;
+
+    z-index: 50;
+
+    padding:
+        max(7px, env(safe-area-inset-top))
+        10px
+        7px;
+
+    background: rgba(255,255,255,.94);
+
+    box-shadow: 0 5px 15px rgba(44,76,128,.12);
+}
+
+.game-title-row {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    width: min(950px, 100%);
+
+    margin: 0 auto 6px;
+}
+
+.game-small-title {
+    color: #435f9b;
+
+    font-size: clamp(13px, 3vw, 18px);
+
+    font-weight: 1000;
+}
+
+.language-mode {
+    padding: 5px 10px;
+
+    border-radius: 999px;
+
+    background: #edf4ff;
+
+    color: #5873aa;
+
+    font-size: 11px;
+
+    font-weight: 1000;
+}
+
+.score-board {
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 6px;
+
+    width: min(950px, 100%);
+
+    margin: auto;
+}
+
+.score-item {
+    padding: 7px 3px;
+
+    border-radius: 12px;
+
+    border: 2px solid #e1ebff;
+
+    background:
+        linear-gradient(
+            #fff,
+            #f4f8ff
+        );
+
+    text-align: center;
+}
+
+.score-label {
+    display: block;
+
+    color: #8492ac;
+
+    font-size: 9px;
+
+    font-weight: 1000;
+}
+
+.score-value {
+    display: block;
+
+    color: #35518d;
+
+    font-size: clamp(14px, 3vw, 21px);
+
+    font-weight: 1000;
+
+    white-space: nowrap;
+}
+
+.action-row {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 7px;
+
+    width: min(950px, 100%);
+
+    margin: 6px auto 0;
+}
+
+.small-button {
+    min-height: 36px;
+
+    padding: 6px 11px;
+
+    border-radius: 10px;
+
+    background: #edf3fc;
+
+    color: #506687;
+
+    font-size: 11px;
+
+    font-weight: 1000;
+}
+
+.pause-button {
+    background: #f1eaff;
+
+    color: #7053a6;
+}
+
+
+/* =========================================
+   낙하 영역
+========================================= */
+
+#gameArea {
+    position: relative;
+
+    flex: 1 1 auto;
+
+    width: 100%;
+
+    min-height: 0;
+
+    overflow: hidden;
+
+    border-bottom:
+        3px dashed
+        rgba(255,80,100,.38);
+}
+
+.danger-text {
+    position: absolute;
+
+    right: 10px;
+    bottom: 7px;
+
+    color: rgba(185,72,87,.55);
+
+    font-size: 10px;
+
+    font-weight: 1000;
+
+    pointer-events: none;
+}
+
+
+/* =========================================
+   떨어지는 단어
+========================================= */
+
+.word-card {
+    position: absolute;
+
+    left: 0;
+    top: 0;
+
+    z-index: 10;
+
+    padding: 9px 15px;
+
+    border-radius: 18px;
+
+    border: 3px solid rgba(255,255,255,.9);
+
+    color: white;
+
+    font-size: clamp(17px, 3vw, 24px);
+
+    font-weight: 1000;
+
+    line-height: 1;
+
+    white-space: nowrap;
+
+    text-shadow:
+        0 2px 2px rgba(0,0,0,.14);
+
+    box-shadow:
+        0 7px 13px rgba(27,70,117,.17);
+
+    user-select: none;
+
+    will-change: transform;
+}
+
+.word-hit {
+    animation: wordHit .3s ease-out forwards;
+}
+
+@keyframes wordHit {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 1;
+
+        transform:
+            scale(1.35)
+            rotate(5deg);
+    }
+
+    100% {
+        opacity: 0;
+
+        transform:
+            scale(.2)
+            rotate(-12deg);
+    }
+}
+
+
+/* =========================================
+   +10
+========================================= */
+
+.score-pop {
+    position: absolute;
+
+    z-index: 30;
+
+    color: #ff4668;
+
+    font-size: 27px;
+
+    font-weight: 1000;
+
+    text-shadow:
+        -2px 0 white,
+        2px 0 white,
+        0 -2px white,
+        0 2px white;
+
+    pointer-events: none;
+
+    animation: scorePop .8s ease-out forwards;
+}
+
+@keyframes scorePop {
+    0% {
+        opacity: 0;
+
+        transform:
+            translate(-50%,0)
+            scale(.6);
+    }
+
+    20% {
+        opacity: 1;
+
+        transform:
+            translate(-50%,-5px)
+            scale(1.2);
+    }
+
+    100% {
+        opacity: 0;
+
+        transform:
+            translate(-50%,-60px)
+            scale(.9);
+    }
+}
+
+
+/* =========================================
+   별 효과
+========================================= */
+
+.spark {
+    position: absolute;
+
+    z-index: 29;
+
+    pointer-events: none;
+
+    font-size: 16px;
+
+    animation:
+        sparkAnimation
+        .7s
+        ease-out
+        forwards;
+}
+
+@keyframes sparkAnimation {
+    from {
+        opacity: 1;
+
+        transform:
+            translate(0,0)
+            scale(.6);
+    }
+
+    to {
+        opacity: 0;
+
+        transform:
+            translate(
+                var(--x),
+                var(--y)
+            )
+            scale(1.3)
+            rotate(180deg);
+    }
+}
+
+
+/* =========================================
+   중앙 효과
+========================================= */
+
+.center-effect {
+    position: absolute;
+
+    left: 50%;
+    top: 43%;
+
+    transform: translate(-50%,-50%);
+
+    z-index: 60;
+
+    text-align: center;
+
+    pointer-events: none;
+}
+
+#levelEffect {
+    display: none;
+
+    padding: 16px 25px;
+
+    border-radius: 24px;
+
+    border: 4px solid #ffdf5c;
+
+    background: rgba(255,255,255,.96);
+
+    color: #ff704d;
+
+    font-size: clamp(28px,7vw,47px);
+
+    font-weight: 1000;
+
+    white-space: nowrap;
+
+    box-shadow: 0 15px 30px rgba(0,0,0,.15);
+
+    animation:
+        levelAnimation
+        1.2s
+        ease
+        forwards;
+}
+
+@keyframes levelAnimation {
+    0% {
+        opacity: 0;
+        transform: scale(.3);
+    }
+
+    20% {
+        opacity: 1;
+        transform: scale(1.15);
+    }
+
+    60% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(.8);
+    }
+}
+
+#comboEffect {
+    display: none;
+
+    padding: 11px 19px;
+
+    border-radius: 999px;
+
+    background: rgba(40,49,76,.88);
+
+    color: white;
+
+    font-size: clamp(21px,5vw,34px);
+
+    font-weight: 1000;
+
+    white-space: nowrap;
+
+    animation:
+        comboAnimation
+        .75s
+        ease
+        forwards;
+}
+
+@keyframes comboAnimation {
+    0% {
+        opacity: 0;
+        transform: scale(.4);
+    }
+
+    30% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+
+    100% {
+        opacity: 0;
+
+        transform:
+            scale(.9)
+            translateY(-20px);
+    }
+}
+
+
+/* =========================================
+   오타
+========================================= */
+
+.typing-error {
+    position: absolute;
+
+    left: 50%;
+    bottom: 18px;
+
+    z-index: 80;
+
+    transform: translateX(-50%);
+
+    padding: 10px 18px;
+
+    border-radius: 999px;
+
+    background: rgba(255,255,255,.97);
+
+    color: #ff4160;
+
+    font-size: clamp(15px,4vw,21px);
+
+    font-weight: 1000;
+
+    white-space: nowrap;
+
+    box-shadow:
+        0 7px 18px rgba(0,0,0,.15);
+
+    pointer-events: none;
+
+    animation:
+        errorAnimation
+        .8s
+        ease
+        forwards;
+}
+
+@keyframes errorAnimation {
+    0% {
+        opacity: 0;
+
+        transform:
+            translateX(-50%)
+            scale(.7);
+    }
+
+    20% {
+        opacity: 1;
+
+        transform:
+            translateX(-50%)
+            scale(1.08);
+    }
+
+    70% {
+        opacity: 1;
+
+        transform:
+            translateX(-50%)
+            scale(1);
+    }
+
+    100% {
+        opacity: 0;
+
+        transform:
+            translateX(-50%)
+            translateY(-18px)
+            scale(.9);
+    }
+}
+
+
+/* =========================================
+   입력 부분
+========================================= */
+
+.input-panel {
+    position: relative;
+
+    z-index: 50;
+
+    flex: 0 0 auto;
+
+    padding:
+        9px
+        max(12px, env(safe-area-inset-right))
+        max(10px, env(safe-area-inset-bottom))
+        max(12px, env(safe-area-inset-left));
+
+    background: rgba(255,255,255,.97);
+
+    box-shadow:
+        0 -6px 17px rgba(44,77,130,.12);
+}
+
+.input-inner {
+    width: min(760px,100%);
+
+    margin: auto;
+}
+
+.input-label {
+    margin-bottom: 5px;
+
+    color: #53698f;
+
+    text-align: center;
+
+    font-size: clamp(13px,3vw,16px);
+
+    font-weight: 1000;
+}
+
+#typingInput {
+    width: 100%;
+
+    height: clamp(50px,8vh,63px);
+
+    padding: 8px 15px;
+
+    border:
+        4px solid
+        #84a7ff;
+
+    border-radius: 19px;
+
+    outline: none;
+
+    background: white;
+
+    color: #284474;
+
+    text-align: center;
+
+    font-size: clamp(21px,5vw,31px);
+
+    font-weight: 1000;
+
+    caret-color: #ff6479;
+
+    box-shadow:
+        inset 0 2px 4px rgba(0,0,0,.03);
+}
+
+#typingInput:focus {
+    border-color: #ff8b71;
+
+    box-shadow:
+        0 0 0 5px
+        rgba(255,139,113,.15);
+}
+
+#typingInput.correct {
+    animation:
+        correctInput
+        .3s
+        ease;
+}
+
+@keyframes correctInput {
+    0% {
+        background: white;
+    }
+
+    50% {
+        background: #caffd8;
+
+        transform: scale(1.02);
+    }
+
+    100% {
+        background: white;
+    }
+}
+
+
+/* =========================================
+   Pause
+========================================= */
+
+#pauseOverlay {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 100;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    background:
+        rgba(38,52,84,.38);
+
+    backdrop-filter: blur(4px);
+}
+
+#pauseOverlay.active {
+    display: flex;
+}
+
+.pause-card {
+    width: min(400px,88vw);
+
+    padding: 30px 24px;
+
+    border-radius: 28px;
+
+    background: white;
+
+    text-align: center;
+
+    box-shadow:
+        0 20px 40px
+        rgba(0,0,0,.18);
+}
+
+.pause-icon {
+    font-size: 55px;
+}
+
+.pause-title {
+    margin: 5px 0;
+
+    color: #475f95;
+
+    font-size: 32px;
+
+    font-weight: 1000;
+}
+
+.pause-description {
+    color: #7786a5;
+
+    font-weight: 800;
+}
+
+.resume-button {
+    width: 100%;
+
+    min-height: 53px;
+
+    margin-top: 18px;
+
+    border-radius: 16px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #665dff,
+            #9182ff
+        );
+
+    color: white;
+
+    font-size: 18px;
+
+    font-weight: 1000;
+}
+
+
+/* =========================================
+   Game Over
+========================================= */
+
+#gameOverScreen {
+    z-index: 200;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 18px;
+
+    background:
+        rgba(31,45,77,.52);
+
+    backdrop-filter: blur(5px);
+}
+
+.game-over-card {
+    width: min(490px,95vw);
+
+    padding: 29px 24px;
+
+    border-radius: 31px;
+
+    border:
+        4px solid
+        rgba(255,255,255,.85);
+
+    background: white;
+
+    text-align: center;
+
+    box-shadow:
+        0 24px 50px
+        rgba(0,0,0,.22);
+}
+
+.game-over-icon {
+    font-size: 54px;
+}
+
+.game-over-title {
+    margin: 0;
+
+    color: #ff536b;
+
+    font-size: clamp(38px,9vw,56px);
+
+    font-weight: 1000;
+}
+
+.result-grid {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 9px;
+
+    margin: 20px 0;
+}
+
+.result-item {
+    padding: 14px 7px;
+
+    border-radius: 16px;
+
+    border: 2px solid #e2ecff;
+
+    background: #f4f8ff;
+}
+
+.result-label {
+    display: block;
+
+    color: #7e8ca7;
+
+    font-size: 12px;
+
+    font-weight: 1000;
+}
+
+.result-number {
+    display: block;
+
+    margin-top: 4px;
+
+    color: #344e85;
+
+    font-size: 25px;
+
+    font-weight: 1000;
+}
+
+.new-record {
+    display: none;
+
+    margin: 13px 0 0;
+
+    padding: 9px;
+
+    border-radius: 13px;
+
+    background: #fff1ad;
+
+    color: #e06a2e;
+
+    font-weight: 1000;
+}
+
+.end-buttons {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 9px;
+}
+
+.end-button {
+    min-height: 55px;
+
+    border-radius: 16px;
+
+    color: white;
+
+    font-size: 16px;
+
+    font-weight: 1000;
+}
+
+.retry-button {
+    background:
+        linear-gradient(
+            135deg,
+            #ff7358,
+            #ff9c61
+        );
+}
+
+.home-button {
+    background:
+        linear-gradient(
+            135deg,
+            #6579ff,
+            #64a2ff
+        );
+}
+
+
+/* =========================================
+   모바일
+========================================= */
+
+@media (max-width: 600px) {
+
+    .start-card {
+        padding: 26px 16px;
+    }
+
+    .language-buttons {
+        grid-template-columns: 1fr;
+    }
+
+    .language-button {
+        min-height: 61px;
+    }
+
+    .best-item {
+        min-width: 140px;
+
+        font-size: 12px;
+    }
+
+    .score-board {
+        gap: 4px;
+    }
+
+    .score-item {
+        padding: 5px 2px;
+
+        border-width: 1px;
+    }
+
+    .score-label {
+        font-size: 8px;
+    }
+
+    .score-value {
+        font-size: 14px;
+    }
+
+    #lifeDisplay {
+        font-size: 12px;
+    }
+
+    .word-card {
+        padding: 8px 12px;
+
+        border-width: 2px;
+
+        font-size: 17px;
+    }
+
+    #typingInput {
+        height: 52px;
+
+        border-width: 3px;
+    }
+}
+
+
+/* 모바일 키보드가 올라온 상태 */
+
+@media (max-height: 520px) {
+
+    .game-title-row {
+        margin-bottom: 3px;
+    }
+
+    .score-item {
+        padding: 3px 2px;
+    }
+
+    .score-label {
+        display: none;
+    }
+
+    .score-value {
+        font-size: 12px;
+    }
+
+    .action-row {
+        margin-top: 3px;
+    }
+
+    .small-button {
+        min-height: 27px;
+
+        padding: 3px 7px;
+
+        font-size: 9px;
+    }
+
+    .input-label {
+        display: none;
+    }
+
+    #typingInput {
+        height: 42px;
+
+        font-size: 20px;
+    }
+
+    .input-panel {
+        padding-top: 4px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+    <!-- 배경 -->
+    <div class="background">
+
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+        <div class="cloud cloud3"></div>
+
+        <div class="star star1">⭐</div>
+        <div class="star star2">✨</div>
+        <div class="star star3">⭐</div>
+
+    </div>
+
+
+    <!-- =================================
+         시작 화면
+    ================================== -->
+
+    <section
+        id="startScreen"
+        class="screen active"
+    >
+
+        <div class="start-card">
+
+            <div class="keyboard-icon">
+                ⌨️
+            </div>
+
+            <h1 class="start-title">
+                WORD DROP<br>
+                TYPING
+            </h1>
+
+            <div class="start-subtitle">
+                떨어지는 단어를 입력하세요!
+            </div>
+
+            <div class="start-info">
+                🎯 단어가 바닥에 닿기 전에
+                정확하게 입력하세요!<br>
+                정답은 Enter 없이 자동으로 처리됩니다.
+            </div>
+
+            <div class="language-buttons">
+
+                <button
+                    class="language-button ko-button"
+                    onclick="startGame('ko')"
+                >
+                    🇰🇷 한글 타자 시작
+                </button>
+
+                <button
+                    class="language-button en-button"
+                    onclick="startGame('en')"
+                >
+                    🇺🇸 영어 타자 시작
+                </button>
+
+            </div>
+
+            <div class="best-box">
+
+                <div class="best-item">
+                    🇰🇷 한글 최고점수 :
+                    <span
+                        id="koBest"
+                        class="best-score"
+                    >
+                        0
+                    </span>
+                </div>
+
+                <div class="best-item">
+                    🇺🇸 영어 최고점수 :
+                    <span
+                        id="enBest"
+                        class="best-score"
+                    >
+                        0
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================
+         게임 화면
+    ================================== -->
+
+    <section
+        id="gameScreen"
+        class="screen"
+    >
+
+        <header class="top-panel">
+
+            <div class="game-title-row">
+
+                <div class="game-small-title">
+                    ⌨️ WORD DROP TYPING
+                </div>
+
+                <div
+                    id="languageMode"
+                    class="language-mode"
+                >
+                    🇰🇷 한글
+                </div>
+
+            </div>
+
+
+            <div class="score-board">
+
+                <div class="score-item">
+                    <span class="score-label">
+                        SCORE
+                    </span>
+
+                    <span
+                        id="scoreDisplay"
+                        class="score-value"
+                    >
+                        0
+                    </span>
+                </div>
+
+
+                <div class="score-item">
+                    <span class="score-label">
+                        LEVEL
+                    </span>
+
+                    <span
+                        id="levelDisplay"
+                        class="score-value"
+                    >
+                        1
+                    </span>
+                </div>
+
+
+                <div class="score-item">
+                    <span class="score-label">
+                        COMBO
+                    </span>
+
+                    <span
+                        id="comboDisplay"
+                        class="score-value"
+                    >
+                        0
+                    </span>
+                </div>
+
+
+                <div class="score-item">
+                    <span class="score-label">
+                        LIFE
+                    </span>
+
+                    <span
+                        id="lifeDisplay"
+                        class="score-value"
+                    >
+                        ❤️❤️❤️
+                    </span>
+                </div>
+
+            </div>
+
+
+            <div class="action-row">
+
+                <button
+                    id="pauseButton"
+                    class="small-button pause-button"
+                    onclick="togglePause()"
+                >
+                    일시정지 ⏸️
+                </button>
+
+                <button
+                    class="small-button"
+                    onclick="goHome()"
+                >
+                    처음으로 🏠
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <main id="gameArea">
+
+            <div class="danger-text">
+                ⚠️ 바닥
+            </div>
+
+
+            <div class="center-effect">
+
+                <div id="levelEffect">
+                    LEVEL UP! 🚀
+                </div>
+
+            </div>
+
+
+            <div
+                class="center-effect"
+                style="top:56%;"
+            >
+
+                <div id="comboEffect">
+                </div>
+
+            </div>
+
+        </main>
+
+
+        <footer class="input-panel">
+
+            <div class="input-inner">
+
+                <div class="input-label">
+                    👇 떨어지는 단어를 입력하세요
+                </div>
+
+                <input
+                    id="typingInput"
+                    type="text"
+
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+
+                    enterkeyhint="done"
+
+                    placeholder="여기에 입력하세요!"
+                >
+
+            </div>
+
+        </footer>
+
+
+        <!-- Pause -->
+
+        <div id="pauseOverlay">
+
+            <div class="pause-card">
+
+                <div class="pause-icon">
+                    ⏸️
+                </div>
+
+                <div class="pause-title">
+                    PAUSE
+                </div>
+
+                <div class="pause-description">
+                    게임이 잠시 멈췄어요.
+                </div>
+
+                <button
+                    class="resume-button"
+                    onclick="togglePause()"
+                >
+                    계속하기 ▶️
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================
+         게임 오버 화면
+    ================================== -->
+
+    <section
+        id="gameOverScreen"
+        class="screen"
+    >
+
+        <div class="game-over-card">
+
+            <div class="game-over-icon">
+                🏁
+            </div>
+
+            <h2 class="game-over-title">
+                GAME OVER
+            </h2>
+
+
+            <div
+                id="newRecord"
+                class="new-record"
+            >
+                🏆 NEW RECORD!
+            </div>
+
+
+            <div class="result-grid">
+
+                <div class="result-item">
+                    <span class="result-label">
+                        최종 점수
+                    </span>
+
+                    <span
+                        id="finalScore"
+                        class="result-number"
+                    >
+                        0
+                    </span>
+                </div>
+
+
+                <div class="result-item">
+                    <span class="result-label">
+                        맞힌 단어
+                    </span>
+
+                    <span
+                        id="finalHits"
+                        class="result-number"
+                    >
+                        0
+                    </span>
+                </div>
+
+
+                <div class="result-item">
+                    <span class="result-label">
+                        최고 점수
+                    </span>
+
+                    <span
+                        id="finalBest"
+                        class="result-number"
+                    >
+                        0
+                    </span>
+                </div>
+
+
+                <div class="result-item">
+                    <span class="result-label">
+                        도달 레벨
+                    </span>
+
+                    <span
+                        id="finalLevel"
+                        class="result-number"
+                    >
+                        1
+                    </span>
+                </div>
+
+            </div>
+
+
+            <div class="end-buttons">
+
+                <button
+                    class="end-button retry-button"
+                    onclick="retryGame()"
+                >
+                    🔄 다시하기
+                </button>
+
+                <button
+                    class="end-button home-button"
+                    onclick="goHome()"
+                >
+                    🏠 메인 화면
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   단어
+===================================================== */
+
+const koreanWords = [
+
+    "학교","친구","컴퓨터","인공지능","바다",
+    "하늘","사과","자동차","고양이","강아지",
+
+    "무지개","여름","겨울","가족","행복",
+    "봄","가을","나무","꽃","공원",
+
+    "선생님","학생","교실","책상","연필",
+    "지우개","공책","도서관","놀이터","축구",
+
+    "야구","농구","수영","음악","미술",
+    "과학","수학","한글","로봇","게임",
+
+    "키보드","마우스","우주","별빛","달빛",
+    "태양","지구","행성","로켓","비행기",
+
+    "기차","자전거","버스","여행","사진",
+    "영화","노래","웃음","사랑","마음",
+
+    "희망","용기","도전","성공","공부",
+    "숙제","시간","시계","아침","점심",
+
+    "저녁","딸기","포도","수박","바나나",
+    "복숭아","오렌지","토마토","감자","초콜릿",
+
+    "아이스크림","햄버거","피자","떡볶이","김밥",
+    "대한민국","세계","미래","코딩","인터넷",
+
+    "스마트폰","태블릿","창의력","상상력","이야기",
+    "그림","동물","자연","구름","날씨"
+
+];
+
+
+const englishWords = [
+
+    "apple","school","friend","computer","game",
+    "water","happy","robot","music","banana",
+
+    "family","summer","winter","rainbow","keyboard",
+    "mouse","teacher","student","class","book",
+
+    "pencil","eraser","desk","library","playground",
+    "soccer","baseball","basketball","swimming","science",
+
+    "math","coding","internet","phone","tablet",
+    "future","dream","hope","smile","love",
+
+    "heart","star","moon","sun","earth",
+    "space","rocket","planet","train","airplane",
+
+    "bicycle","travel","photo","movie","dance",
+    "morning","lunch","evening","strawberry","grape",
+
+    "melon","orange","peach","tomato","potato",
+    "chocolate","pizza","hamburger","garden","flower",
+
+    "tree","forest","ocean","river","cloud",
+    "weather","spring","autumn","world","country",
+
+    "story","picture","animal","nature","energy",
+    "light","color","magic","adventure","challenge",
+
+    "success","winner","practice","typing","letter",
+    "word","screen","window","button","creative"
+
+];
+
+
+/* =====================================================
+   DOM
+===================================================== */
+
+const startScreen =
+    document.getElementById("startScreen");
+
+const gameScreen =
+    document.getElementById("gameScreen");
+
+const gameOverScreen =
+    document.getElementById("gameOverScreen");
+
+const gameArea =
+    document.getElementById("gameArea");
+
+const typingInput =
+    document.getElementById("typingInput");
+
+const scoreDisplay =
+    document.getElementById("scoreDisplay");
+
+const levelDisplay =
+    document.getElementById("levelDisplay");
+
+const comboDisplay =
+    document.getElementById("comboDisplay");
+
+const lifeDisplay =
+    document.getElementById("lifeDisplay");
+
+const koBest =
+    document.getElementById("koBest");
+
+const enBest =
+    document.getElementById("enBest");
+
+const languageMode =
+    document.getElementById("languageMode");
+
+const pauseButton =
+    document.getElementById("pauseButton");
+
+const pauseOverlay =
+    document.getElementById("pauseOverlay");
+
+const levelEffect =
+    document.getElementById("levelEffect");
+
+const comboEffect =
+    document.getElementById("comboEffect");
+
+const finalScore =
+    document.getElementById("finalScore");
+
+const finalHits =
+    document.getElementById("finalHits");
+
+const finalBest =
+    document.getElementById("finalBest");
+
+const finalLevel =
+    document.getElementById("finalLevel");
+
+const newRecord =
+    document.getElementById("newRecord");
+
+
+/* =====================================================
+   상태
+===================================================== */
+
+let language = "ko";
+
+let score = 0;
+let level = 1;
+let lives = 3;
+let combo = 0;
+let hitCount = 0;
+
+let gameRunning = false;
+let paused = false;
+
+let words = [];
+
+let animationId = null;
+
+let lastTime = 0;
+let spawnTimer = 0;
+
+let recentWords = [];
+
+let isComposing = false;
+
+/*
+    정답 처리 직후
+    IME에서 이전 글자가 다시 들어오는 것을
+    막기 위한 시간
+*/
+
+let ignoreInputUntil = 0;
+
+
+/*
+    오타 판정을 즉시 하지 않고
+    입력이 잠시 멈춘 뒤 확인한다.
+
+    이것이 한글 입력이 중간에
+    자꾸 지워지는 문제를 막는 핵심.
+*/
+
+let typoTimer = null;
+
+
+/* =====================================================
+   레벨
+===================================================== */
+
+const levelSettings = {
+
+    1: {
+        speed: 28,
+        spawn: 2300,
+        max: 3
+    },
+
+    2: {
+        speed: 39,
+        spawn: 1800,
+        max: 4
+    },
+
+    3: {
+        speed: 52,
+        spawn: 1400,
+        max: 5
+    },
+
+    4: {
+        speed: 67,
+        spawn: 1050,
+        max: 6
+    }
+
+};
+
+
+/* =====================================================
+   색상
+===================================================== */
+
+const colors = [
+
+    ["#ff607e","#ff8a64"],
+    ["#5d7cff","#53a6ff"],
+    ["#7965f1","#a46cff"],
+    ["#00aa9c","#48c99e"],
+    ["#f3952b","#ffc150"],
+    ["#d95ecf","#ed83b5"],
+    ["#35a7c7","#4fd0cc"],
+    ["#ee6573","#ff8d9a"]
+
+];
+
+
+/* =====================================================
+   최고 점수
+===================================================== */
+
+function getBest(lang) {
+
+    try {
+
+        const key =
+            lang === "ko"
+                ? "wordDropBestKo"
+                : "wordDropBestEn";
+
+        return Number(
+            localStorage.getItem(key)
+        ) || 0;
+
+    } catch (e) {
+
+        return 0;
+    }
+}
+
+
+function saveBest(lang, value) {
+
+    try {
+
+        const key =
+            lang === "ko"
+                ? "wordDropBestKo"
+                : "wordDropBestEn";
+
+        localStorage.setItem(
+            key,
+            String(value)
+        );
+
+    } catch (e) {}
+}
+
+
+function updateBestDisplay() {
+
+    koBest.textContent =
+        getBest("ko");
+
+    enBest.textContent =
+        getBest("en");
+}
+
+
+/* =====================================================
+   화면
+===================================================== */
+
+function showScreen(screen) {
+
+    startScreen.classList.remove("active");
+    gameScreen.classList.remove("active");
+    gameOverScreen.classList.remove("active");
+
+    screen.classList.add("active");
+}
+
+
+/* =====================================================
+   게임 시작
+===================================================== */
+
+function startGame(lang) {
+
+    stopGameLoop();
+
+    clearWords();
+
+    clearTimeout(typoTimer);
+
+    language = lang;
+
+    score = 0;
+    level = 1;
+    lives = 3;
+    combo = 0;
+    hitCount = 0;
+
+    recentWords = [];
+
+    lastTime = 0;
+    spawnTimer = 0;
+
+    isComposing = false;
+
+    ignoreInputUntil = 0;
+
+    gameRunning = true;
+    paused = false;
+
+    typingInput.disabled = false;
+    typingInput.value = "";
+
+    pauseOverlay.classList.remove("active");
+
+    pauseButton.textContent =
+        "일시정지 ⏸️";
+
+
+    if (language === "ko") {
+
+        languageMode.textContent =
+            "🇰🇷 한글 타자";
+
+        typingInput.placeholder =
+            "한글 단어 입력!";
+
+        typingInput.setAttribute(
+            "lang",
+            "ko"
+        );
+
+    } else {
+
+        languageMode.textContent =
+            "🇺🇸 영어 타자";
+
+        typingInput.placeholder =
+            "English word!";
+
+        typingInput.setAttribute(
+            "lang",
+            "en"
+        );
+    }
+
+
+    updateScore();
+
+    showScreen(gameScreen);
+
+
+    requestAnimationFrame(() => {
+
+        createWord();
+
+        animationId =
+            requestAnimationFrame(gameLoop);
+
+        /*
+            PC는 게임을 시작하면
+            바로 타이핑 가능
+        */
+
+        if (
+            !isTouchDevice() ||
+            window.innerWidth > 800
+        ) {
+
+            focusTyping();
+        }
+
+    });
+}
+
+
+/* =====================================================
+   터치 기기
+===================================================== */
+
+function isTouchDevice() {
+
+    return (
+        "ontouchstart" in window ||
+        navigator.maxTouchPoints > 0
+    );
+}
+
+
+/* =====================================================
+   입력창
+===================================================== */
+
+function focusTyping() {
+
+    if (
+        !gameRunning ||
+        paused
+    ) {
+        return;
+    }
+
+    try {
+
+        typingInput.focus({
+            preventScroll: true
+        });
+
+    } catch (e) {
+
+        typingInput.focus();
+    }
+}
+
+
+/* =====================================================
+   랜덤 단어
+===================================================== */
+
+function getRandomWord() {
+
+    const list =
+        language === "ko"
+            ? koreanWords
+            : englishWords;
+
+
+    let available =
+        list.filter(
+            word =>
+                !recentWords.includes(word)
+        );
+
+
+    if (!available.length) {
+
+        recentWords = [];
+
+        available = [...list];
+    }
+
+
+    const word =
+        available[
+            Math.floor(
+                Math.random() *
+                available.length
+            )
+        ];
+
+
+    recentWords.push(word);
+
+
+    if (recentWords.length > 15) {
+
+        recentWords.shift();
+    }
+
+
+    return word;
+}
+
+
+/* =====================================================
+   단어 생성
+===================================================== */
+
+function createWord() {
+
+    if (
+        !gameRunning ||
+        paused
+    ) {
+        return;
+    }
+
+
+    const setting =
+        levelSettings[level];
+
+
+    if (
+        words.length >=
+        setting.max
+    ) {
+        return;
+    }
+
+
+    const text =
+        getRandomWord();
+
+
+    const element =
+        document.createElement("div");
+
+
+    element.className =
+        "word-card";
+
+
+    element.textContent =
+        text;
+
+
+    const color =
+        colors[
+            Math.floor(
+                Math.random() *
+                colors.length
+            )
+        ];
+
+
+    element.style.background =
+        `linear-gradient(
+            135deg,
+            ${color[0]},
+            ${color[1]}
+        )`;
+
+
+    gameArea.appendChild(element);
+
+
+    const cardWidth =
+        element.offsetWidth;
+
+    const cardHeight =
+        element.offsetHeight;
+
+    const areaWidth =
+        gameArea.clientWidth;
+
+
+    const margin = 7;
+
+
+    const maxX =
+        Math.max(
+            margin,
+            areaWidth -
+            cardWidth -
+            margin
+        );
+
+
+    const x =
+        margin +
+        Math.random() *
+        Math.max(
+            0,
+            maxX - margin
+        );
+
+
+    const word = {
+
+        text: text,
+
+        normalized:
+            normalize(text),
+
+        x: x,
+
+        y:
+            -cardHeight - 5,
+
+        width:
+            cardWidth,
+
+        height:
+            cardHeight,
+
+        speed:
+            setting.speed *
+            random(.9,1.12),
+
+        element:
+            element,
+
+        removing:
+            false
+    };
+
+
+    words.push(word);
+
+    setWordPosition(word);
+}
+
+
+/* =====================================================
+   위치
+===================================================== */
+
+function setWordPosition(word) {
+
+    word.element.style.transform =
+        `translate3d(
+            ${word.x}px,
+            ${word.y}px,
+            0
+        )`;
+}
+
+
+/* =====================================================
+   게임 루프
+===================================================== */
+
+function gameLoop(time) {
+
+    if (!gameRunning) {
+        return;
+    }
+
+
+    if (!lastTime) {
+
+        lastTime = time;
+    }
+
+
+    let delta =
+        (time - lastTime) / 1000;
+
+
+    delta =
+        Math.min(
+            delta,
+            .05
+        );
+
+
+    lastTime =
+        time;
+
+
+    if (!paused) {
+
+        moveWords(delta);
+
+
+        spawnTimer +=
+            delta * 1000;
+
+
+        const setting =
+            levelSettings[level];
+
+
+        if (
+            spawnTimer >=
+            setting.spawn
+        ) {
+
+            spawnTimer = 0;
+
+            createWord();
+        }
+    }
+
+
+    animationId =
+        requestAnimationFrame(
+            gameLoop
+        );
+}
+
+
+/* =====================================================
+   단어 이동
+===================================================== */
+
+function moveWords(delta) {
+
+    const bottom =
+        gameArea.clientHeight - 7;
+
+
+    for (
+        let i =
+            words.length - 1;
+
+        i >= 0;
+
+        i--
+    ) {
+
+        const word =
+            words[i];
+
+
+        if (word.removing) {
+            continue;
+        }
+
+
+        word.y +=
+            word.speed * delta;
+
+
+        setWordPosition(word);
+
+
+        if (
+            word.y +
+            word.height >=
+            bottom
+        ) {
+
+            missWord(word);
+        }
+    }
+}
+
+
+/* =====================================================
+   놓침
+===================================================== */
+
+function missWord(word) {
+
+    if (
+        !word ||
+        word.removing
+    ) {
+        return;
+    }
+
+
+    word.removing = true;
+
+
+    removeWord(word);
+
+
+    if (word.element.parentNode) {
+
+        word.element.remove();
+    }
+
+
+    lives--;
+
+    combo = 0;
+
+
+    /*
+        단어를 놓친 순간
+        현재 입력 중인 글자는 그대로 둔다.
+
+        사용자가 다른 단어를 입력 중일 수도 있기 때문.
+    */
+
+
+    updateScore();
+
+
+    gameArea.animate(
+
+        [
+            { transform: "translateX(0)" },
+            { transform: "translateX(-5px)" },
+            { transform: "translateX(5px)" },
+            { transform: "translateX(0)" }
+        ],
+
+        {
+            duration: 220
+        }
+
+    );
+
+
+    if (lives <= 0) {
+
+        endGame();
+
+        return;
+    }
+
+
+    /*
+        단어 하나도 없으면
+        바로 다음 단어
+    */
+
+    if (!words.length) {
+
+        createWord();
+    }
+
+
+    /*
+        떨어진 단어 때문에 현재 입력 내용이
+        유효하지 않아졌을 수 있으므로
+        조금 뒤 다시 검사
+    */
+
+    scheduleTypoCheck();
+}
+
+
+/* =====================================================
+   ★ 핵심 - 한글 IME 처리
+===================================================== */
+
+/*
+    한글을 입력하면 브라우저에서는
+
+    ㅎ → 하 → 학
+
+    같은 글자를 만드는 동안
+    composition 이벤트가 발생한다.
+
+    이 상태에서는 절대 오타 판정을 하면 안 된다.
+*/
+
+
+typingInput.addEventListener(
+    "compositionstart",
+    () => {
+
+        isComposing = true;
+
+        /*
+            입력 중에는 예약된
+            오타 검사 취소
+        */
+
+        clearTimeout(typoTimer);
+
+    }
+);
+
+
+typingInput.addEventListener(
+    "compositionupdate",
+    () => {
+
+        /*
+            조합 중에는
+            오타 검사 금지
+        */
+
+        clearTimeout(typoTimer);
+
+    }
+);
+
+
+typingInput.addEventListener(
+    "compositionend",
+    () => {
+
+        isComposing = false;
+
+
+        /*
+            compositionend 직후
+            브라우저가 input 이벤트를
+            한 번 더 보내는 경우가 있다.
+
+            아주 짧게 기다렸다가 검사
+        */
+
+        setTimeout(() => {
+
+            if (
+                gameRunning &&
+                !paused
+            ) {
+
+                checkCurrentInput();
+            }
+
+        }, 30);
+
+    }
+);
+
+
+/* =====================================================
+   일반 입력
+===================================================== */
+
+typingInput.addEventListener(
+    "input",
+    () => {
+
+        if (
+            !gameRunning ||
+            paused
+        ) {
+            return;
+        }
+
+
+        /*
+            정답 직후 IME가 이전 마지막 글자를
+            다시 보내는 극히 짧은 구간
+        */
+
+        if (
+            performance.now() <
+            ignoreInputUntil
+        ) {
+
+            typingInput.value = "";
+
+            return;
+        }
+
+
+        /*
+            한글 조합 중이면
+            절대 판정하지 않는다.
+        */
+
+        if (isComposing) {
+
+            return;
+        }
+
+
+        checkCurrentInput();
+
+    }
+);
+
+
+/* =====================================================
+   입력 검사
+===================================================== */
+
+function checkCurrentInput() {
+
+    if (
+        !gameRunning ||
+        paused ||
+        isComposing
+    ) {
+        return;
+    }
+
+
+    const typed =
+        normalize(
+            typingInput.value
+        );
+
+
+    if (!typed) {
+
+        clearTimeout(typoTimer);
+
+        return;
+    }
+
+
+    /*
+        1. 완전한 정답부터 검사
+    */
+
+    const matches =
+        words
+            .filter(
+                word =>
+                    !word.removing &&
+                    word.normalized === typed
+            )
+            .sort(
+                (a,b) =>
+                    b.y - a.y
+            );
+
+
+    if (matches.length) {
+
+        clearTimeout(typoTimer);
+
+        correctWord(
+            matches[0]
+        );
+
+        return;
+    }
+
+
+    /*
+        2. 아직 단어를 입력하는 도중인지 확인
+
+        예:
+        컴퓨터
+
+        컴
+        컴퓨
+        컴퓨터
+
+        모두 정상
+    */
+
+    const prefixExists =
+        words.some(
+            word =>
+                !word.removing &&
+                word.normalized.startsWith(
+                    typed
+                )
+        );
+
+
+    if (prefixExists) {
+
+        clearTimeout(typoTimer);
+
+        return;
+    }
+
+
+    /*
+        3. 가능한 단어가 없다고 하더라도
+           즉시 오타 처리하지 않는다.
+
+           잠깐 기다린다.
+
+           한글 IME의 중간 상태를
+           오타로 착각하는 것을 방지.
+    */
+
+    scheduleTypoCheck();
+}
+
+
+/* =====================================================
+   ★ 오타 검사 예약
+===================================================== */
+
+function scheduleTypoCheck() {
+
+    clearTimeout(typoTimer);
+
+
+    /*
+        한글은 조합 과정이 있으므로
+        조금 더 여유 있게 설정.
+
+        영어는 상대적으로 빠르게 판정.
+    */
+
+    const delay =
+        language === "ko"
+            ? 550
+            : 400;
+
+
+    typoTimer =
+        setTimeout(() => {
+
+            validateTypo();
+
+        }, delay);
+}
+
+
+/* =====================================================
+   최종 오타 판정
+===================================================== */
+
+function validateTypo() {
+
+    if (
+        !gameRunning ||
+        paused ||
+        isComposing
+    ) {
+        return;
+    }
+
+
+    const typed =
+        normalize(
+            typingInput.value
+        );
+
+
+    if (!typed) {
+        return;
+    }
+
+
+    /*
+        타이머가 기다리는 동안
+        정답이 됐는지 다시 확인
+    */
+
+    const exact =
+        words
+            .filter(
+                word =>
+                    !word.removing &&
+                    word.normalized === typed
+            )
+            .sort(
+                (a,b) =>
+                    b.y - a.y
+            );
+
+
+    if (exact.length) {
+
+        correctWord(
+            exact[0]
+        );
+
+        return;
+    }
+
+
+    /*
+        현재 입력으로 시작하는
+        단어가 있는지 다시 검사
+    */
+
+    const possible =
+        words.some(
+            word =>
+                !word.removing &&
+                word.normalized.startsWith(
+                    typed
+                )
+        );
+
+
+    if (possible) {
+
+        return;
+    }
+
+
+    /*
+        최종적으로 어떤 단어에도 해당하지 않으면
+        이때만 오타 처리
+    */
+
+    showTypo();
+
+    combo = 0;
+
+    updateScore();
+
+
+    /*
+        여기서는 실제 오타가 확정됐으므로
+        입력창 비우기
+    */
+
+    typingInput.value = "";
+
+
+    /*
+        PC에서는 포커스 유지
+    */
+
+    if (
+        !isTouchDevice() ||
+        window.innerWidth > 800
+    ) {
+
+        focusTyping();
+    }
+}
+
+
+/* =====================================================
+   오타 효과
+===================================================== */
+
+function showTypo() {
+
+    const previous =
+        document.querySelector(
+            ".typing-error"
+        );
+
+
+    if (previous) {
+
+        previous.remove();
+    }
+
+
+    const error =
+        document.createElement("div");
+
+
+    error.className =
+        "typing-error";
+
+
+    error.textContent =
+        "❌ 오타! 다시 입력하세요";
+
+
+    gameArea.appendChild(
+        error
+    );
+
+
+    typingInput.animate(
+
+        [
+            {
+                transform:
+                    "translateX(0)",
+
+                borderColor:
+                    "#ff4263"
+            },
+
+            {
+                transform:
+                    "translateX(-6px)",
+
+                borderColor:
+                    "#ff4263"
+            },
+
+            {
+                transform:
+                    "translateX(6px)",
+
+                borderColor:
+                    "#ff4263"
+            },
+
+            {
+                transform:
+                    "translateX(-4px)",
+
+                borderColor:
+                    "#ff4263"
+            },
+
+            {
+                transform:
+                    "translateX(0)",
+
+                borderColor:
+                    "#84a7ff"
+            }
+        ],
+
+        {
+            duration: 360
+        }
+
+    );
+
+
+    setTimeout(() => {
+
+        if (error.parentNode) {
+
+            error.remove();
+        }
+
+    }, 820);
+}
+
+
+/* =====================================================
+   정답
+===================================================== */
+
+function correctWord(word) {
+
+    if (
+        !word ||
+        word.removing
+    ) {
+        return;
+    }
+
+
+    clearTimeout(typoTimer);
+
+
+    word.removing = true;
+
+
+    const oldLevel =
+        level;
+
+
+    score += 10;
+
+    hitCount++;
+
+    combo++;
+
+
+    level =
+        calculateLevel(score);
+
+
+    /*
+        ★ 정답 후 입력창 초기화
+
+        이전처럼 여러 번 requestAnimationFrame으로
+        계속 지우지 않는다.
+
+        그것이 다음 글자까지 지워버리는 원인이었음.
+    */
+
+    typingInput.value = "";
+
+
+    /*
+        한글 브라우저에서 정답 직후
+        마지막 조합 글자가 한 번 더 들어오는
+        현상만 아주 짧게 차단.
+
+        80ms 후에는 정상 입력 가능.
+    */
+
+    ignoreInputUntil =
+        performance.now() +
+        (
+            language === "ko"
+                ? 80
+                : 20
+        );
+
+
+    typingInput.classList.remove(
+        "correct"
+    );
+
+
+    void typingInput.offsetWidth;
+
+
+    typingInput.classList.add(
+        "correct"
+    );
+
+
+    const effectX =
+        word.x +
+        word.width / 2;
+
+
+    const effectY =
+        word.y +
+        word.height / 2;
+
+
+    showScoreEffect(
+        effectX,
+        effectY
+    );
+
+
+    makeSparks(
+        effectX,
+        effectY
+    );
+
+
+    showCombo();
+
+
+    updateScore();
+
+
+    if (
+        level > oldLevel
+    ) {
+
+        showLevelUp();
+
+        changeWordSpeed();
+    }
+
+
+    word.element.classList.add(
+        "word-hit"
+    );
+
+
+    removeWord(word);
+
+
+    setTimeout(() => {
+
+        if (
+            word.element &&
+            word.element.parentNode
+        ) {
+
+            word.element.remove();
+        }
+
+    }, 300);
+
+
+    /*
+        레벨이 높을수록
+        정답 직후 화면 채우기
+    */
+
+    const setting =
+        levelSettings[level];
+
+
+    if (
+        words.length <
+        Math.min(
+            level,
+            setting.max
+        )
+    ) {
+
+        setTimeout(() => {
+
+            if (
+                gameRunning &&
+                !paused
+            ) {
+
+                createWord();
+            }
+
+        }, 160);
+    }
+}
+
+
+/* =====================================================
+   문자열
+===================================================== */
+
+function normalize(text) {
+
+    let value =
+        String(text)
+            .trim()
+            .normalize("NFC");
+
+
+    if (language === "en") {
+
+        value =
+            value.toLowerCase();
+    }
+
+
+    return value;
+}
+
+
+/* =====================================================
+   레벨
+===================================================== */
+
+function calculateLevel(value) {
+
+    if (value >= 510) {
+
+        return 4;
+    }
+
+
+    if (value >= 260) {
+
+        return 3;
+    }
+
+
+    if (value >= 110) {
+
+        return 2;
+    }
+
+
+    return 1;
+}
+
+
+/* =====================================================
+   레벨업 시 기존 단어 속도
+===================================================== */
+
+function changeWordSpeed() {
+
+    const setting =
+        levelSettings[level];
+
+
+    words.forEach(word => {
+
+        if (!word.removing) {
+
+            word.speed =
+                setting.speed *
+                random(.9,1.12);
+        }
+
+    });
+}
+
+
+/* =====================================================
+   점수판
+===================================================== */
+
+function updateScore() {
+
+    scoreDisplay.textContent =
+        score;
+
+    levelDisplay.textContent =
+        level;
+
+    comboDisplay.textContent =
+        combo;
+
+
+    if (lives > 0) {
+
+        lifeDisplay.textContent =
+            "❤️".repeat(lives);
+
+    } else {
+
+        lifeDisplay.textContent =
+            "💔";
+    }
+}
+
+
+/* =====================================================
+   +10
+===================================================== */
+
+function showScoreEffect(x,y) {
+
+    const pop =
+        document.createElement("div");
+
+
+    pop.className =
+        "score-pop";
+
+
+    pop.textContent =
+        "+10";
+
+
+    pop.style.left =
+        `${x}px`;
+
+
+    pop.style.top =
+        `${y}px`;
+
+
+    gameArea.appendChild(
+        pop
+    );
+
+
+    setTimeout(() => {
+
+        pop.remove();
+
+    }, 820);
+}
+
+
+/* =====================================================
+   별
+===================================================== */
+
+function makeSparks(x,y) {
+
+    const icons = [
+        "⭐",
+        "✨",
+        "◆",
+        "✦"
+    ];
+
+
+    for (
+        let i = 0;
+        i < 7;
+        i++
+    ) {
+
+        const spark =
+            document.createElement("div");
+
+
+        spark.className =
+            "spark";
+
+
+        spark.textContent =
+            icons[
+                Math.floor(
+                    Math.random() *
+                    icons.length
+                )
+            ];
+
+
+        spark.style.left =
+            `${x}px`;
+
+
+        spark.style.top =
+            `${y}px`;
+
+
+        const angle =
+            Math.random() *
+            Math.PI * 2;
+
+
+        const distance =
+            random(
+                25,
+                65
+            );
+
+
+        spark.style.setProperty(
+            "--x",
+            `${
+                Math.cos(angle) *
+                distance
+            }px`
+        );
+
+
+        spark.style.setProperty(
+            "--y",
+            `${
+                Math.sin(angle) *
+                distance
+            }px`
+        );
+
+
+        gameArea.appendChild(
+            spark
+        );
+
+
+        setTimeout(() => {
+
+            spark.remove();
+
+        }, 720);
+    }
+}
+
+
+/* =====================================================
+   콤보
+===================================================== */
+
+function showCombo() {
+
+    if (combo < 3) {
+
+        return;
+    }
+
+
+    let icon =
+        "🔥";
+
+
+    if (combo >= 5) {
+
+        icon =
+            "🔥🔥";
+    }
+
+
+    if (combo >= 10) {
+
+        icon =
+            "⚡🔥";
+    }
+
+
+    if (combo >= 20) {
+
+        icon =
+            "⚡🔥⚡";
+    }
+
+
+    comboEffect.textContent =
+        `${combo} COMBO ${icon}`;
+
+
+    comboEffect.style.display =
+        "block";
+
+
+    comboEffect.style.animation =
+        "none";
+
+
+    void comboEffect.offsetWidth;
+
+
+    comboEffect.style.animation =
+        "comboAnimation .75s ease forwards";
+
+
+    setTimeout(() => {
+
+        comboEffect.style.display =
+            "none";
+
+    }, 780);
+}
+
+
+/* =====================================================
+   레벨업
+===================================================== */
+
+function showLevelUp() {
+
+    levelEffect.innerHTML =
+        `LEVEL ${level}<br>LEVEL UP! 🚀`;
+
+
+    levelEffect.style.display =
+        "block";
+
+
+    levelEffect.style.animation =
+        "none";
+
+
+    void levelEffect.offsetWidth;
+
+
+    levelEffect.style.animation =
+        "levelAnimation 1.2s ease forwards";
+
+
+    setTimeout(() => {
+
+        levelEffect.style.display =
+            "none";
+
+    }, 1250);
+}
+
+
+/* =====================================================
+   일시정지
+===================================================== */
+
+function togglePause() {
+
+    if (!gameRunning) {
+
+        return;
+    }
+
+
+    paused =
+        !paused;
+
+
+    clearTimeout(
+        typoTimer
+    );
+
+
+    if (paused) {
+
+        pauseOverlay.classList.add(
+            "active"
+        );
+
+
+        pauseButton.textContent =
+            "계속하기 ▶️";
+
+
+        typingInput.blur();
+
+    } else {
+
+        pauseOverlay.classList.remove(
+            "active"
+        );
+
+
+        pauseButton.textContent =
+            "일시정지 ⏸️";
+
+
+        lastTime = 0;
+
+
+        setTimeout(() => {
+
+            focusTyping();
+
+        }, 80);
+    }
+}
+
+
+/* =====================================================
+   게임 종료
+===================================================== */
+
+function endGame() {
+
+    if (!gameRunning) {
+
+        return;
+    }
+
+
+    gameRunning = false;
+
+    paused = false;
+
+
+    clearTimeout(
+        typoTimer
+    );
+
+
+    stopGameLoop();
+
+
+    typingInput.blur();
+
+    typingInput.disabled =
+        true;
+
+
+    const previousBest =
+        getBest(language);
+
+
+    let best =
+        previousBest;
+
+
+    let isRecord =
+        false;
+
+
+    if (
+        score >
+        previousBest
+    ) {
+
+        best =
+            score;
+
+        isRecord =
+            true;
+
+
+        saveBest(
+            language,
+            score
+        );
+    }
+
+
+    finalScore.textContent =
+        score;
+
+
+    finalHits.textContent =
+        hitCount;
+
+
+    finalBest.textContent =
+        best;
+
+
+    finalLevel.textContent =
+        level;
+
+
+    newRecord.style.display =
+        isRecord
+            ? "block"
+            : "none";
+
+
+    updateBestDisplay();
+
+
+    showScreen(
+        gameOverScreen
+    );
+}
+
+
+/* =====================================================
+   다시하기
+===================================================== */
+
+function retryGame() {
+
+    startGame(
+        language
+    );
+}
+
+
+/* =====================================================
+   홈
+===================================================== */
+
+function goHome() {
+
+    gameRunning = false;
+
+    paused = false;
+
+
+    clearTimeout(
+        typoTimer
+    );
+
+
+    stopGameLoop();
+
+
+    typingInput.blur();
+
+    typingInput.disabled =
+        false;
+
+    typingInput.value =
+        "";
+
+
+    isComposing =
+        false;
+
+    ignoreInputUntil =
+        0;
+
+
+    pauseOverlay.classList.remove(
+        "active"
+    );
+
+
+    clearWords();
+
+
+    updateBestDisplay();
+
+
+    showScreen(
+        startScreen
+    );
+}
+
+
+/* =====================================================
+   단어 삭제
+===================================================== */
+
+function removeWord(word) {
+
+    const index =
+        words.indexOf(word);
+
+
+    if (index !== -1) {
+
+        words.splice(
+            index,
+            1
+        );
+    }
+}
+
+
+/* =====================================================
+   전체 단어 제거
+===================================================== */
+
+function clearWords() {
+
+    words.forEach(word => {
+
+        if (
+            word.element &&
+            word.element.parentNode
+        ) {
+
+            word.element.remove();
+        }
+
+    });
+
+
+    words = [];
+
+
+    gameArea
+        .querySelectorAll(
+            ".score-pop, .spark, .typing-error"
+        )
+        .forEach(
+            element =>
+                element.remove()
+        );
+}
+
+
+/* =====================================================
+   Loop 종료
+===================================================== */
+
+function stopGameLoop() {
+
+    if (animationId) {
+
+        cancelAnimationFrame(
+            animationId
+        );
+
+
+        animationId =
+            null;
+    }
+
+
+    lastTime = 0;
+}
+
+
+/* =====================================================
+   랜덤
+===================================================== */
+
+function random(min,max) {
+
+    return (
+        Math.random() *
+        (max-min) +
+        min
+    );
+}
+
+
+/* =====================================================
+   화면 크기
+===================================================== */
+
+function resizeGame() {
+
+    if (!gameRunning) {
+
+        return;
+    }
+
+
+    const width =
+        gameArea.clientWidth;
+
+
+    words.forEach(word => {
+
+        const maxX =
+            Math.max(
+                4,
+                width -
+                word.width -
+                4
+            );
+
+
+        if (
+            word.x >
+            maxX
+        ) {
+
+            word.x =
+                maxX;
+
+
+            setWordPosition(
+                word
+            );
+        }
+
+    });
+}
+
+
+window.addEventListener(
+    "resize",
+    resizeGame
+);
+
+
+if (window.visualViewport) {
+
+    window.visualViewport.addEventListener(
+        "resize",
+        resizeGame
+    );
+}
+
+
+/* =====================================================
+   브라우저 밖으로 나가면 Pause
+===================================================== */
+
+document.addEventListener(
+    "visibilitychange",
+    () => {
+
+        if (
+            document.hidden &&
+            gameRunning &&
+            !paused
+        ) {
+
+            paused = true;
+
+
+            clearTimeout(
+                typoTimer
+            );
+
+
+            pauseOverlay.classList.add(
+                "active"
+            );
+
+
+            pauseButton.textContent =
+                "계속하기 ▶️";
+
+
+            typingInput.blur();
+        }
+
+    }
+);
+
+
+/* =====================================================
+   Enter
+===================================================== */
+
+typingInput.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Enter"
+        ) {
+
+            event.preventDefault();
+
+
+            /*
+                Enter를 눌렀을 때는
+                입력된 내용이 틀렸다면
+                기다리지 않고 즉시 오타 처리 가능
+            */
+
+            if (
+                !isComposing &&
+                typingInput.value.trim()
+            ) {
+
+                clearTimeout(
+                    typoTimer
+                );
+
+
+                validateTypo();
+            }
+        }
+
+    }
+);
+
+
+/* =====================================================
+   초기 실행
+===================================================== */
+
+updateBestDisplay();
+
+</script>
+
+</body>
+</html>
