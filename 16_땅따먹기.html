@@ -1,0 +1,3046 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>COLOR LAND!</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family:Arial,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    background:#dff5ff;
+    touch-action:none;
+}
+#wrap{
+    position:relative;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+}
+canvas{
+    position:absolute;
+    inset:0;
+    display:block;
+    width:100%;
+    height:100%;
+    cursor:crosshair;
+}
+
+/* HUD */
+#hud{
+    position:absolute;
+    top:max(10px,env(safe-area-inset-top));
+    left:50%;
+    transform:translateX(-50%);
+    z-index:10;
+
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    flex-wrap:wrap;
+
+    width:96%;
+    pointer-events:none;
+}
+.hudItem{
+    min-width:70px;
+    padding:7px 11px;
+    border-radius:15px;
+
+    background:rgba(255,255,255,.92);
+    box-shadow:0 4px 14px rgba(50,80,120,.16);
+
+    text-align:center;
+    color:#526575;
+    font-size:11px;
+    font-weight:800;
+}
+.hudItem strong{
+    display:block;
+    margin-top:1px;
+    font-size:16px;
+    color:#263c4c;
+}
+
+/* 메시지 */
+#toast{
+    position:absolute;
+    top:25%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    z-index:15;
+
+    font-size:clamp(27px,7vw,54px);
+    font-weight:1000;
+    color:white;
+    text-shadow:
+        0 3px 0 rgba(30,50,70,.4),
+        0 6px 18px rgba(0,0,0,.22);
+
+    opacity:0;
+    pointer-events:none;
+}
+#toast.show{
+    animation:toastAni 1s ease;
+}
+@keyframes toastAni{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}
+    20%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}
+    70%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+    100%{opacity:0;transform:translate(-50%,-70%) scale(.9)}
+}
+
+/* 시작/게임오버 */
+.screen{
+    position:absolute;
+    inset:0;
+    z-index:30;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    padding:20px;
+
+    background:
+        radial-gradient(circle at 15% 20%,#bcefff 0,transparent 35%),
+        radial-gradient(circle at 85% 80%,#e3c8ff 0,transparent 35%),
+        linear-gradient(135deg,#e8fbff,#f5eaff);
+}
+.panel{
+    width:min(450px,92vw);
+    padding:28px 22px;
+
+    background:rgba(255,255,255,.97);
+    border-radius:30px;
+
+    text-align:center;
+
+    box-shadow:0 20px 60px rgba(50,70,110,.22);
+}
+.title{
+    margin:0;
+    color:#526dff;
+    font-size:clamp(38px,10vw,60px);
+    font-weight:1000;
+    line-height:1;
+}
+.subtitle{
+    margin:15px 0;
+    color:#526575;
+    font-size:17px;
+    line-height:1.55;
+    font-weight:800;
+}
+.guide{
+    margin:15px 0 20px;
+    padding:14px;
+
+    border-radius:18px;
+    background:#f2f7ff;
+
+    color:#607484;
+    font-size:13px;
+    line-height:1.8;
+}
+button{
+    border:0;
+    border-radius:18px;
+
+    padding:15px 30px;
+
+    background:linear-gradient(135deg,#536dfe,#925ee9);
+    color:white;
+
+    font-size:19px;
+    font-weight:1000;
+
+    box-shadow:0 7px 0 #4053bd;
+    cursor:pointer;
+    touch-action:manipulation;
+}
+button:active{
+    transform:translateY(4px);
+    box-shadow:0 3px 0 #4053bd;
+}
+.hidden{
+    display:none!important;
+}
+
+#controlGuide{
+    position:absolute;
+    left:50%;
+    bottom:max(12px,env(safe-area-inset-bottom));
+    transform:translateX(-50%);
+    z-index:10;
+
+    padding:7px 13px;
+    border-radius:20px;
+
+    background:rgba(255,255,255,.88);
+
+    color:#526575;
+    font-size:11px;
+    font-weight:800;
+    white-space:nowrap;
+
+    pointer-events:none;
+}
+
+#result{
+    margin:15px 0;
+    padding:15px;
+
+    background:#f4f8ff;
+    border-radius:18px;
+
+    color:#526575;
+    font-weight:800;
+    line-height:1.9;
+}
+
+#miniLabel{
+    position:absolute;
+    right:17px;
+    top:92px;
+    z-index:9;
+
+    padding:3px 8px;
+    border-radius:10px;
+
+    background:rgba(255,255,255,.85);
+    color:#657887;
+
+    font-size:9px;
+    font-weight:bold;
+
+    pointer-events:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="wrap">
+
+<canvas id="canvas"></canvas>
+
+<div id="hud" class="hidden">
+    <div class="hudItem">
+        점수
+        <strong id="score">0</strong>
+    </div>
+
+    <div class="hudItem">
+        내 영역
+        <strong id="area">0%</strong>
+    </div>
+
+    <div class="hudItem">
+        순위
+        <strong id="rank">1/3</strong>
+    </div>
+
+    <div class="hudItem">
+        시간
+        <strong id="time">0:00</strong>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="controlGuide" class="hidden">
+🖱️ 마우스 방향 이동　⌨️ 방향키/WASD　📱 스와이프
+</div>
+
+<div id="miniLabel" class="hidden">MINI MAP</div>
+
+
+<!-- 시작 화면 -->
+<div id="startScreen" class="screen">
+
+    <div class="panel">
+
+        <h1 class="title">
+            🗺️<br>
+            COLOR LAND!
+        </h1>
+
+        <div class="subtitle">
+            땅을 넓혀<br>
+            최고의 영역왕이 되어라! 👑
+        </div>
+
+        <div class="guide">
+
+            🔵 파란색 <b>YOU</b>가 내 캐릭터입니다.<br>
+
+            🖱️ 마우스를 원하는 방향으로 움직여 보세요.<br>
+
+            🟦 내 땅 밖으로 나가면 궤적이 생깁니다.<br>
+
+            🔄 다시 내 땅으로 돌아오면 영역 획득!<br>
+
+            ⚔️ AI의 궤적을 끊으면 상대를 제거합니다.<br>
+
+            💥 내 궤적이 끊기면 GAME OVER!
+
+        </div>
+
+        <button id="startBtn">
+            🎮 게임 시작
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- 게임 오버 -->
+<div id="gameOverScreen" class="screen hidden">
+
+    <div class="panel">
+
+        <h1 class="title" style="font-size:43px">
+            GAME OVER
+        </h1>
+
+        <div id="result"></div>
+
+        <button id="restartBtn">
+            🔄 다시 도전하기
+        </button>
+
+    </div>
+
+</div>
+
+</div>
+
+
+<script>
+(() => {
+
+"use strict";
+
+/* =========================================================
+   DOM
+========================================================= */
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const startScreen = document.getElementById("startScreen");
+const gameOverScreen = document.getElementById("gameOverScreen");
+
+const hud = document.getElementById("hud");
+const controlGuide = document.getElementById("controlGuide");
+const miniLabel = document.getElementById("miniLabel");
+
+const scoreEl = document.getElementById("score");
+const areaEl = document.getElementById("area");
+const rankEl = document.getElementById("rank");
+const timeEl = document.getElementById("time");
+
+const toast = document.getElementById("toast");
+
+
+/* =========================================================
+   게임 설정
+========================================================= */
+
+/*
+    큰 맵
+    화면에는 맵의 일부만 보입니다.
+    플레이어를 따라 카메라가 이동합니다.
+*/
+
+const COLS = 120;
+const ROWS = 120;
+
+const CELL = 22;
+
+const WORLD_W = COLS * CELL;
+const WORLD_H = ROWS * CELL;
+
+const MOVE_INTERVAL = 82;
+
+let W = window.innerWidth;
+let H = window.innerHeight;
+
+let territory = null;
+
+let players = [];
+let human = null;
+
+let gameRunning = false;
+
+let startTime = 0;
+let lastMove = 0;
+
+let cameraX = 0;
+let cameraY = 0;
+
+let mouseX = W / 2;
+let mouseY = H / 2;
+
+let touchStartX = 0;
+let touchStartY = 0;
+
+let particles = [];
+
+let animationId = null;
+
+
+/* =========================================================
+   색상
+========================================================= */
+
+const colors = [
+
+    {
+        main:"#4169e1",
+        land:"#b7c4ff",
+        name:"YOU"
+    },
+
+    {
+        main:"#ff496d",
+        land:"#ffc0cd",
+        name:"AI RED"
+    },
+
+    {
+        main:"#00ad86",
+        land:"#9be5d1",
+        name:"AI GREEN"
+    }
+
+];
+
+
+/* =========================================================
+   방향
+========================================================= */
+
+const dirs = [
+
+    {x:1,y:0},   // 오른쪽
+    {x:0,y:1},   // 아래
+    {x:-1,y:0},  // 왼쪽
+    {x:0,y:-1}   // 위
+
+];
+
+
+/* =========================================================
+   CANVAS
+========================================================= */
+
+function resize(){
+
+    W = window.innerWidth;
+    H = window.innerHeight;
+
+    const dpr =
+        Math.min(
+            window.devicePixelRatio || 1,
+            2
+        );
+
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+
+    ctx.setTransform(
+        dpr,0,0,dpr,0,0
+    );
+
+}
+
+window.addEventListener("resize",resize);
+
+resize();
+
+
+/* =========================================================
+   유틸
+========================================================= */
+
+function valid(x,y){
+
+    return (
+        x >= 0 &&
+        x < COLS &&
+        y >= 0 &&
+        y < ROWS
+    );
+
+}
+
+function index(x,y){
+
+    return y * COLS + x;
+
+}
+
+function getOwner(x,y){
+
+    if(!valid(x,y))
+        return -99;
+
+    return territory[index(x,y)];
+
+}
+
+
+/* =========================================================
+   플레이어 생성
+========================================================= */
+
+function createPlayer(id,x,y,dir,isAI){
+
+    return {
+
+        id,
+        x,
+        y,
+
+        dir,
+        nextDir:dir,
+
+        isAI,
+
+        alive:true,
+
+        outside:false,
+
+        trail:[],
+
+        kills:0,
+
+        aiTimer:0,
+
+        respawning:false
+
+    };
+
+}
+
+
+/* =========================================================
+   시작 영역
+========================================================= */
+
+function createStartLand(p){
+
+    const radius = 5;
+
+    for(
+        let y=p.y-radius;
+        y<=p.y+radius;
+        y++
+    ){
+
+        for(
+            let x=p.x-radius;
+            x<=p.x+radius;
+            x++
+        ){
+
+            if(!valid(x,y))
+                continue;
+
+            const dx=x-p.x;
+            const dy=y-p.y;
+
+            if(
+                Math.sqrt(dx*dx+dy*dy)
+                <= radius+.5
+            ){
+
+                territory[index(x,y)]
+                    = p.id;
+
+            }
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   게임 시작
+========================================================= */
+
+function startGame(){
+
+    territory =
+        new Int16Array(
+            COLS * ROWS
+        );
+
+    territory.fill(-1);
+
+    particles = [];
+
+    players = [];
+
+
+    /*
+        플레이어는 맵 중앙
+    */
+
+    human =
+        createPlayer(
+            0,
+            60,
+            60,
+            0,
+            false
+        );
+
+
+    /*
+        AI는 정확히 2명
+    */
+
+    const ai1 =
+        createPlayer(
+            1,
+            25,
+            30,
+            1,
+            true
+        );
+
+    const ai2 =
+        createPlayer(
+            2,
+            92,
+            86,
+            3,
+            true
+        );
+
+
+    players.push(
+        human,
+        ai1,
+        ai2
+    );
+
+
+    players.forEach(
+        createStartLand
+    );
+
+
+    cameraX =
+        human.x*CELL - W/2;
+
+    cameraY =
+        human.y*CELL - H/2;
+
+
+    clampCamera();
+
+
+    gameRunning=true;
+
+    startTime=performance.now();
+
+    lastMove=startTime;
+
+
+    startScreen.classList.add(
+        "hidden"
+    );
+
+    gameOverScreen.classList.add(
+        "hidden"
+    );
+
+    hud.classList.remove(
+        "hidden"
+    );
+
+    controlGuide.classList.remove(
+        "hidden"
+    );
+
+    miniLabel.classList.remove(
+        "hidden"
+    );
+
+
+    showToast(
+        "GO! 🚀"
+    );
+
+
+    if(animationId){
+
+        cancelAnimationFrame(
+            animationId
+        );
+
+    }
+
+
+    animationId =
+        requestAnimationFrame(
+            loop
+        );
+
+}
+
+
+/* =========================================================
+   카메라
+========================================================= */
+
+function clampCamera(){
+
+    cameraX =
+        Math.max(
+            0,
+            Math.min(
+                WORLD_W-W,
+                cameraX
+            )
+        );
+
+    cameraY =
+        Math.max(
+            0,
+            Math.min(
+                WORLD_H-H,
+                cameraY
+            )
+        );
+
+}
+
+
+function updateCamera(){
+
+    if(!human)
+        return;
+
+
+    const targetX =
+        human.x*CELL+
+        CELL/2-
+        W/2;
+
+    const targetY =
+        human.y*CELL+
+        CELL/2-
+        H/2;
+
+
+    /*
+        부드럽게 플레이어를 따라감
+    */
+
+    cameraX +=
+        (targetX-cameraX)
+        * .13;
+
+    cameraY +=
+        (targetY-cameraY)
+        * .13;
+
+
+    clampCamera();
+
+}
+
+
+/* =========================================================
+   궤적 확인
+========================================================= */
+
+function trailContains(p,x,y){
+
+    for(const t of p.trail){
+
+        if(
+            t.x===x &&
+            t.y===y
+        ){
+
+            return true;
+
+        }
+
+    }
+
+    return false;
+
+}
+
+
+/* =========================================================
+   AI
+========================================================= */
+
+function updateAI(p){
+
+    p.aiTimer--;
+
+
+    const forward =
+        dirs[p.dir];
+
+    const fx =
+        p.x+
+        forward.x*3;
+
+    const fy =
+        p.y+
+        forward.y*3;
+
+
+    const nearWall =
+        !valid(fx,fy);
+
+
+    if(
+        p.aiTimer>0 &&
+        !nearWall
+    ){
+
+        return;
+
+    }
+
+
+    p.aiTimer =
+        3+
+        Math.floor(
+            Math.random()*7
+        );
+
+
+    let choices=[];
+
+
+    for(
+        let d=0;
+        d<4;
+        d++
+    ){
+
+        /*
+            180도 회전 금지
+        */
+
+        if(
+            d===
+            (p.dir+2)%4
+        )
+        continue;
+
+
+        const v =
+            dirs[d];
+
+        const nx =
+            p.x+v.x;
+
+        const ny =
+            p.y+v.y;
+
+
+        if(!valid(nx,ny))
+            continue;
+
+
+        if(
+            trailContains(
+                p,
+                nx,
+                ny
+            )
+        )
+        continue;
+
+
+        let score =
+            Math.random()*5;
+
+
+        /*
+            벽 피하기
+        */
+
+        if(
+            nx<5 ||
+            ny<5 ||
+            nx>COLS-6 ||
+            ny>ROWS-6
+        ){
+
+            score -= 8;
+
+        }
+
+
+        /*
+            궤적이 길어지면
+            자기 영역으로 복귀
+        */
+
+        if(
+            p.outside &&
+            p.trail.length>9
+        ){
+
+            if(
+                getOwner(nx,ny)
+                ===p.id
+            ){
+
+                score += 25;
+
+            }
+
+        }
+
+
+        /*
+            다른 플레이어 궤적 발견
+        */
+
+        for(
+            const other
+            of players
+        ){
+
+            if(
+                other===p ||
+                !other.alive
+            )
+            continue;
+
+
+            if(
+                trailContains(
+                    other,
+                    nx,
+                    ny
+                )
+            ){
+
+                score += 20;
+
+            }
+
+        }
+
+
+        choices.push({
+
+            dir:d,
+            score
+
+        });
+
+    }
+
+
+    if(!choices.length)
+        return;
+
+
+    choices.sort(
+        (a,b)=>
+        b.score-a.score
+    );
+
+
+    if(
+        Math.random()<.75
+    ){
+
+        p.nextDir =
+            choices[0].dir;
+
+    }
+    else{
+
+        p.nextDir =
+            choices[
+                Math.floor(
+                    Math.random()*
+                    choices.length
+                )
+            ].dir;
+
+    }
+
+}
+
+
+/* =========================================================
+   이동
+========================================================= */
+
+function movePlayer(p){
+
+    if(
+        !p.alive
+    )
+    return;
+
+
+    if(p.isAI){
+
+        updateAI(p);
+
+    }
+
+
+    /*
+        반대 방향 금지
+    */
+
+    if(
+        p.nextDir !==
+        (p.dir+2)%4
+    ){
+
+        p.dir =
+            p.nextDir;
+
+    }
+
+
+    const d =
+        dirs[p.dir];
+
+
+    const nx =
+        p.x+d.x;
+
+    const ny =
+        p.y+d.y;
+
+
+    /*
+        벽
+    */
+
+    if(
+        !valid(nx,ny)
+    ){
+
+        if(p===human){
+
+            killPlayer(
+                p,
+                null
+            );
+
+        }
+        else{
+
+            p.nextDir =
+                (p.dir+1)%4;
+
+        }
+
+        return;
+
+    }
+
+
+    /*
+        자기 궤적 충돌
+    */
+
+    if(
+        trailContains(
+            p,
+            nx,
+            ny
+        )
+    ){
+
+        killPlayer(
+            p,
+            null
+        );
+
+        return;
+
+    }
+
+
+    /*
+        다른 사람 궤적 자르기
+    */
+
+    for(
+        const other
+        of players
+    ){
+
+        if(
+            other===p ||
+            !other.alive
+        )
+        continue;
+
+
+        if(
+            trailContains(
+                other,
+                nx,
+                ny
+            )
+        ){
+
+            killPlayer(
+                other,
+                p
+            );
+
+        }
+
+    }
+
+
+    p.x=nx;
+    p.y=ny;
+
+
+    const ownLand =
+        getOwner(
+            p.x,
+            p.y
+        ) === p.id;
+
+
+    if(!ownLand){
+
+        p.outside=true;
+
+
+        p.trail.push({
+
+            x:p.x,
+            y:p.y
+
+        });
+
+    }
+
+    else if(
+        p.outside
+    ){
+
+        captureLand(p);
+
+    }
+
+}
+
+
+/* =========================================================
+   영역 획득
+========================================================= */
+
+function captureLand(p){
+
+    const before =
+        countLand(
+            p.id
+        );
+
+
+    /*
+        궤적을 영역으로
+    */
+
+    for(
+        const t
+        of p.trail
+    ){
+
+        if(valid(t.x,t.y)){
+
+            territory[
+                index(t.x,t.y)
+            ] = p.id;
+
+        }
+
+    }
+
+
+    /*
+        맵 가장자리에서 Flood Fill
+    */
+
+    const visited =
+        new Uint8Array(
+            COLS*ROWS
+        );
+
+
+    const qx =
+        new Int16Array(
+            COLS*ROWS
+        );
+
+    const qy =
+        new Int16Array(
+            COLS*ROWS
+        );
+
+
+    let head=0;
+    let tail=0;
+
+
+    function add(x,y){
+
+        if(!valid(x,y))
+            return;
+
+
+        const i =
+            index(x,y);
+
+
+        if(
+            visited[i]
+        )
+        return;
+
+
+        if(
+            territory[i]
+            ===p.id
+        )
+        return;
+
+
+        visited[i]=1;
+
+        qx[tail]=x;
+        qy[tail]=y;
+
+        tail++;
+
+    }
+
+
+    for(
+        let x=0;
+        x<COLS;
+        x++
+    ){
+
+        add(x,0);
+
+        add(
+            x,
+            ROWS-1
+        );
+
+    }
+
+
+    for(
+        let y=0;
+        y<ROWS;
+        y++
+    ){
+
+        add(0,y);
+
+        add(
+            COLS-1,
+            y
+        );
+
+    }
+
+
+    while(
+        head<tail
+    ){
+
+        const x =
+            qx[head];
+
+        const y =
+            qy[head];
+
+        head++;
+
+
+        for(
+            const d
+            of dirs
+        ){
+
+            add(
+                x+d.x,
+                y+d.y
+            );
+
+        }
+
+    }
+
+
+    /*
+        바깥에서 접근하지 못하는 공간
+        = 둘러싼 공간
+    */
+
+    for(
+        let y=0;
+        y<ROWS;
+        y++
+    ){
+
+        for(
+            let x=0;
+            x<COLS;
+            x++
+        ){
+
+            const i =
+                index(x,y);
+
+
+            if(
+                territory[i]
+                !==p.id
+                &&
+                !visited[i]
+            ){
+
+                territory[i]
+                    =p.id;
+
+            }
+
+        }
+
+    }
+
+
+    p.trail=[];
+
+    p.outside=false;
+
+
+    const after =
+        countLand(
+            p.id
+        );
+
+
+    const gained =
+        after-before;
+
+
+    if(
+        p===human &&
+        gained>20
+    ){
+
+        if(
+            gained>100
+        ){
+
+            showToast(
+                "BIG AREA! 🔥"
+            );
+
+        }
+        else{
+
+            showToast(
+                "GOOD! ✨"
+            );
+
+        }
+
+
+        createParticles(
+            p.x,
+            p.y,
+            colors[p.id].main
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   죽음
+========================================================= */
+
+function killPlayer(
+    victim,
+    killer
+){
+
+    if(
+        !victim.alive
+    )
+    return;
+
+
+    victim.alive=false;
+
+    victim.trail=[];
+
+
+    if(
+        killer===human
+    ){
+
+        human.kills++;
+
+        showToast(
+            "NICE! ⭐"
+        );
+
+
+        createParticles(
+            victim.x,
+            victim.y,
+            colors[
+                victim.id
+            ].main
+        );
+
+    }
+
+
+    if(
+        victim===human
+    ){
+
+        endGame();
+
+    }
+    else{
+
+        victim.respawning=true;
+
+
+        setTimeout(
+            ()=>{
+
+                respawnAI(
+                    victim
+                );
+
+            },
+            1200
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   AI 부활
+========================================================= */
+
+function respawnAI(p){
+
+    if(
+        !gameRunning
+    )
+    return;
+
+
+    for(
+        let tries=0;
+        tries<100;
+        tries++
+    ){
+
+        const x =
+            8+
+            Math.floor(
+                Math.random()*
+                (COLS-16)
+            );
+
+        const y =
+            8+
+            Math.floor(
+                Math.random()*
+                (ROWS-16)
+            );
+
+
+        if(
+            getOwner(x,y)
+            ===-1
+        ){
+
+            p.x=x;
+            p.y=y;
+
+            p.dir=
+                Math.floor(
+                    Math.random()*4
+                );
+
+            p.nextDir=p.dir;
+
+            p.trail=[];
+
+            p.outside=false;
+
+            p.alive=true;
+
+            p.respawning=false;
+
+            createStartLand(p);
+
+            return;
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   땅 개수
+========================================================= */
+
+function countLand(id){
+
+    let count=0;
+
+
+    for(
+        let i=0;
+        i<territory.length;
+        i++
+    ){
+
+        if(
+            territory[i]
+            ===id
+        ){
+
+            count++;
+
+        }
+
+    }
+
+
+    return count;
+
+}
+
+
+/* =========================================================
+   마우스 조작
+========================================================= */
+
+canvas.addEventListener(
+    "mousemove",
+    e=>{
+
+        if(
+            !gameRunning ||
+            !human ||
+            !human.alive
+        )
+        return;
+
+
+        mouseX =
+            e.clientX;
+
+        mouseY =
+            e.clientY;
+
+
+        /*
+            플레이어는 화면 중앙 근처에 있으므로
+            화면상 플레이어 위치를 계산
+        */
+
+        const playerScreenX =
+            human.x*CELL+
+            CELL/2-
+            cameraX;
+
+        const playerScreenY =
+            human.y*CELL+
+            CELL/2-
+            cameraY;
+
+
+        const dx =
+            mouseX-
+            playerScreenX;
+
+        const dy =
+            mouseY-
+            playerScreenY;
+
+
+        /*
+            너무 가까운 마우스 움직임은 무시
+        */
+
+        if(
+            Math.abs(dx)<20 &&
+            Math.abs(dy)<20
+        )
+        return;
+
+
+        let newDir;
+
+
+        if(
+            Math.abs(dx)>
+            Math.abs(dy)
+        ){
+
+            newDir =
+                dx>0
+                ?0
+                :2;
+
+        }
+        else{
+
+            newDir =
+                dy>0
+                ?1
+                :3;
+
+        }
+
+
+        changeHumanDirection(
+            newDir
+        );
+
+    }
+);
+
+
+/*
+    마우스 클릭한 방향으로도 이동
+*/
+
+canvas.addEventListener(
+    "mousedown",
+    e=>{
+
+        if(
+            !gameRunning
+        )
+        return;
+
+
+        const playerScreenX =
+            human.x*CELL+
+            CELL/2-
+            cameraX;
+
+        const playerScreenY =
+            human.y*CELL+
+            CELL/2-
+            cameraY;
+
+
+        const dx =
+            e.clientX-
+            playerScreenX;
+
+        const dy =
+            e.clientY-
+            playerScreenY;
+
+
+        let dir;
+
+
+        if(
+            Math.abs(dx)>
+            Math.abs(dy)
+        ){
+
+            dir =
+                dx>0
+                ?0
+                :2;
+
+        }
+        else{
+
+            dir =
+                dy>0
+                ?1
+                :3;
+
+        }
+
+
+        changeHumanDirection(
+            dir
+        );
+
+    }
+);
+
+
+/* =========================================================
+   키보드
+========================================================= */
+
+window.addEventListener(
+    "keydown",
+    e=>{
+
+        let dir=null;
+
+
+        switch(e.key){
+
+            case "ArrowRight":
+            case "d":
+            case "D":
+
+                dir=0;
+                break;
+
+
+            case "ArrowDown":
+            case "s":
+            case "S":
+
+                dir=1;
+                break;
+
+
+            case "ArrowLeft":
+            case "a":
+            case "A":
+
+                dir=2;
+                break;
+
+
+            case "ArrowUp":
+            case "w":
+            case "W":
+
+                dir=3;
+                break;
+
+        }
+
+
+        if(dir!==null){
+
+            e.preventDefault();
+
+            changeHumanDirection(
+                dir
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   스마트폰
+========================================================= */
+
+canvas.addEventListener(
+    "touchstart",
+    e=>{
+
+        if(
+            !gameRunning
+        )
+        return;
+
+
+        const t =
+            e.changedTouches[0];
+
+
+        touchStartX =
+            t.clientX;
+
+        touchStartY =
+            t.clientY;
+
+
+        e.preventDefault();
+
+    },
+    {passive:false}
+);
+
+
+canvas.addEventListener(
+    "touchend",
+    e=>{
+
+        if(
+            !gameRunning
+        )
+        return;
+
+
+        const t =
+            e.changedTouches[0];
+
+
+        const dx =
+            t.clientX-
+            touchStartX;
+
+        const dy =
+            t.clientY-
+            touchStartY;
+
+
+        if(
+            Math.abs(dx)<18 &&
+            Math.abs(dy)<18
+        )
+        return;
+
+
+        let dir;
+
+
+        if(
+            Math.abs(dx)>
+            Math.abs(dy)
+        ){
+
+            dir =
+                dx>0
+                ?0
+                :2;
+
+        }
+        else{
+
+            dir =
+                dy>0
+                ?1
+                :3;
+
+        }
+
+
+        changeHumanDirection(
+            dir
+        );
+
+
+        e.preventDefault();
+
+    },
+    {passive:false}
+);
+
+
+function changeHumanDirection(dir){
+
+    if(
+        !gameRunning ||
+        !human ||
+        !human.alive
+    )
+    return;
+
+
+    /*
+        180도 즉시 회전 방지
+    */
+
+    if(
+        dir !==
+        (human.dir+2)%4
+    ){
+
+        human.nextDir=
+            dir;
+
+    }
+
+}
+
+
+/* =========================================================
+   파티클
+========================================================= */
+
+function createParticles(
+    x,y,color
+){
+
+    for(
+        let i=0;
+        i<25;
+        i++
+    ){
+
+        particles.push({
+
+            x:
+                x*CELL+
+                CELL/2,
+
+            y:
+                y*CELL+
+                CELL/2,
+
+            vx:
+                (Math.random()-.5)*6,
+
+            vy:
+                (Math.random()-.5)*6,
+
+            life:
+                30+
+                Math.random()*25,
+
+            color
+
+        });
+
+    }
+
+}
+
+
+function updateParticles(){
+
+    for(
+        let i=
+        particles.length-1;
+        i>=0;
+        i--
+    ){
+
+        const p =
+            particles[i];
+
+
+        p.x+=p.vx;
+
+        p.y+=p.vy;
+
+        p.vx*=.95;
+
+        p.vy*=.95;
+
+        p.life--;
+
+
+        if(
+            p.life<=0
+        ){
+
+            particles.splice(
+                i,1
+            );
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   그리기
+========================================================= */
+
+function draw(){
+
+    ctx.clearRect(
+        0,0,W,H
+    );
+
+
+    /*
+        화면 배경
+    */
+
+    const bg =
+        ctx.createLinearGradient(
+            0,0,
+            0,H
+        );
+
+    bg.addColorStop(
+        0,
+        "#dff6ff"
+    );
+
+    bg.addColorStop(
+        1,
+        "#f0eaff"
+    );
+
+
+    ctx.fillStyle=bg;
+
+    ctx.fillRect(
+        0,0,W,H
+    );
+
+
+    if(
+        !territory
+    )
+    return;
+
+
+    ctx.save();
+
+
+    /*
+        카메라 이동
+    */
+
+    ctx.translate(
+        -cameraX,
+        -cameraY
+    );
+
+
+    /*
+        맵
+    */
+
+    ctx.fillStyle=
+        "#f9fcff";
+
+    ctx.fillRect(
+        0,0,
+        WORLD_W,
+        WORLD_H
+    );
+
+
+    /*
+        화면에 보이는 셀만 그림
+    */
+
+    const startCol =
+        Math.max(
+            0,
+            Math.floor(
+                cameraX/CELL
+            )-2
+        );
+
+    const endCol =
+        Math.min(
+            COLS,
+            Math.ceil(
+                (cameraX+W)/CELL
+            )+2
+        );
+
+    const startRow =
+        Math.max(
+            0,
+            Math.floor(
+                cameraY/CELL
+            )-2
+        );
+
+    const endRow =
+        Math.min(
+            ROWS,
+            Math.ceil(
+                (cameraY+H)/CELL
+            )+2
+        );
+
+
+    /*
+        영역
+    */
+
+    for(
+        let y=startRow;
+        y<endRow;
+        y++
+    ){
+
+        for(
+            let x=startCol;
+            x<endCol;
+            x++
+        ){
+
+            const owner =
+                getOwner(x,y);
+
+
+            if(owner>=0){
+
+                ctx.fillStyle =
+                    colors[
+                        owner
+                    ].land;
+
+
+                ctx.fillRect(
+
+                    x*CELL,
+                    y*CELL,
+
+                    CELL+.5,
+                    CELL+.5
+
+                );
+
+            }
+
+        }
+
+    }
+
+
+    /*
+        격자
+    */
+
+    ctx.strokeStyle =
+        "rgba(80,110,140,.07)";
+
+    ctx.lineWidth=1;
+
+
+    for(
+        let x=startCol;
+        x<=endCol;
+        x++
+    ){
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            x*CELL,
+            startRow*CELL
+        );
+
+        ctx.lineTo(
+            x*CELL,
+            endRow*CELL
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    for(
+        let y=startRow;
+        y<=endRow;
+        y++
+    ){
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            startCol*CELL,
+            y*CELL
+        );
+
+        ctx.lineTo(
+            endCol*CELL,
+            y*CELL
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    /*
+        궤적
+    */
+
+    for(
+        const p
+        of players
+    ){
+
+        if(!p.alive)
+            continue;
+
+
+        ctx.fillStyle =
+            colors[
+                p.id
+            ].main;
+
+
+        for(
+            const t
+            of p.trail
+        ){
+
+            ctx.fillRect(
+
+                t.x*CELL+
+                CELL*.25,
+
+                t.y*CELL+
+                CELL*.25,
+
+                CELL*.5,
+
+                CELL*.5
+
+            );
+
+        }
+
+    }
+
+
+    /*
+        캐릭터
+    */
+
+    for(
+        const p
+        of players
+    ){
+
+        if(p.alive){
+
+            drawPlayer(p);
+
+        }
+
+    }
+
+
+    /*
+        파티클
+    */
+
+    for(
+        const p
+        of particles
+    ){
+
+        ctx.globalAlpha =
+            Math.min(
+                1,
+                p.life/25
+            );
+
+
+        ctx.fillStyle =
+            p.color;
+
+
+        ctx.beginPath();
+
+        ctx.arc(
+            p.x,
+            p.y,
+            3,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+    }
+
+
+    ctx.globalAlpha=1;
+
+
+    /*
+        맵 테두리
+    */
+
+    ctx.strokeStyle=
+        "#829baa";
+
+    ctx.lineWidth=5;
+
+    ctx.strokeRect(
+        2,
+        2,
+        WORLD_W-4,
+        WORLD_H-4
+    );
+
+
+    ctx.restore();
+
+
+    drawMiniMap();
+
+}
+
+
+/* =========================================================
+   캐릭터
+========================================================= */
+
+function drawPlayer(p){
+
+    const cx =
+        p.x*CELL+
+        CELL/2;
+
+    const cy =
+        p.y*CELL+
+        CELL/2;
+
+
+    const radius =
+        CELL*.68;
+
+
+    ctx.save();
+
+
+    /*
+        그림자
+    */
+
+    ctx.shadowColor=
+        "rgba(0,0,0,.28)";
+
+    ctx.shadowBlur=9;
+
+    ctx.shadowOffsetY=3;
+
+
+    /*
+        몸
+    */
+
+    ctx.fillStyle =
+        colors[
+            p.id
+        ].main;
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+        cx,
+        cy,
+        radius,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.shadowColor=
+        "transparent";
+
+
+    /*
+        흰 테두리
+    */
+
+    ctx.strokeStyle=
+        "white";
+
+    ctx.lineWidth=
+        p===human
+        ?3
+        :2;
+
+    ctx.stroke();
+
+
+    /*
+        눈
+    */
+
+    const d =
+        dirs[p.dir];
+
+
+    const eyeShiftX =
+        d.x*2.5;
+
+    const eyeShiftY =
+        d.y*2.5;
+
+
+    const eyeY =
+        cy-radius*.15;
+
+
+    ctx.fillStyle="white";
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+        cx-radius*.34,
+        eyeY,
+        4,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+        cx+radius*.34,
+        eyeY,
+        4,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.fillStyle="#263238";
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+        cx-radius*.34+
+        eyeShiftX,
+        eyeY+
+        eyeShiftY,
+        1.7,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+        cx+radius*.34+
+        eyeShiftX,
+        eyeY+
+        eyeShiftY,
+        1.7,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /*
+        이름
+    */
+
+    ctx.font=
+        "bold 12px Arial";
+
+    ctx.textAlign=
+        "center";
+
+    ctx.fillStyle=
+        "#263b4b";
+
+
+    ctx.fillText(
+        colors[
+            p.id
+        ].name,
+        cx,
+        cy-radius-9
+    );
+
+
+    ctx.restore();
+
+}
+
+
+/* =========================================================
+   미니맵
+========================================================= */
+
+function drawMiniMap(){
+
+    if(
+        !gameRunning
+    )
+    return;
+
+
+    const size =
+        Math.min(
+            120,
+            W*.25
+        );
+
+
+    const x =
+        W-size-15;
+
+    const y =
+        112;
+
+
+    ctx.save();
+
+
+    /*
+        배경
+    */
+
+    ctx.fillStyle=
+        "rgba(255,255,255,.90)";
+
+    ctx.fillRect(
+        x-4,
+        y-4,
+        size+8,
+        size+8
+    );
+
+
+    const sx =
+        size/COLS;
+
+    const sy =
+        size/ROWS;
+
+
+    /*
+        영역
+    */
+
+    for(
+        let yy=0;
+        yy<ROWS;
+        yy+=3
+    ){
+
+        for(
+            let xx=0;
+            xx<COLS;
+            xx+=3
+        ){
+
+            const owner =
+                getOwner(
+                    xx,
+                    yy
+                );
+
+
+            if(owner>=0){
+
+                ctx.fillStyle =
+                    colors[
+                        owner
+                    ].land;
+
+
+                ctx.fillRect(
+
+                    x+
+                    xx*sx,
+
+                    y+
+                    yy*sy,
+
+                    sx*3+.3,
+
+                    sy*3+.3
+
+                );
+
+            }
+
+        }
+
+    }
+
+
+    /*
+        플레이어 위치
+    */
+
+    for(
+        const p
+        of players
+    ){
+
+        if(!p.alive)
+            continue;
+
+
+        ctx.fillStyle =
+            colors[
+                p.id
+            ].main;
+
+
+        ctx.beginPath();
+
+        ctx.arc(
+
+            x+
+            p.x*sx,
+
+            y+
+            p.y*sy,
+
+            p===human
+            ?4
+            :3,
+
+            0,
+            Math.PI*2
+
+        );
+
+        ctx.fill();
+
+    }
+
+
+    /*
+        현재 화면 영역 표시
+    */
+
+    ctx.strokeStyle=
+        "rgba(40,60,80,.5)";
+
+    ctx.lineWidth=1;
+
+
+    ctx.strokeRect(
+
+        x+
+        cameraX/
+        WORLD_W*
+        size,
+
+        y+
+        cameraY/
+        WORLD_H*
+        size,
+
+        Math.min(
+            size,
+            W/
+            WORLD_W*
+            size
+        ),
+
+        Math.min(
+            size,
+            H/
+            WORLD_H*
+            size
+        )
+
+    );
+
+
+    ctx.strokeStyle=
+        "#8499a8";
+
+    ctx.strokeRect(
+        x,
+        y,
+        size,
+        size
+    );
+
+
+    ctx.restore();
+
+}
+
+
+/* =========================================================
+   HUD
+========================================================= */
+
+function updateHUD(){
+
+    if(
+        !human ||
+        !territory
+    )
+    return;
+
+
+    const humanLand =
+        countLand(0);
+
+
+    const percentage =
+        humanLand/
+        (COLS*ROWS)*
+        100;
+
+
+    const score =
+        humanLand*3+
+        human.kills*500;
+
+
+    scoreEl.textContent =
+        score.toLocaleString();
+
+
+    areaEl.textContent =
+        percentage.toFixed(1)
+        +"%";
+
+
+    const ranking =
+        players
+        .filter(
+            p=>p.alive
+        )
+        .map(
+            p=>({
+
+                id:p.id,
+
+                land:
+                    countLand(
+                        p.id
+                    )
+
+            })
+        )
+        .sort(
+            (a,b)=>
+            b.land-a.land
+        );
+
+
+    let rank =
+        ranking.findIndex(
+            p=>p.id===0
+        )+1;
+
+
+    if(rank<1)
+        rank=ranking.length;
+
+
+    rankEl.textContent =
+        rank+
+        "/"+
+        ranking.length;
+
+
+    const seconds =
+        Math.floor(
+            (
+                performance.now()
+                -
+                startTime
+            )/1000
+        );
+
+
+    const min =
+        Math.floor(
+            seconds/60
+        );
+
+
+    const sec =
+        String(
+            seconds%60
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    timeEl.textContent =
+        min+":"+sec;
+
+}
+
+
+/* =========================================================
+   메시지
+========================================================= */
+
+function showToast(text){
+
+    toast.textContent=
+        text;
+
+
+    toast.classList.remove(
+        "show"
+    );
+
+
+    void toast.offsetWidth;
+
+
+    toast.classList.add(
+        "show"
+    );
+
+}
+
+
+/* =========================================================
+   게임 오버
+========================================================= */
+
+function endGame(){
+
+    if(
+        !gameRunning
+    )
+    return;
+
+
+    gameRunning=false;
+
+
+    const land =
+        countLand(0);
+
+
+    const percentage =
+        land/
+        (COLS*ROWS)*
+        100;
+
+
+    const score =
+        land*3+
+        human.kills*500;
+
+
+    hud.classList.add(
+        "hidden"
+    );
+
+    controlGuide.classList.add(
+        "hidden"
+    );
+
+    miniLabel.classList.add(
+        "hidden"
+    );
+
+
+    document.getElementById(
+        "result"
+    ).innerHTML =
+
+        "⭐ 점수 : "+
+        score.toLocaleString()+
+        "점<br>"+
+
+        "🗺️ 차지한 영역 : "+
+        percentage.toFixed(1)+
+        "%<br>"+
+
+        "⚔️ 제거한 AI : "+
+        human.kills+
+        "명";
+
+
+    setTimeout(
+        ()=>{
+
+            gameOverScreen
+                .classList.remove(
+                    "hidden"
+                );
+
+        },
+        400
+    );
+
+}
+
+
+/* =========================================================
+   게임 루프
+========================================================= */
+
+function loop(time){
+
+    if(
+        !gameRunning
+    ){
+
+        draw();
+
+        return;
+
+    }
+
+
+    /*
+        일정한 속도로 이동
+    */
+
+    if(
+        time-lastMove
+        >=MOVE_INTERVAL
+    ){
+
+        lastMove=time;
+
+
+        /*
+            플레이어
+        */
+
+        if(
+            human &&
+            human.alive
+        ){
+
+            movePlayer(
+                human
+            );
+
+        }
+
+
+        /*
+            AI 2명
+        */
+
+        for(
+            let i=1;
+            i<players.length;
+            i++
+        ){
+
+            if(
+                players[i].alive
+            ){
+
+                movePlayer(
+                    players[i]
+                );
+
+            }
+
+        }
+
+
+        updateHUD();
+
+    }
+
+
+    updateCamera();
+
+    updateParticles();
+
+    draw();
+
+
+    animationId =
+        requestAnimationFrame(
+            loop
+        );
+
+}
+
+
+/* =========================================================
+   버튼
+========================================================= */
+
+document
+.getElementById(
+    "startBtn"
+)
+.addEventListener(
+    "click",
+    startGame
+);
+
+
+document
+.getElementById(
+    "restartBtn"
+)
+.addEventListener(
+    "click",
+    startGame
+);
+
+
+/* =========================================================
+   시작 배경
+========================================================= */
+
+ctx.fillStyle="#eaf8ff";
+ctx.fillRect(0,0,W,H);
+
+})();
+</script>
+
+</body>
+</html>
