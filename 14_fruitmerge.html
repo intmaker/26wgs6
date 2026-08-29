@@ -125,7 +125,24 @@ function mergePair(a,b){if(a.merging||b.merging||a.dead||b.dead)return;a.merging
  const newLevel=level+1;const pts=Math.round(10*Math.pow(2,level)*(1+Math.max(0,chainCount-1)*.25));addScore(pts);biggest=Math.max(biggest,newLevel);effects.push({x,y,t:.17,type:'suck',level:newLevel});spark(x,y,Math.min(18,7+newLevel),'merge');a.dead=b.dead=true;const token=runToken;setTimeout(()=>{if(token!==runToken||!playing||gameOver)return;addFruit(newLevel,x,y,((Math.random()-.5)*35)*scale,-85*scale,null,.22,chainCount);if(newLevel===10){showMsg('🎉 WATERMELON! +3000');addScore(3000);spark(x,y,35,'super');tone('watermelon');shell.classList.remove('shake');void shell.offsetWidth;shell.classList.add('shake')}else if(chainCount>=3){showMsg('🔥 CHAIN x'+chainCount+'!');tone('chain')}else if(chainCount===2){showMsg('DOUBLE MERGE!');tone('chain')}else{showMsg('MERGE!');tone(newLevel>=6?'bigmerge':'merge')}},80)}
 function burstPush(x,y){for(const f of fruitsOn){if(f.dead)continue;const dx=f.x-x,dy=f.y-y,d=Math.hypot(dx,dy)||1;if(d<220*scale){const p=(1-d/(220*scale))*320*scale;f.vx+=dx/d*p;f.vy+=dy/d*p-60*scale}}}
 function addScore(n){score+=n;scoreEl.textContent=score.toLocaleString();if(score>best){best=score;localStorage.setItem('fruitMergeBest',best);bestEl.textContent=best.toLocaleString();if(!newRecordShown){newRecordShown=true;showMsg('🏆 NEW RECORD!');spark(W/2,H*.25,20,'record')}}}
-function dangerCheck(){if(!playing||gameOver)return;const line=H*.18;let over=false;for(const f of fruitsOn){if(f.dead||f.merging)continue;const r=R(f.level);if(f.y-r<line && f.y>25){over=true;break}}const now=performance.now();if(over){if(!dangerSince)dangerSince=now;dangerOverlay.style.display='grid';if(now-dangerBeep>850){tone('danger');dangerBeep=now}if(now-dangerSince>2600)endGame()}else{dangerSince=0;dangerOverlay.style.display='none'}}
+function dangerCheck(){
+  if(!playing||gameOver)return;
+  const line=H*.18;
+  const dangerBand=H*.28;
+  const topFruits=fruitsOn.filter(f=>!f.dead&&!f.merging && f.y-R(f.level)<line+26);
+  const crowded=fruitsOn.filter(f=>!f.dead&&!f.merging && f.y-R(f.level)<dangerBand);
+  const over=(fruitsOn.length>=10 && topFruits.length>=3 && crowded.length>=8);
+  const now=performance.now();
+  if(over){
+    if(!dangerSince)dangerSince=now;
+    dangerOverlay.style.display='grid';
+    if(now-dangerBeep>850){tone('danger');dangerBeep=now}
+    if(now-dangerSince>2600)endGame()
+  }else{
+    dangerSince=0;
+    dangerOverlay.style.display='none'
+  }
+}
 function endGame(){if(gameOver)return;gameOver=true;ready=false;dangerOverlay.style.display='none';tone('gameover');const token=runToken;setTimeout(()=>{if(token!==runToken)return;playing=false;finalScore.textContent=score.toLocaleString();finalFruit.textContent=fruits[biggest].name;finalChain.textContent=bestChain;recordMsg.textContent=score>=best&&score>0?'🏆 NEW RECORD!':'';gameOverScreen.style.display='flex'},450)}
 function spark(x,y,count,type){const max=Math.min(count,40);for(let i=0;i<max;i++){const a=Math.random()*TAU,s=35+Math.random()*130;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-40,life:.45+Math.random()*.5,max:.9,size:2+Math.random()*5,type,rot:Math.random()*TAU})}if(particles.length>110)particles.splice(0,particles.length-110)}
 function updateParticles(dt){for(const p of particles){p.life-=dt;p.vy+=220*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.rot+=dt*5}particles=particles.filter(p=>p.life>0&&p.y<H+30);for(const e of effects)e.t-=dt;effects=effects.filter(e=>e.t>0)}
