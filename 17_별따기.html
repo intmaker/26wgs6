@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>별따기</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1b1d4a, #2d4b9b, #6ec6ff);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .game {
+      width: min(92vw, 760px);
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      backdrop-filter: blur(8px);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.25);
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    h1 { margin: 0; font-size: clamp(24px, 4vw, 36px); }
+    .hud {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      background: rgba(255,255,255,0.15);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 700;
+    }
+    .board {
+      position: relative;
+      width: 100%;
+      height: 430px;
+      background: linear-gradient(180deg, rgba(15,30,60,0.8), rgba(13,19,45,0.9));
+      border-radius: 18px;
+      border: 2px solid rgba(255,255,255,0.18);
+      overflow: hidden;
+      user-select: none;
+    }
+    .star {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 28px;
+      cursor: pointer;
+      animation: float 1s ease-in-out infinite alternate;
+      transition: transform 0.1s ease;
+    }
+    .star:hover { transform: scale(1.2); }
+    .basket { position:absolute; bottom:12px; width:88px; height:34px; border-radius:8px 8px 24px 24px; background:linear-gradient(#fde68a,#f59e0b); box-shadow:0 8px 20px #0007; transform:translateX(-50%); font-size:24px; text-align:center; }
+    @keyframes float {
+      from { transform: translateY(0px); }
+      to { transform: translateY(-6px); }
+    }
+    .message {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      min-height: 28px;
+    }
+    button {
+      display: block;
+      margin: 18px auto 0;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ffd43b, #ff8c42);
+      color: #1d1d1d;
+    }
+  </style>
+</head>
+<body>
+  <div class="game">
+    <div class="top">
+      <h1>🌟 별따기</h1>
+      <div class="hud">
+        <div class="badge">점수: <span id="score">0</span></div>
+        <div class="badge">시간: <span id="time">15</span>s</div>
+      </div>
+    </div>
+    <div class="board" id="board"><div class="basket" id="basket">🧺</div></div>
+    <div class="message" id="message">바구니를 움직여 떨어지는 별을 받아요!</div>
+    <button id="startBtn">게임 시작</button>
+  </div>
+
+  <script>
+    const board = document.getElementById('board');
+    const scoreEl = document.getElementById('score');
+    const timeEl = document.getElementById('time');
+    const messageEl = document.getElementById('message');
+    const startBtn = document.getElementById('startBtn');
+
+    let score = 0;
+    let timeLeft = 15;
+    let timer = null;
+    let spawnTimer = null;
+    let playing = false;
+    let basketX = 0;
+
+    function updateHud() {
+      scoreEl.textContent = score;
+      timeEl.textContent = timeLeft;
+    }
+
+    function spawnStar() {
+      if (!playing) return;
+      const star = document.createElement('div');
+      star.className = 'star';
+      star.textContent = '⭐';
+      const x = Math.random() * (board.clientWidth - 40);
+      const y = -35;
+      star.style.left = `${x}px`;
+      star.style.top = `${y}px`;
+      board.appendChild(star);
+      let sy=y, speed=2.2+score*.06;
+      const fall=setInterval(()=>{
+        if(!playing||!star.isConnected){clearInterval(fall);return}
+        sy+=speed; star.style.top=sy+'px';
+        const sx=parseFloat(star.style.left);
+        if(sy>board.clientHeight-65 && sy<board.clientHeight-20 && Math.abs(sx+16-basketX)<58){score++;updateHud();star.remove();clearInterval(fall);messageEl.textContent='받았다! ⭐'}
+        else if(sy>board.clientHeight){star.remove();clearInterval(fall)}
+      },16);
+    }
+
+    function endGame() {
+      playing = false;
+      clearInterval(timer);
+      clearInterval(spawnTimer);
+      messageEl.textContent = `게임 종료! 최종 점수는 ${score}점입니다.`;
+      startBtn.textContent = '다시 시작';
+      startBtn.disabled = false;
+    }
+
+    function startGame() {
+      score = 0;
+      timeLeft = 15;
+      playing = true;
+      board.innerHTML = '<div class="basket" id="basket">🧺</div>';
+      basketX=board.clientWidth/2; board.firstElementChild.style.left=basketX+'px';
+      updateHud();
+      messageEl.textContent = '마우스나 손가락으로 바구니를 움직이세요!';
+      startBtn.disabled = true;
+
+      spawnStar();
+      spawnTimer = setInterval(spawnStar, 650);
+      timer = setInterval(() => {
+        timeLeft -= 1;
+        updateHud();
+        if (timeLeft <= 0) {
+          endGame();
+        }
+      }, 1000);
+    }
+
+    startBtn.addEventListener('click', startGame);
+    function moveBasket(clientX){if(!playing)return;const r=board.getBoundingClientRect();basketX=Math.max(44,Math.min(r.width-44,clientX-r.left));const b=board.querySelector('.basket');if(b)b.style.left=basketX+'px'}
+    board.addEventListener('pointermove',e=>moveBasket(e.clientX));board.addEventListener('pointerdown',e=>moveBasket(e.clientX));
+    document.addEventListener('keydown',e=>{if(!playing)return;if(e.key==='ArrowLeft')basketX-=28;if(e.key==='ArrowRight')basketX+=28;moveBasket(board.getBoundingClientRect().left+basketX)});
+    updateHud();
+  </script>
+</body>
+</html>

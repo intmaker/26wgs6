@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>색상치기</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #111827, #0ea5e9, #a78bfa);
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+    .game {
+      width: min(92vw, 720px);
+      background: rgba(255,255,255,0.08);
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.2);
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    h1 { margin: 0; font-size: clamp(24px, 4vw, 34px); }
+    .badge { background: rgba(255,255,255,0.12); padding: 8px 12px; border-radius: 999px; font-weight: 800; }
+    .target {
+      margin: 18px 0;
+      text-align: center;
+      font-size: clamp(22px, 4vw, 42px);
+      font-weight: 900;
+      letter-spacing: 2px;
+      padding: 20px 10px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.12);
+    }
+    .options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(120px, 1fr));
+      gap: 12px;
+    }
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 18px 12px;
+      font-size: 18px;
+      font-weight: 900;
+      cursor: pointer;
+      color: white;
+      background: rgba(255,255,255,0.15);
+    }
+    .message {
+      margin-top: 18px;
+      text-align: center;
+      font-weight: 700;
+      min-height: 28px;
+    }
+  </style>
+</head>
+<body>
+  <div class="game">
+    <div class="top">
+      <h1>🎨 색상치기</h1>
+      <div class="badge">점수: <span id="score">0</span></div>
+    </div>
+    <div class="target" id="target">RED</div>
+    <div class="options" id="options"></div>
+    <div class="message" id="message">글자와 색을 맞춰 보세요!</div>
+  </div>
+
+  <script>
+    const colors = ['RED', 'BLUE', 'GREEN', 'YELLOW', 'PURPLE', 'PINK'];
+    const colorValues = ['#ef4444', '#3b82f6', '#22c55e', '#facc15', '#a78bfa', '#f472b6'];
+    const targetEl = document.getElementById('target');
+    const optionsEl = document.getElementById('options');
+    const scoreEl = document.getElementById('score');
+    const messageEl = document.getElementById('message');
+
+    let score = 0;
+    let correct = '';
+
+    function randomIndex(max) {
+      return Math.floor(Math.random() * max);
+    }
+
+    function makeQuestion() {
+      const wordIdx = randomIndex(colors.length);
+      let inkIdx = randomIndex(colors.length);
+      while (inkIdx === wordIdx) inkIdx = randomIndex(colors.length);
+      correct = colors[inkIdx];
+      targetEl.textContent = colors[wordIdx];
+      targetEl.style.color = colorValues[inkIdx];
+
+      const options = shuffle([...colors]);
+      optionsEl.innerHTML = '';
+      options.forEach((name) => {
+        const btn = document.createElement('button');
+        btn.textContent = name;
+        btn.style.background = colorValues[colors.indexOf(name)];
+        btn.addEventListener('click', () => {
+          if (name === correct) {
+            score += 1;
+            scoreEl.textContent = score;
+            messageEl.textContent = '정답! 글자가 아닌 잉크 색을 맞혔어요!';
+          } else {
+            score = Math.max(0, score - 1);
+            scoreEl.textContent = score;
+            messageEl.textContent = '오답! 다시 시도해보세요.';
+          }
+          setTimeout(makeQuestion, 300);
+        });
+        optionsEl.appendChild(btn);
+      });
+    }
+
+    function shuffle(arr) {
+      return arr.sort(() => Math.random() - 0.5);
+    }
+
+    makeQuestion();
+  </script>
+</body>
+</html>

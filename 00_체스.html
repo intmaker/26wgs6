@@ -1,0 +1,4999 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+<meta name="theme-color" content="#18222f">
+<title>AI 체스</title>
+
+<style>
+/* =========================================================
+   AI 체스
+   - HTML / CSS / JavaScript 단일 파일
+   - 외부 라이브러리 없음
+   - PC / 태블릿 / 모바일 반응형
+========================================================= */
+
+:root{
+    --bg1:#101720;
+    --bg2:#1d2938;
+    --panel:#ffffff;
+    --panel-soft:#f4f7fb;
+    --text:#17202a;
+    --muted:#64748b;
+
+    --light:#f0d9b5;
+    --dark:#b58863;
+
+    --accent:#2563eb;
+    --accent2:#1d4ed8;
+
+    --danger:#dc2626;
+    --success:#16a34a;
+    --warning:#f59e0b;
+
+    --last:#f6e05e99;
+    --selected:#22c55e;
+    --check:#ef4444;
+
+    --radius:18px;
+    --shadow:0 18px 45px rgba(0,0,0,.22);
+}
+
+*{
+    box-sizing:border-box;
+}
+
+html{
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+}
+
+body{
+    margin:0;
+    min-height:100vh;
+    min-height:100dvh;
+    overflow-x:hidden;
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        "Apple SD Gothic Neo",
+        "Noto Sans KR",
+        Arial,
+        sans-serif;
+
+    color:white;
+
+    background:
+        radial-gradient(circle at top left, #263d58 0, transparent 35%),
+        linear-gradient(135deg,var(--bg1),var(--bg2));
+
+    /* 모바일 터치 시 불필요한 선택 방지 */
+    -webkit-tap-highlight-color:transparent;
+}
+
+button,
+select{
+    font:inherit;
+}
+
+button{
+    touch-action:manipulation;
+}
+
+button:focus-visible,
+select:focus-visible{
+    outline:3px solid #60a5fa;
+    outline-offset:2px;
+}
+
+
+/* =========================================================
+   전체 화면
+========================================================= */
+
+.app{
+    width:min(1200px, 100%);
+    margin:0 auto;
+    padding:
+        max(14px, env(safe-area-inset-top))
+        max(14px, env(safe-area-inset-right))
+        max(18px, env(safe-area-inset-bottom))
+        max(14px, env(safe-area-inset-left));
+}
+
+header{
+    text-align:center;
+    margin-bottom:16px;
+}
+
+header h1{
+    margin:0;
+    font-size:clamp(1.7rem,4vw,2.6rem);
+    letter-spacing:-.04em;
+}
+
+header p{
+    margin:7px 0 0;
+    color:#cbd5e1;
+    font-size:clamp(.88rem,2.5vw,1rem);
+}
+
+.game-layout{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 330px;
+    gap:20px;
+    align-items:start;
+}
+
+
+/* =========================================================
+   체스판 영역
+========================================================= */
+
+.board-area{
+    min-width:0;
+}
+
+.board-wrap{
+    width:min(90vw, 720px);
+    max-width:100%;
+    margin:0 auto;
+}
+
+.board-frame{
+    background:#111827;
+    padding:clamp(6px,1.2vw,10px);
+    border-radius:20px;
+    box-shadow:var(--shadow);
+}
+
+.board{
+    width:100%;
+    aspect-ratio:1 / 1;
+    display:grid;
+    grid-template-columns:repeat(8,1fr);
+    grid-template-rows:repeat(8,1fr);
+    overflow:hidden;
+    border-radius:12px;
+
+    user-select:none;
+    -webkit-user-select:none;
+
+    /* 더블탭 확대나 스크롤과의 충돌 최소화 */
+    touch-action:manipulation;
+}
+
+.square{
+    position:relative;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    min-width:0;
+    min-height:0;
+
+    cursor:pointer;
+
+    font-size:clamp(27px, 7.3vw, 65px);
+    line-height:1;
+}
+
+.square.light{
+    background:var(--light);
+}
+
+.square.dark{
+    background:var(--dark);
+}
+
+/* 마지막 이동 칸 */
+.square.last-move{
+    box-shadow:inset 0 0 0 9999px var(--last);
+}
+
+/* 선택된 말 */
+.square.selected{
+    box-shadow:
+        inset 0 0 0 5px var(--selected),
+        inset 0 0 0 9999px rgba(34,197,94,.12);
+    z-index:3;
+}
+
+/* 체크 상태의 킹 */
+.square.in-check{
+    background:#ef4444 !important;
+    animation:checkPulse .8s ease-in-out infinite alternate;
+}
+
+@keyframes checkPulse{
+    from{
+        box-shadow:inset 0 0 0 2px rgba(255,255,255,.5);
+    }
+    to{
+        box-shadow:
+            inset 0 0 0 5px rgba(127,29,29,.8),
+            0 0 20px rgba(239,68,68,.8);
+    }
+}
+
+
+/* =========================================================
+   체스 말
+========================================================= */
+
+.piece{
+    position:relative;
+    z-index:2;
+    pointer-events:none;
+
+    transform:translateY(-1%);
+
+    font-family:
+        "Segoe UI Symbol",
+        "Apple Symbols",
+        "Arial Unicode MS",
+        sans-serif;
+
+    text-shadow:
+        0 2px 1px rgba(0,0,0,.15),
+        0 0 1px rgba(0,0,0,.7);
+}
+
+/* 흰 말 */
+.piece.white-piece{
+    color:#ffffff;
+    -webkit-text-stroke:1px #222;
+    paint-order:stroke fill;
+}
+
+/* 검은 말 */
+.piece.black-piece{
+    color:#151515;
+    -webkit-text-stroke:.45px #fff;
+    paint-order:stroke fill;
+}
+
+
+/* =========================================================
+   이동 가능 표시
+========================================================= */
+
+/* 이동 가능한 빈 칸 */
+.square.move-target::after{
+    content:"";
+    position:absolute;
+
+    width:20%;
+    aspect-ratio:1;
+    border-radius:50%;
+
+    background:rgba(30,64,175,.64);
+
+    z-index:4;
+    pointer-events:none;
+}
+
+/* 잡을 수 있는 칸 */
+.square.capture-target::after{
+    content:"";
+    position:absolute;
+
+    inset:7%;
+    border-radius:50%;
+
+    border:clamp(3px,.8vw,6px) solid rgba(220,38,38,.8);
+
+    z-index:4;
+    pointer-events:none;
+}
+
+
+/* =========================================================
+   좌표 a~h, 1~8
+========================================================= */
+
+.coord-file,
+.coord-rank{
+    position:absolute;
+    z-index:5;
+
+    font-size:clamp(8px,1.7vw,12px);
+    font-weight:800;
+
+    pointer-events:none;
+}
+
+.coord-file{
+    right:4px;
+    bottom:2px;
+}
+
+.coord-rank{
+    left:4px;
+    top:2px;
+}
+
+.square.light .coord-file,
+.square.light .coord-rank{
+    color:#8b5e34;
+}
+
+.square.dark .coord-file,
+.square.dark .coord-rank{
+    color:#f7e5cb;
+}
+
+
+/* =========================================================
+   게임 정보 패널
+========================================================= */
+
+.side-panel{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    min-width:0;
+}
+
+.card{
+    background:var(--panel);
+    color:var(--text);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:16px;
+}
+
+.card-title{
+    margin:0 0 12px;
+    font-size:1.05rem;
+    font-weight:800;
+}
+
+.status-box{
+    background:linear-gradient(135deg,#eff6ff,#f8fafc);
+    border:1px solid #dbeafe;
+    border-radius:15px;
+    padding:14px;
+}
+
+.turn-text{
+    font-size:1.15rem;
+    font-weight:900;
+    color:#1e3a8a;
+}
+
+.status-text{
+    margin-top:7px;
+    min-height:24px;
+    font-size:.95rem;
+    font-weight:700;
+    color:#475569;
+}
+
+.status-text.check{
+    color:var(--danger);
+}
+
+.status-text.thinking{
+    color:#7c3aed;
+}
+
+.controls{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+}
+
+.game-btn{
+    border:0;
+    border-radius:13px;
+
+    min-height:48px;
+    padding:10px 12px;
+
+    cursor:pointer;
+
+    color:white;
+    background:#334155;
+
+    font-size:.95rem;
+    font-weight:800;
+
+    transition:
+        transform .15s ease,
+        filter .15s ease,
+        box-shadow .15s ease;
+}
+
+.game-btn.primary{
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+}
+
+.game-btn.undo{
+    background:linear-gradient(135deg,#475569,#334155);
+}
+
+.game-btn:disabled{
+    opacity:.45;
+    cursor:not-allowed;
+}
+
+@media (hover:hover){
+    .game-btn:not(:disabled):hover{
+        transform:translateY(-2px);
+        filter:brightness(1.06);
+        box-shadow:0 7px 15px rgba(0,0,0,.18);
+    }
+}
+
+.difficulty-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:12px;
+}
+
+.difficulty-row label{
+    flex:0 0 auto;
+    font-weight:800;
+    font-size:.9rem;
+}
+
+.difficulty-row select{
+    min-width:0;
+    flex:1;
+
+    height:45px;
+
+    border:1px solid #cbd5e1;
+    border-radius:12px;
+
+    background:white;
+    color:#17202a;
+
+    padding:0 10px;
+
+    font-weight:800;
+}
+
+
+/* =========================================================
+   잡힌 말
+========================================================= */
+
+.captured-section{
+    display:grid;
+    gap:12px;
+}
+
+.captured-line{
+    background:var(--panel-soft);
+    border-radius:12px;
+    padding:10px 12px;
+}
+
+.captured-label{
+    margin-bottom:5px;
+    color:#475569;
+    font-size:.86rem;
+    font-weight:800;
+}
+
+.captured-pieces{
+    min-height:27px;
+    font-size:24px;
+    line-height:1.15;
+    word-break:break-all;
+}
+
+
+/* =========================================================
+   게임 기록
+========================================================= */
+
+.history{
+    max-height:290px;
+    overflow:auto;
+
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    border-radius:12px;
+
+    padding:10px;
+
+    overscroll-behavior:contain;
+}
+
+.history-empty{
+    color:#94a3b8;
+    font-size:.9rem;
+    text-align:center;
+    padding:18px 0;
+}
+
+.history-row{
+    display:grid;
+    grid-template-columns:34px 1fr 1fr;
+    gap:5px;
+
+    padding:6px 3px;
+    border-bottom:1px solid #e8edf3;
+
+    font-size:.9rem;
+}
+
+.history-row:last-child{
+    border-bottom:0;
+}
+
+.move-number{
+    color:#64748b;
+    font-weight:800;
+}
+
+.move-white,
+.move-black{
+    font-weight:700;
+    overflow-wrap:anywhere;
+}
+
+
+/* =========================================================
+   하단 도움말
+========================================================= */
+
+.help{
+    max-width:720px;
+    margin:14px auto 0;
+
+    color:#d6deea;
+    text-align:center;
+
+    font-size:clamp(.78rem,2.2vw,.9rem);
+    line-height:1.6;
+}
+
+
+/* =========================================================
+   팝업 공통
+========================================================= */
+
+.modal-overlay{
+    position:fixed;
+    inset:0;
+
+    z-index:100;
+
+    display:none;
+    align-items:center;
+    justify-content:center;
+
+    padding:18px;
+
+    background:rgba(15,23,42,.78);
+    backdrop-filter:blur(4px);
+    -webkit-backdrop-filter:blur(4px);
+}
+
+.modal-overlay.show{
+    display:flex;
+}
+
+.modal{
+    width:min(440px,100%);
+    background:white;
+    color:#17202a;
+
+    border-radius:22px;
+    box-shadow:0 25px 70px rgba(0,0,0,.4);
+
+    padding:24px;
+
+    text-align:center;
+}
+
+.modal h2{
+    margin:0 0 10px;
+    font-size:1.55rem;
+}
+
+.modal p{
+    color:#475569;
+    margin:0 0 18px;
+    line-height:1.55;
+}
+
+
+/* =========================================================
+   프로모션
+========================================================= */
+
+.promotion-buttons{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:9px;
+}
+
+.promotion-btn{
+    min-height:75px;
+    border:0;
+    border-radius:14px;
+
+    cursor:pointer;
+
+    background:#eef2ff;
+    color:#17202a;
+
+    font-size:38px;
+
+    touch-action:manipulation;
+}
+
+.promotion-btn span{
+    display:block;
+    margin-top:3px;
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    font-size:11px;
+    font-weight:800;
+}
+
+@media (hover:hover){
+    .promotion-btn:hover{
+        background:#dbeafe;
+    }
+}
+
+
+/* =========================================================
+   AI 생각 애니메이션
+========================================================= */
+
+.thinking-dots::after{
+    content:"";
+    animation:dots 1.25s steps(4,end) infinite;
+}
+
+@keyframes dots{
+    0%{content:"";}
+    25%{content:".";}
+    50%{content:"..";}
+    75%{content:"...";}
+    100%{content:"";}
+}
+
+
+/* =========================================================
+   반응형
+========================================================= */
+
+@media (max-width:900px){
+    .game-layout{
+        grid-template-columns:1fr;
+    }
+
+    .side-panel{
+        width:min(720px,100%);
+        margin:0 auto;
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        align-items:start;
+    }
+
+    .side-panel .history-card{
+        grid-column:1 / -1;
+    }
+
+    .history{
+        max-height:230px;
+    }
+}
+
+@media (max-width:620px){
+    .app{
+        padding-left:10px;
+        padding-right:10px;
+    }
+
+    header{
+        margin-bottom:11px;
+    }
+
+    header p{
+        display:none;
+    }
+
+    .game-layout{
+        gap:13px;
+    }
+
+    .board-wrap{
+        width:min(90vw,560px);
+    }
+
+    .board-frame{
+        border-radius:14px;
+        padding:5px;
+    }
+
+    .board{
+        border-radius:9px;
+    }
+
+    .side-panel{
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+    }
+
+    .card{
+        width:100%;
+        border-radius:15px;
+        padding:13px;
+    }
+
+    .controls{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .game-btn{
+        min-height:50px;
+        font-size:.92rem;
+    }
+
+    .difficulty-row{
+        flex-wrap:wrap;
+    }
+
+    .difficulty-row label{
+        width:100%;
+    }
+
+    .difficulty-row select{
+        width:100%;
+        flex-basis:100%;
+    }
+
+    .history{
+        max-height:210px;
+    }
+
+    .promotion-buttons{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .promotion-btn{
+        min-height:82px;
+    }
+}
+
+@media (max-width:370px){
+    .controls{
+        grid-template-columns:1fr;
+    }
+
+    .square{
+        font-size:clamp(25px,10.5vw,42px);
+    }
+
+    .card{
+        padding:11px;
+    }
+}
+
+/* 가로가 짧은 모바일 */
+@media (orientation:landscape) and (max-height:600px){
+    header{
+        margin-bottom:8px;
+    }
+
+    header h1{
+        font-size:1.45rem;
+    }
+
+    header p{
+        display:none;
+    }
+
+    .board-wrap{
+        width:min(76vh,64vw,600px);
+    }
+
+    .game-layout{
+        grid-template-columns:minmax(0,1fr) 290px;
+        gap:12px;
+    }
+
+    .side-panel{
+        display:flex;
+        width:auto;
+        margin:0;
+    }
+
+    .card{
+        padding:10px;
+    }
+
+    .history{
+        max-height:130px;
+    }
+
+    .help{
+        display:none;
+    }
+}
+
+@media (prefers-reduced-motion:reduce){
+    *,
+    *::before,
+    *::after{
+        animation-duration:.001ms !important;
+        animation-iteration-count:1 !important;
+        transition-duration:.001ms !important;
+    }
+}
+</style>
+</head>
+
+
+<body>
+
+<div class="app">
+
+    <header>
+        <h1>♟ AI 체스</h1>
+        <p>사용자 White · 인공지능 Black · 인터넷 없이 실행되는 체스 게임</p>
+    </header>
+
+    <main class="game-layout">
+
+        <!-- 체스판 -->
+        <section class="board-area">
+
+            <div class="board-wrap">
+                <div class="board-frame">
+                    <div
+                        id="board"
+                        class="board"
+                        aria-label="체스판"
+                        role="grid">
+                    </div>
+                </div>
+            </div>
+
+            <div class="help">
+                말을 선택한 뒤 이동할 칸을 선택하세요.
+                ● 표시는 이동 가능 칸이며 빨간 테두리는 상대 말을 잡을 수 있는 칸입니다.
+            </div>
+
+        </section>
+
+
+        <!-- 게임 정보 -->
+        <aside class="side-panel">
+
+            <section class="card">
+                <h2 class="card-title">게임 정보</h2>
+
+                <div class="status-box">
+                    <div id="turnText" class="turn-text">
+                        당신의 차례
+                    </div>
+
+                    <div id="statusText" class="status-text">
+                        흰색 말을 움직이세요.
+                    </div>
+                </div>
+
+                <div class="difficulty-row">
+                    <label for="difficulty">AI 난이도</label>
+
+                    <select id="difficulty">
+                        <option value="easy">쉬움</option>
+                        <option value="normal" selected>보통</option>
+                        <option value="hard">어려움</option>
+                    </select>
+                </div>
+
+                <div class="controls" style="margin-top:12px;">
+                    <button id="newGameBtn" class="game-btn primary">
+                        새 게임
+                    </button>
+
+                    <button id="undoBtn" class="game-btn undo">
+                        무르기
+                    </button>
+                </div>
+            </section>
+
+
+            <section class="card">
+                <h2 class="card-title">잡힌 말</h2>
+
+                <div class="captured-section">
+
+                    <div class="captured-line">
+                        <div class="captured-label">
+                            내가 잡은 말
+                        </div>
+
+                        <div id="capturedByWhite" class="captured-pieces">
+                            -
+                        </div>
+                    </div>
+
+                    <div class="captured-line">
+                        <div class="captured-label">
+                            AI가 잡은 말
+                        </div>
+
+                        <div id="capturedByBlack" class="captured-pieces">
+                            -
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+
+            <section class="card history-card">
+                <h2 class="card-title">게임 기록</h2>
+
+                <div id="history" class="history">
+                    <div class="history-empty">
+                        아직 이동 기록이 없습니다.
+                    </div>
+                </div>
+            </section>
+
+        </aside>
+
+    </main>
+
+</div>
+
+
+<!-- =====================================================
+     게임 결과 팝업
+===================================================== -->
+
+<div id="resultModal" class="modal-overlay">
+
+    <div class="modal">
+
+        <h2 id="resultTitle">
+            🏆 게임 종료
+        </h2>
+
+        <p id="resultMessage">
+            게임이 종료되었습니다.
+        </p>
+
+        <button id="restartBtn" class="game-btn primary" style="width:100%;">
+            다시하기
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     사용자 폰 프로모션 팝업
+===================================================== -->
+
+<div id="promotionModal" class="modal-overlay">
+
+    <div class="modal">
+
+        <h2>폰 프로모션</h2>
+
+        <p>
+            변경할 말을 선택하세요.
+        </p>
+
+        <div class="promotion-buttons">
+
+            <button class="promotion-btn" data-piece="q">
+                ♕
+                <span>퀸</span>
+            </button>
+
+            <button class="promotion-btn" data-piece="r">
+                ♖
+                <span>룩</span>
+            </button>
+
+            <button class="promotion-btn" data-piece="b">
+                ♗
+                <span>비숍</span>
+            </button>
+
+            <button class="promotion-btn" data-piece="n">
+                ♘
+                <span>나이트</span>
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<script>
+"use strict";
+
+/* =========================================================
+   1. 기본 설정
+========================================================= */
+
+/*
+    체스판 좌표
+
+    배열의 행:
+    0 = 8번 줄
+    1 = 7번 줄
+    ...
+    7 = 1번 줄
+
+    배열의 열:
+    0 = a
+    1 = b
+    ...
+    7 = h
+*/
+
+const WHITE = "w";
+const BLACK = "b";
+
+const FILES = ["a","b","c","d","e","f","g","h"];
+
+const PIECE_SYMBOLS = {
+    w: {
+        k: "♔",
+        q: "♕",
+        r: "♖",
+        b: "♗",
+        n: "♘",
+        p: "♙"
+    },
+
+    b: {
+        k: "♚",
+        q: "♛",
+        r: "♜",
+        b: "♝",
+        n: "♞",
+        p: "♟"
+    }
+};
+
+
+/* AI 평가용 기본 말 가치 */
+const PIECE_VALUES = {
+    p: 100,
+    n: 320,
+    b: 330,
+    r: 500,
+    q: 900,
+    k: 20000
+};
+
+
+/* =========================================================
+   2. HTML 요소
+========================================================= */
+
+const boardElement = document.getElementById("board");
+
+const turnText = document.getElementById("turnText");
+const statusText = document.getElementById("statusText");
+
+const difficultySelect = document.getElementById("difficulty");
+
+const newGameBtn = document.getElementById("newGameBtn");
+const undoBtn = document.getElementById("undoBtn");
+
+const capturedByWhiteElement =
+    document.getElementById("capturedByWhite");
+
+const capturedByBlackElement =
+    document.getElementById("capturedByBlack");
+
+const historyElement =
+    document.getElementById("history");
+
+const resultModal =
+    document.getElementById("resultModal");
+
+const resultTitle =
+    document.getElementById("resultTitle");
+
+const resultMessage =
+    document.getElementById("resultMessage");
+
+const restartBtn =
+    document.getElementById("restartBtn");
+
+const promotionModal =
+    document.getElementById("promotionModal");
+
+const promotionButtons =
+    document.querySelectorAll(".promotion-btn");
+
+
+/* =========================================================
+   3. 게임 상태 변수
+========================================================= */
+
+let game = null;
+
+/* 사용자가 선택한 칸 */
+let selectedSquare = null;
+
+/* 현재 선택된 말의 합법적인 이동 */
+let selectedMoves = [];
+
+/* AI 계산 중 여부 */
+let aiThinking = false;
+
+/* AI setTimeout 중복 방지 */
+let aiTimer = null;
+
+/* 사용자 프로모션 대기 정보 */
+let pendingPromotion = null;
+
+/* AI 탐색 종료 시간을 제한하기 위한 변수 */
+let aiSearchDeadline = 0;
+
+/* AI 탐색이 시간 제한 때문에 중단되었는지 여부 */
+let aiSearchAborted = false;
+
+
+/* =========================================================
+   4. 체스 말 생성
+========================================================= */
+
+function piece(type, color) {
+    return {
+        type: type,
+        color: color
+    };
+}
+
+
+/* =========================================================
+   5. 새로운 게임 상태 생성
+========================================================= */
+
+function createInitialGame() {
+
+    const board = Array.from(
+        { length: 8 },
+        () => Array(8).fill(null)
+    );
+
+    /* 검은색 주요 기물 */
+    board[0][0] = piece("r", BLACK);
+    board[0][1] = piece("n", BLACK);
+    board[0][2] = piece("b", BLACK);
+    board[0][3] = piece("q", BLACK);
+    board[0][4] = piece("k", BLACK);
+    board[0][5] = piece("b", BLACK);
+    board[0][6] = piece("n", BLACK);
+    board[0][7] = piece("r", BLACK);
+
+    /* 검은 폰 */
+    for (let col = 0; col < 8; col++) {
+        board[1][col] = piece("p", BLACK);
+    }
+
+    /* 흰 폰 */
+    for (let col = 0; col < 8; col++) {
+        board[6][col] = piece("p", WHITE);
+    }
+
+    /* 흰색 주요 기물 */
+    board[7][0] = piece("r", WHITE);
+    board[7][1] = piece("n", WHITE);
+    board[7][2] = piece("b", WHITE);
+    board[7][3] = piece("q", WHITE);
+    board[7][4] = piece("k", WHITE);
+    board[7][5] = piece("b", WHITE);
+    board[7][6] = piece("n", WHITE);
+    board[7][7] = piece("r", WHITE);
+
+    return {
+        board: board,
+
+        turn: WHITE,
+
+        /* 캐슬링 권리 */
+        castling: {
+            wK: true,
+            wQ: true,
+            bK: true,
+            bQ: true
+        },
+
+        /*
+            앙파상 가능 칸.
+            예: 상대 폰이 2칸 움직여 지나온 칸.
+        */
+        enPassant: null,
+
+        /*
+            이전 이동 정보.
+            마지막 이동 칸 표시와 기보 작성에 사용.
+        */
+        lastMove: null,
+
+        /*
+            기보:
+            {
+                white:"e4",
+                black:"e5"
+            }
+        */
+        notationHistory: [],
+
+        /*
+            무르기용 전체 게임 스냅샷
+        */
+        undoStack: [],
+
+        capturedByWhite: [],
+        capturedByBlack: [],
+
+        gameOver: false
+    };
+}
+
+
+/* =========================================================
+   6. 게임 복사
+========================================================= */
+
+/*
+    AI 탐색에서는 실제 게임 상태를 바꾸면 안 되므로
+    빠르게 복사한다.
+*/
+function cloneGame(state) {
+
+    return {
+        board: state.board.map(row =>
+            row.map(p =>
+                p ? { type: p.type, color: p.color } : null
+            )
+        ),
+
+        turn: state.turn,
+
+        castling: {
+            wK: state.castling.wK,
+            wQ: state.castling.wQ,
+            bK: state.castling.bK,
+            bQ: state.castling.bQ
+        },
+
+        enPassant: state.enPassant
+            ? {
+                row: state.enPassant.row,
+                col: state.enPassant.col
+            }
+            : null,
+
+        lastMove: state.lastMove
+            ? {
+                from: {
+                    row: state.lastMove.from.row,
+                    col: state.lastMove.from.col
+                },
+                to: {
+                    row: state.lastMove.to.row,
+                    col: state.lastMove.to.col
+                }
+            }
+            : null,
+
+        notationHistory: [],
+
+        undoStack: [],
+
+        capturedByWhite: [],
+        capturedByBlack: [],
+
+        gameOver: state.gameOver
+    };
+}
+
+
+/* =========================================================
+   7. 무르기용 전체 스냅샷
+========================================================= */
+
+function makeUndoSnapshot(state) {
+
+    return {
+        board: state.board.map(row =>
+            row.map(p =>
+                p ? { type: p.type, color: p.color } : null
+            )
+        ),
+
+        turn: state.turn,
+
+        castling: {
+            wK: state.castling.wK,
+            wQ: state.castling.wQ,
+            bK: state.castling.bK,
+            bQ: state.castling.bQ
+        },
+
+        enPassant: state.enPassant
+            ? {
+                row: state.enPassant.row,
+                col: state.enPassant.col
+            }
+            : null,
+
+        lastMove: state.lastMove
+            ? JSON.parse(JSON.stringify(state.lastMove))
+            : null,
+
+        notationHistory:
+            JSON.parse(JSON.stringify(state.notationHistory)),
+
+        capturedByWhite:
+            state.capturedByWhite.map(p => ({
+                type:p.type,
+                color:p.color
+            })),
+
+        capturedByBlack:
+            state.capturedByBlack.map(p => ({
+                type:p.type,
+                color:p.color
+            })),
+
+        gameOver: state.gameOver
+    };
+}
+
+
+function restoreSnapshot(snapshot) {
+
+    game.board =
+        snapshot.board.map(row =>
+            row.map(p =>
+                p ? { type:p.type, color:p.color } : null
+            )
+        );
+
+    game.turn = snapshot.turn;
+
+    game.castling = {
+        ...snapshot.castling
+    };
+
+    game.enPassant =
+        snapshot.enPassant
+            ? { ...snapshot.enPassant }
+            : null;
+
+    game.lastMove =
+        snapshot.lastMove
+            ? JSON.parse(JSON.stringify(snapshot.lastMove))
+            : null;
+
+    game.notationHistory =
+        JSON.parse(JSON.stringify(snapshot.notationHistory));
+
+    game.capturedByWhite =
+        snapshot.capturedByWhite.map(p => ({...p}));
+
+    game.capturedByBlack =
+        snapshot.capturedByBlack.map(p => ({...p}));
+
+    game.gameOver = snapshot.gameOver;
+}
+
+
+/* =========================================================
+   8. 좌표 관련 함수
+========================================================= */
+
+function isInside(row, col) {
+    return (
+        row >= 0 &&
+        row < 8 &&
+        col >= 0 &&
+        col < 8
+    );
+}
+
+
+function squareName(row, col) {
+    return FILES[col] + (8 - row);
+}
+
+
+/* =========================================================
+   9. 체스판 화면 그리기
+========================================================= */
+
+function renderBoard() {
+
+    boardElement.innerHTML = "";
+
+    /*
+        화면에서는 흰색 진영이 항상 아래쪽이다.
+        따라서 배열 0→7 순서로 그대로 그린다.
+    */
+
+    for (let row = 0; row < 8; row++) {
+
+        for (let col = 0; col < 8; col++) {
+
+            const square = document.createElement("div");
+
+            square.className = "square";
+
+            square.classList.add(
+                (row + col) % 2 === 0
+                    ? "light"
+                    : "dark"
+            );
+
+            square.dataset.row = row;
+            square.dataset.col = col;
+
+            square.setAttribute("role", "gridcell");
+
+            const boardPiece = game.board[row][col];
+
+
+            /* 마지막 이동한 출발칸 / 도착칸 */
+            if (game.lastMove) {
+
+                const from = game.lastMove.from;
+                const to = game.lastMove.to;
+
+                if (
+                    (from.row === row && from.col === col) ||
+                    (to.row === row && to.col === col)
+                ) {
+                    square.classList.add("last-move");
+                }
+            }
+
+
+            /* 현재 선택된 칸 */
+            if (
+                selectedSquare &&
+                selectedSquare.row === row &&
+                selectedSquare.col === col
+            ) {
+                square.classList.add("selected");
+            }
+
+
+            /* 이동 가능 칸 */
+            const moveToThisSquare =
+                selectedMoves.find(move =>
+                    move.to.row === row &&
+                    move.to.col === col
+                );
+
+            if (moveToThisSquare) {
+
+                const target =
+                    game.board[row][col];
+
+                if (
+                    target ||
+                    moveToThisSquare.enPassant
+                ) {
+                    square.classList.add(
+                        "capture-target"
+                    );
+                }
+                else {
+                    square.classList.add(
+                        "move-target"
+                    );
+                }
+            }
+
+
+            /* 체크 상태의 킹 표시 */
+            if (
+                boardPiece &&
+                boardPiece.type === "k" &&
+                isKingInCheck(
+                    game,
+                    boardPiece.color
+                )
+            ) {
+                square.classList.add("in-check");
+            }
+
+
+            /* 체스 말 표시 */
+            if (boardPiece) {
+
+                const pieceSpan =
+                    document.createElement("span");
+
+                pieceSpan.className =
+                    "piece " +
+                    (
+                        boardPiece.color === WHITE
+                            ? "white-piece"
+                            : "black-piece"
+                    );
+
+                pieceSpan.textContent =
+                    PIECE_SYMBOLS
+                    [boardPiece.color]
+                    [boardPiece.type];
+
+                square.appendChild(pieceSpan);
+            }
+
+
+            /*
+                좌표 표시
+
+                왼쪽 줄에는 8~1
+                아래 줄에는 a~h
+            */
+            if (col === 0) {
+
+                const rank =
+                    document.createElement("span");
+
+                rank.className =
+                    "coord-rank";
+
+                rank.textContent =
+                    8 - row;
+
+                square.appendChild(rank);
+            }
+
+            if (row === 7) {
+
+                const file =
+                    document.createElement("span");
+
+                file.className =
+                    "coord-file";
+
+                file.textContent =
+                    FILES[col];
+
+                square.appendChild(file);
+            }
+
+
+            square.addEventListener(
+                "click",
+                onSquareClick
+            );
+
+            boardElement.appendChild(square);
+        }
+    }
+}
+
+
+/* =========================================================
+   10. 공격받는 칸인지 검사
+========================================================= */
+
+/*
+    특정 칸이 특정 색 기물에게 공격받고 있는지 검사한다.
+
+    캐슬링 중
+    - 킹이 지나가는 칸이 공격받는지
+    - 현재 킹이 체크인지
+
+    등을 판단하는 핵심 함수이다.
+*/
+function isSquareAttacked(
+    state,
+    row,
+    col,
+    byColor
+) {
+
+    const board = state.board;
+
+    /* -------------------------
+       폰 공격
+    ------------------------- */
+
+    const pawnDirection =
+        byColor === WHITE
+            ? -1
+            : 1;
+
+    const pawnSourceRow =
+        row - pawnDirection;
+
+    for (const dc of [-1, 1]) {
+
+        const sourceCol =
+            col - dc;
+
+        if (
+            isInside(
+                pawnSourceRow,
+                sourceCol
+            )
+        ) {
+
+            const p =
+                board[pawnSourceRow][sourceCol];
+
+            if (
+                p &&
+                p.color === byColor &&
+                p.type === "p"
+            ) {
+                return true;
+            }
+        }
+    }
+
+
+    /* -------------------------
+       나이트 공격
+    ------------------------- */
+
+    const knightMoves = [
+        [-2,-1],
+        [-2, 1],
+        [-1,-2],
+        [-1, 2],
+        [ 1,-2],
+        [ 1, 2],
+        [ 2,-1],
+        [ 2, 1]
+    ];
+
+    for (const [dr,dc] of knightMoves) {
+
+        const r = row + dr;
+        const c = col + dc;
+
+        if (!isInside(r,c)) {
+            continue;
+        }
+
+        const p = board[r][c];
+
+        if (
+            p &&
+            p.color === byColor &&
+            p.type === "n"
+        ) {
+            return true;
+        }
+    }
+
+
+    /* -------------------------
+       비숍 / 퀸 대각선 공격
+    ------------------------- */
+
+    const diagonalDirections = [
+        [-1,-1],
+        [-1, 1],
+        [ 1,-1],
+        [ 1, 1]
+    ];
+
+    for (
+        const [dr,dc]
+        of diagonalDirections
+    ) {
+
+        let r = row + dr;
+        let c = col + dc;
+
+        while (isInside(r,c)) {
+
+            const p = board[r][c];
+
+            if (p) {
+
+                if (
+                    p.color === byColor &&
+                    (
+                        p.type === "b" ||
+                        p.type === "q"
+                    )
+                ) {
+                    return true;
+                }
+
+                break;
+            }
+
+            r += dr;
+            c += dc;
+        }
+    }
+
+
+    /* -------------------------
+       룩 / 퀸 직선 공격
+    ------------------------- */
+
+    const straightDirections = [
+        [-1, 0],
+        [ 1, 0],
+        [ 0,-1],
+        [ 0, 1]
+    ];
+
+    for (
+        const [dr,dc]
+        of straightDirections
+    ) {
+
+        let r = row + dr;
+        let c = col + dc;
+
+        while (isInside(r,c)) {
+
+            const p = board[r][c];
+
+            if (p) {
+
+                if (
+                    p.color === byColor &&
+                    (
+                        p.type === "r" ||
+                        p.type === "q"
+                    )
+                ) {
+                    return true;
+                }
+
+                break;
+            }
+
+            r += dr;
+            c += dc;
+        }
+    }
+
+
+    /* -------------------------
+       킹 공격
+    ------------------------- */
+
+    for (let dr = -1; dr <= 1; dr++) {
+
+        for (let dc = -1; dc <= 1; dc++) {
+
+            if (
+                dr === 0 &&
+                dc === 0
+            ) {
+                continue;
+            }
+
+            const r = row + dr;
+            const c = col + dc;
+
+            if (!isInside(r,c)) {
+                continue;
+            }
+
+            const p = board[r][c];
+
+            if (
+                p &&
+                p.color === byColor &&
+                p.type === "k"
+            ) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+
+/* =========================================================
+   11. 킹 위치 찾기
+========================================================= */
+
+function findKing(state, color) {
+
+    for (let row = 0; row < 8; row++) {
+
+        for (let col = 0; col < 8; col++) {
+
+            const p =
+                state.board[row][col];
+
+            if (
+                p &&
+                p.color === color &&
+                p.type === "k"
+            ) {
+                return {
+                    row:row,
+                    col:col
+                };
+            }
+        }
+    }
+
+    return null;
+}
+
+
+/* =========================================================
+   12. 체크 검사
+========================================================= */
+
+function isKingInCheck(state, color) {
+
+    const king =
+        findKing(state,color);
+
+    if (!king) {
+        return true;
+    }
+
+    return isSquareAttacked(
+        state,
+        king.row,
+        king.col,
+        color === WHITE
+            ? BLACK
+            : WHITE
+    );
+}
+
+
+/* =========================================================
+   13. 일반 이동 생성
+========================================================= */
+
+function generatePseudoMovesForPiece(
+    state,
+    row,
+    col
+) {
+
+    const board = state.board;
+    const currentPiece = board[row][col];
+
+    if (!currentPiece) {
+        return [];
+    }
+
+    const color =
+        currentPiece.color;
+
+    const enemy =
+        color === WHITE
+            ? BLACK
+            : WHITE;
+
+    const moves = [];
+
+
+    function addMove(
+        toRow,
+        toCol,
+        extra = {}
+    ) {
+
+        if (!isInside(toRow,toCol)) {
+            return;
+        }
+
+        const target =
+            board[toRow][toCol];
+
+        /*
+            체스에서는 킹을 직접 잡지 않는다.
+            상대 킹이 있는 칸으로 이동하는 수는 생성하지 않는다.
+        */
+        if (
+            target &&
+            target.type === "k"
+        ) {
+            return;
+        }
+
+        moves.push({
+            from:{
+                row:row,
+                col:col
+            },
+
+            to:{
+                row:toRow,
+                col:toCol
+            },
+
+            piece:currentPiece.type,
+            color:color,
+
+            promotion:
+                extra.promotion || null,
+
+            castle:
+                extra.castle || null,
+
+            enPassant:
+                extra.enPassant || false
+        });
+    }
+
+
+    /* =====================================================
+       폰
+    ===================================================== */
+
+    if (currentPiece.type === "p") {
+
+        const direction =
+            color === WHITE
+                ? -1
+                : 1;
+
+        const startRow =
+            color === WHITE
+                ? 6
+                : 1;
+
+        const promotionRow =
+            color === WHITE
+                ? 0
+                : 7;
+
+
+        /* 한 칸 전진 */
+        const oneRow =
+            row + direction;
+
+        if (
+            isInside(oneRow,col) &&
+            !board[oneRow][col]
+        ) {
+
+            if (oneRow === promotionRow) {
+
+                for (
+                    const promo
+                    of ["q","r","b","n"]
+                ) {
+
+                    addMove(
+                        oneRow,
+                        col,
+                        {
+                            promotion:promo
+                        }
+                    );
+                }
+            }
+            else {
+
+                addMove(
+                    oneRow,
+                    col
+                );
+            }
+
+
+            /* 첫 이동 두 칸 */
+            const twoRow =
+                row + direction * 2;
+
+            if (
+                row === startRow &&
+                !board[twoRow][col]
+            ) {
+
+                addMove(
+                    twoRow,
+                    col
+                );
+            }
+        }
+
+
+        /* 대각선 잡기 */
+        for (const dc of [-1,1]) {
+
+            const targetRow =
+                row + direction;
+
+            const targetCol =
+                col + dc;
+
+            if (
+                !isInside(
+                    targetRow,
+                    targetCol
+                )
+            ) {
+                continue;
+            }
+
+            const target =
+                board[targetRow][targetCol];
+
+            if (
+                target &&
+                target.color === enemy &&
+                target.type !== "k"
+            ) {
+
+                if (
+                    targetRow === promotionRow
+                ) {
+
+                    for (
+                        const promo
+                        of ["q","r","b","n"]
+                    ) {
+
+                        addMove(
+                            targetRow,
+                            targetCol,
+                            {
+                                promotion:promo
+                            }
+                        );
+                    }
+                }
+                else {
+
+                    addMove(
+                        targetRow,
+                        targetCol
+                    );
+                }
+            }
+
+
+            /* 앙파상 */
+            if (
+                state.enPassant &&
+                state.enPassant.row === targetRow &&
+                state.enPassant.col === targetCol
+            ) {
+
+                /*
+                    실제 잡히는 폰이 옆에 있는지 확인
+                */
+                const capturedPawnRow =
+                    targetRow - direction;
+
+                const capturedPawn =
+                    board
+                    [capturedPawnRow]
+                    [targetCol];
+
+                if (
+                    capturedPawn &&
+                    capturedPawn.type === "p" &&
+                    capturedPawn.color === enemy
+                ) {
+
+                    addMove(
+                        targetRow,
+                        targetCol,
+                        {
+                            enPassant:true
+                        }
+                    );
+                }
+            }
+        }
+
+        return moves;
+    }
+
+
+    /* =====================================================
+       나이트
+    ===================================================== */
+
+    if (currentPiece.type === "n") {
+
+        const offsets = [
+            [-2,-1],
+            [-2, 1],
+            [-1,-2],
+            [-1, 2],
+            [ 1,-2],
+            [ 1, 2],
+            [ 2,-1],
+            [ 2, 1]
+        ];
+
+        for (
+            const [dr,dc]
+            of offsets
+        ) {
+
+            const r = row + dr;
+            const c = col + dc;
+
+            if (!isInside(r,c)) {
+                continue;
+            }
+
+            const target =
+                board[r][c];
+
+            if (
+                !target ||
+                (
+                    target.color !== color &&
+                    target.type !== "k"
+                )
+            ) {
+
+                addMove(r,c);
+            }
+        }
+
+        return moves;
+    }
+
+
+    /* =====================================================
+       슬라이딩 기물
+       비숍 / 룩 / 퀸
+    ===================================================== */
+
+    const directions = [];
+
+    if (
+        currentPiece.type === "b" ||
+        currentPiece.type === "q"
+    ) {
+
+        directions.push(
+            [-1,-1],
+            [-1, 1],
+            [ 1,-1],
+            [ 1, 1]
+        );
+    }
+
+    if (
+        currentPiece.type === "r" ||
+        currentPiece.type === "q"
+    ) {
+
+        directions.push(
+            [-1, 0],
+            [ 1, 0],
+            [ 0,-1],
+            [ 0, 1]
+        );
+    }
+
+    if (
+        currentPiece.type === "b" ||
+        currentPiece.type === "r" ||
+        currentPiece.type === "q"
+    ) {
+
+        for (
+            const [dr,dc]
+            of directions
+        ) {
+
+            let r = row + dr;
+            let c = col + dc;
+
+            while (isInside(r,c)) {
+
+                const target =
+                    board[r][c];
+
+                if (!target) {
+
+                    addMove(r,c);
+                }
+                else {
+
+                    if (
+                        target.color !== color &&
+                        target.type !== "k"
+                    ) {
+                        addMove(r,c);
+                    }
+
+                    break;
+                }
+
+                r += dr;
+                c += dc;
+            }
+        }
+
+        return moves;
+    }
+
+
+    /* =====================================================
+       킹
+    ===================================================== */
+
+    if (currentPiece.type === "k") {
+
+        for (
+            let dr = -1;
+            dr <= 1;
+            dr++
+        ) {
+
+            for (
+                let dc = -1;
+                dc <= 1;
+                dc++
+            ) {
+
+                if (
+                    dr === 0 &&
+                    dc === 0
+                ) {
+                    continue;
+                }
+
+                const r = row + dr;
+                const c = col + dc;
+
+                if (!isInside(r,c)) {
+                    continue;
+                }
+
+                const target =
+                    board[r][c];
+
+                if (
+                    !target ||
+                    (
+                        target.color !== color &&
+                        target.type !== "k"
+                    )
+                ) {
+                    addMove(r,c);
+                }
+            }
+        }
+
+
+        /* =================================================
+           캐슬링
+        ================================================= */
+
+        /*
+            캐슬링 조건
+            1. 킹과 해당 룩이 움직이지 않았음
+            2. 사이 칸이 비어있음
+            3. 킹이 현재 체크가 아님
+            4. 지나가는 칸이 공격받지 않음
+            5. 도착 칸이 공격받지 않음
+        */
+
+        const homeRow =
+            color === WHITE
+                ? 7
+                : 0;
+
+        if (
+            row === homeRow &&
+            col === 4 &&
+            !isKingInCheck(state,color)
+        ) {
+
+            /* 킹사이드 캐슬링 */
+            const canCastleKingSide =
+                color === WHITE
+                    ? state.castling.wK
+                    : state.castling.bK;
+
+            if (canCastleKingSide) {
+
+                const rook =
+                    board[homeRow][7];
+
+                if (
+                    rook &&
+                    rook.type === "r" &&
+                    rook.color === color &&
+                    !board[homeRow][5] &&
+                    !board[homeRow][6] &&
+                    !isSquareAttacked(
+                        state,
+                        homeRow,
+                        5,
+                        enemy
+                    ) &&
+                    !isSquareAttacked(
+                        state,
+                        homeRow,
+                        6,
+                        enemy
+                    )
+                ) {
+
+                    addMove(
+                        homeRow,
+                        6,
+                        {
+                            castle:"K"
+                        }
+                    );
+                }
+            }
+
+
+            /* 퀸사이드 캐슬링 */
+            const canCastleQueenSide =
+                color === WHITE
+                    ? state.castling.wQ
+                    : state.castling.bQ;
+
+            if (canCastleQueenSide) {
+
+                const rook =
+                    board[homeRow][0];
+
+                if (
+                    rook &&
+                    rook.type === "r" &&
+                    rook.color === color &&
+                    !board[homeRow][1] &&
+                    !board[homeRow][2] &&
+                    !board[homeRow][3] &&
+                    !isSquareAttacked(
+                        state,
+                        homeRow,
+                        3,
+                        enemy
+                    ) &&
+                    !isSquareAttacked(
+                        state,
+                        homeRow,
+                        2,
+                        enemy
+                    )
+                ) {
+
+                    addMove(
+                        homeRow,
+                        2,
+                        {
+                            castle:"Q"
+                        }
+                    );
+                }
+            }
+        }
+
+        return moves;
+    }
+
+
+    return moves;
+}
+
+
+/* =========================================================
+   14. 실제 이동 적용
+========================================================= */
+
+/*
+    이 함수는 AI 탐색과 실제 게임 모두에서 사용한다.
+
+    recordCapture = true일 때만 잡힌 말 목록을 기록한다.
+*/
+function applyMove(
+    state,
+    move,
+    recordCapture = false
+) {
+
+    const board = state.board;
+
+    const movingPiece =
+        board
+        [move.from.row]
+        [move.from.col];
+
+    if (!movingPiece) {
+        return;
+    }
+
+    const oldEnPassant =
+        state.enPassant;
+
+    state.enPassant = null;
+
+
+    /* 일반 잡기 */
+    let capturedPiece =
+        board
+        [move.to.row]
+        [move.to.col];
+
+
+    /* 앙파상 */
+    if (move.enPassant) {
+
+        const direction =
+            movingPiece.color === WHITE
+                ? -1
+                : 1;
+
+        const capturedPawnRow =
+            move.to.row - direction;
+
+        capturedPiece =
+            board
+            [capturedPawnRow]
+            [move.to.col];
+
+        board
+        [capturedPawnRow]
+        [move.to.col] = null;
+    }
+
+
+    /* 잡힌 말 기록 */
+    if (
+        recordCapture &&
+        capturedPiece
+    ) {
+
+        if (
+            movingPiece.color === WHITE
+        ) {
+            state.capturedByWhite.push({
+                type:capturedPiece.type,
+                color:capturedPiece.color
+            });
+        }
+        else {
+            state.capturedByBlack.push({
+                type:capturedPiece.type,
+                color:capturedPiece.color
+            });
+        }
+    }
+
+
+    /*
+        잡힌 룩이 원래 자리의 룩이면
+        해당 캐슬링 권리를 제거한다.
+    */
+    if (
+        capturedPiece &&
+        capturedPiece.type === "r"
+    ) {
+
+        if (
+            move.to.row === 7 &&
+            move.to.col === 0
+        ) {
+            state.castling.wQ = false;
+        }
+
+        if (
+            move.to.row === 7 &&
+            move.to.col === 7
+        ) {
+            state.castling.wK = false;
+        }
+
+        if (
+            move.to.row === 0 &&
+            move.to.col === 0
+        ) {
+            state.castling.bQ = false;
+        }
+
+        if (
+            move.to.row === 0 &&
+            move.to.col === 7
+        ) {
+            state.castling.bK = false;
+        }
+    }
+
+
+    /* 원래 칸 비우기 */
+    board
+    [move.from.row]
+    [move.from.col] = null;
+
+
+    /* 도착 칸으로 이동 */
+    board
+    [move.to.row]
+    [move.to.col] = movingPiece;
+
+
+    /* 프로모션 */
+    if (
+        movingPiece.type === "p" &&
+        move.promotion
+    ) {
+        movingPiece.type =
+            move.promotion;
+    }
+
+
+    /* 캐슬링 룩 이동 */
+    if (
+        movingPiece.type === "k" &&
+        move.castle
+    ) {
+
+        const r =
+            move.from.row;
+
+        if (move.castle === "K") {
+
+            board[r][5] =
+                board[r][7];
+
+            board[r][7] =
+                null;
+        }
+        else {
+
+            board[r][3] =
+                board[r][0];
+
+            board[r][0] =
+                null;
+        }
+    }
+
+
+    /* 캐슬링 권리 제거 */
+    if (
+        movingPiece.type === "k"
+    ) {
+
+        if (
+            movingPiece.color === WHITE
+        ) {
+            state.castling.wK = false;
+            state.castling.wQ = false;
+        }
+        else {
+            state.castling.bK = false;
+            state.castling.bQ = false;
+        }
+    }
+
+
+    /* 룩 이동 시 캐슬링 권리 제거 */
+    if (
+        movingPiece.type === "r"
+    ) {
+
+        if (
+            move.from.row === 7 &&
+            move.from.col === 0
+        ) {
+            state.castling.wQ = false;
+        }
+
+        if (
+            move.from.row === 7 &&
+            move.from.col === 7
+        ) {
+            state.castling.wK = false;
+        }
+
+        if (
+            move.from.row === 0 &&
+            move.from.col === 0
+        ) {
+            state.castling.bQ = false;
+        }
+
+        if (
+            move.from.row === 0 &&
+            move.from.col === 7
+        ) {
+            state.castling.bK = false;
+        }
+    }
+
+
+    /*
+        폰이 첫 이동으로 2칸 이동했을 때
+        상대의 앙파상 가능 칸 저장
+    */
+    if (
+        movingPiece.type === "p" &&
+        Math.abs(
+            move.to.row -
+            move.from.row
+        ) === 2
+    ) {
+
+        state.enPassant = {
+            row:
+                (
+                    move.from.row +
+                    move.to.row
+                ) / 2,
+
+            col:
+                move.from.col
+        };
+    }
+
+
+    state.lastMove = {
+        from:{
+            row:move.from.row,
+            col:move.from.col
+        },
+
+        to:{
+            row:move.to.row,
+            col:move.to.col
+        }
+    };
+
+    /*
+        oldEnPassant 변수는 현재는 디버깅 목적 외에는
+        사용하지 않지만 앙파상 흐름 이해를 위해 남겨두었다.
+    */
+    void oldEnPassant;
+}
+
+
+/* =========================================================
+   15. 합법적인 이동 생성
+========================================================= */
+
+/*
+    pseudo move를 만들어본 뒤,
+    실제로 그 수를 두었을 때 자신의 킹이 체크라면 제거한다.
+*/
+function generateLegalMoves(
+    state,
+    color
+) {
+
+    const legalMoves = [];
+
+    for (let row = 0; row < 8; row++) {
+
+        for (let col = 0; col < 8; col++) {
+
+            const currentPiece =
+                state.board[row][col];
+
+            if (
+                !currentPiece ||
+                currentPiece.color !== color
+            ) {
+                continue;
+            }
+
+            const pseudoMoves =
+                generatePseudoMovesForPiece(
+                    state,
+                    row,
+                    col
+                );
+
+            for (
+                const move
+                of pseudoMoves
+            ) {
+
+                const testState =
+                    cloneGame(state);
+
+                applyMove(
+                    testState,
+                    move,
+                    false
+                );
+
+                if (
+                    !isKingInCheck(
+                        testState,
+                        color
+                    )
+                ) {
+                    legalMoves.push(move);
+                }
+            }
+        }
+    }
+
+    return legalMoves;
+}
+
+
+/* =========================================================
+   16. 특정 말의 합법적인 이동
+========================================================= */
+
+function getLegalMovesForSquare(
+    state,
+    row,
+    col
+) {
+
+    const allMoves =
+        generateLegalMoves(
+            state,
+            state.turn
+        );
+
+    return allMoves.filter(move =>
+        move.from.row === row &&
+        move.from.col === col
+    );
+}
+
+
+/* =========================================================
+   17. 사용자 체스판 클릭
+========================================================= */
+
+function onSquareClick(event) {
+
+    if (
+        aiThinking ||
+        game.gameOver ||
+        pendingPromotion
+    ) {
+        return;
+    }
+
+    if (game.turn !== WHITE) {
+        return;
+    }
+
+    const square =
+        event.currentTarget;
+
+    const row =
+        Number(square.dataset.row);
+
+    const col =
+        Number(square.dataset.col);
+
+    const clickedPiece =
+        game.board[row][col];
+
+
+    /*
+        이미 말을 선택한 경우
+        이동 가능한 칸인지 먼저 검사한다.
+    */
+    if (selectedSquare) {
+
+        const matchingMoves =
+            selectedMoves.filter(move =>
+                move.to.row === row &&
+                move.to.col === col
+            );
+
+        if (matchingMoves.length > 0) {
+
+            /*
+                프로모션 칸이라면
+                q/r/b/n 네 개의 이동이 같은 도착칸에 존재한다.
+            */
+            if (
+                matchingMoves.some(
+                    move => move.promotion
+                )
+            ) {
+
+                pendingPromotion = {
+                    moves:matchingMoves
+                };
+
+                promotionModal
+                    .classList
+                    .add("show");
+
+                return;
+            }
+
+            makeRealMove(
+                matchingMoves[0]
+            );
+
+            return;
+        }
+    }
+
+
+    /*
+        자신의 흰색 말을 클릭한 경우
+        선택 상태로 변경
+    */
+    if (
+        clickedPiece &&
+        clickedPiece.color === WHITE
+    ) {
+
+        selectedSquare = {
+            row:row,
+            col:col
+        };
+
+        selectedMoves =
+            getLegalMovesForSquare(
+                game,
+                row,
+                col
+            );
+
+        renderBoard();
+
+        return;
+    }
+
+
+    /* 다른 곳을 누르면 선택 취소 */
+    selectedSquare = null;
+    selectedMoves = [];
+
+    renderBoard();
+}
+
+
+/* =========================================================
+   18. 프로모션 선택
+========================================================= */
+
+promotionButtons.forEach(button => {
+
+    button.addEventListener(
+        "click",
+        function () {
+
+            if (!pendingPromotion) {
+                return;
+            }
+
+            const chosenPiece =
+                this.dataset.piece;
+
+            const chosenMove =
+                pendingPromotion.moves.find(
+                    move =>
+                        move.promotion ===
+                        chosenPiece
+                );
+
+            if (!chosenMove) {
+                return;
+            }
+
+            promotionModal
+                .classList
+                .remove("show");
+
+            pendingPromotion = null;
+
+            makeRealMove(chosenMove);
+        }
+    );
+});
+
+
+/* =========================================================
+   19. 기보 표기
+========================================================= */
+
+function pieceLetter(type) {
+
+    const map = {
+        k:"K",
+        q:"Q",
+        r:"R",
+        b:"B",
+        n:"N",
+        p:""
+    };
+
+    return map[type] || "";
+}
+
+
+/*
+    SAN 전체 규격을 100% 구현한 것은 아니지만,
+    Nf3, Bxc6, O-O, e8=Q+, Qh5# 형태의
+    일반적인 체스 기보에 가깝게 표시한다.
+*/
+function createNotation(
+    stateBefore,
+    move,
+    stateAfter,
+    capturedPiece
+) {
+
+    if (move.castle === "K") {
+
+        let text = "O-O";
+
+        const enemy =
+            move.color === WHITE
+                ? BLACK
+                : WHITE;
+
+        const enemyMoves =
+            generateLegalMoves(
+                stateAfter,
+                enemy
+            );
+
+        if (
+            isKingInCheck(
+                stateAfter,
+                enemy
+            )
+        ) {
+            text +=
+                enemyMoves.length === 0
+                    ? "#"
+                    : "+";
+        }
+
+        return text;
+    }
+
+
+    if (move.castle === "Q") {
+
+        let text = "O-O-O";
+
+        const enemy =
+            move.color === WHITE
+                ? BLACK
+                : WHITE;
+
+        const enemyMoves =
+            generateLegalMoves(
+                stateAfter,
+                enemy
+            );
+
+        if (
+            isKingInCheck(
+                stateAfter,
+                enemy
+            )
+        ) {
+            text +=
+                enemyMoves.length === 0
+                    ? "#"
+                    : "+";
+        }
+
+        return text;
+    }
+
+
+    const movingPiece =
+        stateBefore
+        .board
+        [move.from.row]
+        [move.from.col];
+
+    const isCapture =
+        Boolean(capturedPiece) ||
+        move.enPassant;
+
+    let notation = "";
+
+
+    if (
+        movingPiece.type === "p"
+    ) {
+
+        if (isCapture) {
+
+            notation +=
+                FILES[move.from.col] +
+                "x";
+        }
+    }
+    else {
+
+        notation +=
+            pieceLetter(
+                movingPiece.type
+            );
+
+
+        /*
+            같은 종류의 다른 기물도
+            같은 칸으로 이동할 수 있다면
+            출발 파일 또는 랭크를 일부 표시한다.
+        */
+        const sameTypeMoves =
+            generateLegalMoves(
+                stateBefore,
+                movingPiece.color
+            ).filter(otherMove => {
+
+                if (
+                    otherMove.from.row ===
+                        move.from.row &&
+                    otherMove.from.col ===
+                        move.from.col
+                ) {
+                    return false;
+                }
+
+                const otherPiece =
+                    stateBefore
+                    .board
+                    [otherMove.from.row]
+                    [otherMove.from.col];
+
+                return (
+                    otherPiece &&
+                    otherPiece.type ===
+                        movingPiece.type &&
+                    otherMove.to.row ===
+                        move.to.row &&
+                    otherMove.to.col ===
+                        move.to.col
+                );
+            });
+
+        if (sameTypeMoves.length > 0) {
+
+            const sameFile =
+                sameTypeMoves.some(
+                    otherMove =>
+                        otherMove.from.col ===
+                        move.from.col
+                );
+
+            const sameRank =
+                sameTypeMoves.some(
+                    otherMove =>
+                        otherMove.from.row ===
+                        move.from.row
+                );
+
+            if (!sameFile) {
+
+                notation +=
+                    FILES[move.from.col];
+            }
+            else if (!sameRank) {
+
+                notation +=
+                    (8 - move.from.row);
+            }
+            else {
+
+                notation +=
+                    FILES[move.from.col] +
+                    (8 - move.from.row);
+            }
+        }
+
+
+        if (isCapture) {
+            notation += "x";
+        }
+    }
+
+
+    notation +=
+        squareName(
+            move.to.row,
+            move.to.col
+        );
+
+
+    if (move.promotion) {
+
+        notation +=
+            "=" +
+            pieceLetter(
+                move.promotion
+            );
+    }
+
+
+    const enemy =
+        movingPiece.color === WHITE
+            ? BLACK
+            : WHITE;
+
+    const enemyMoves =
+        generateLegalMoves(
+            stateAfter,
+            enemy
+        );
+
+    if (
+        isKingInCheck(
+            stateAfter,
+            enemy
+        )
+    ) {
+
+        notation +=
+            enemyMoves.length === 0
+                ? "#"
+                : "+";
+    }
+
+
+    return notation;
+}
+
+
+/* =========================================================
+   20. 실제 게임의 이동 실행
+========================================================= */
+
+function makeRealMove(move) {
+
+    if (game.gameOver) {
+        return;
+    }
+
+    /* 무르기를 위해 이동 전 상태 저장 */
+    game.undoStack.push(
+        makeUndoSnapshot(game)
+    );
+
+
+    const before =
+        cloneGame(game);
+
+
+    /* 잡힌 말 기보용 */
+    let capturedPiece =
+        game.board
+        [move.to.row]
+        [move.to.col];
+
+
+    if (move.enPassant) {
+
+        const movingPiece =
+            game.board
+            [move.from.row]
+            [move.from.col];
+
+        const direction =
+            movingPiece.color === WHITE
+                ? -1
+                : 1;
+
+        const capturedRow =
+            move.to.row - direction;
+
+        capturedPiece =
+            game.board
+            [capturedRow]
+            [move.to.col];
+    }
+
+
+    applyMove(
+        game,
+        move,
+        true
+    );
+
+
+    const after =
+        cloneGame(game);
+
+
+    const notation =
+        createNotation(
+            before,
+            move,
+            after,
+            capturedPiece
+        );
+
+
+    /* 기보 저장 */
+    if (move.color === WHITE) {
+
+        game.notationHistory.push({
+            white:notation,
+            black:""
+        });
+    }
+    else {
+
+        if (
+            game.notationHistory.length === 0
+        ) {
+            game.notationHistory.push({
+                white:"",
+                black:notation
+            });
+        }
+        else {
+
+            const last =
+                game.notationHistory[
+                    game.notationHistory.length - 1
+                ];
+
+            if (!last.black) {
+                last.black = notation;
+            }
+            else {
+                game.notationHistory.push({
+                    white:"",
+                    black:notation
+                });
+            }
+        }
+    }
+
+
+    /* 차례 변경 */
+    game.turn =
+        game.turn === WHITE
+            ? BLACK
+            : WHITE;
+
+
+    selectedSquare = null;
+    selectedMoves = [];
+
+
+    renderAll();
+
+
+    /* 체크메이트 / 스테일메이트 검사 */
+    if (checkGameEnd()) {
+        return;
+    }
+
+
+    /* AI 차례 */
+    if (game.turn === BLACK) {
+        scheduleAI();
+    }
+}
+
+
+/* =========================================================
+   21. 게임 종료 검사
+========================================================= */
+
+function checkGameEnd() {
+
+    const moves =
+        generateLegalMoves(
+            game,
+            game.turn
+        );
+
+    const inCheck =
+        isKingInCheck(
+            game,
+            game.turn
+        );
+
+
+    if (moves.length === 0) {
+
+        game.gameOver = true;
+
+        renderAll();
+
+        if (inCheck) {
+
+            if (game.turn === BLACK) {
+
+                showResult(
+                    "🏆 체크메이트!",
+                    "당신이 승리했습니다."
+                );
+            }
+            else {
+
+                showResult(
+                    "♟ 체크메이트!",
+                    "AI가 승리했습니다."
+                );
+            }
+        }
+        else {
+
+            showResult(
+                "🤝 스테일메이트",
+                "무승부입니다."
+            );
+        }
+
+        return true;
+    }
+
+
+    return false;
+}
+
+
+/* =========================================================
+   22. 게임 상태 표시
+========================================================= */
+
+function updateStatus() {
+
+    statusText.className =
+        "status-text";
+
+
+    if (game.gameOver) {
+
+        turnText.textContent =
+            "게임 종료";
+
+        statusText.textContent =
+            "다시하기를 눌러 새 게임을 시작하세요.";
+
+        return;
+    }
+
+
+    if (aiThinking) {
+
+        turnText.textContent =
+            "AI의 차례";
+
+        statusText.classList.add(
+            "thinking"
+        );
+
+        statusText.innerHTML =
+            'AI가 생각 중입니다<span class="thinking-dots"></span>';
+
+        return;
+    }
+
+
+    if (game.turn === WHITE) {
+
+        turnText.textContent =
+            "당신의 차례";
+    }
+    else {
+
+        turnText.textContent =
+            "AI의 차례";
+    }
+
+
+    if (
+        isKingInCheck(
+            game,
+            game.turn
+        )
+    ) {
+
+        statusText.classList.add(
+            "check"
+        );
+
+        statusText.textContent =
+            game.turn === WHITE
+                ? "체크! 킹을 보호하세요."
+                : "AI의 킹이 체크 상태입니다.";
+    }
+    else {
+
+        statusText.textContent =
+            game.turn === WHITE
+                ? "흰색 말을 움직이세요."
+                : "AI 차례입니다.";
+    }
+}
+
+
+/* =========================================================
+   23. 잡힌 말 화면 표시
+========================================================= */
+
+function updateCapturedPieces() {
+
+    if (
+        game.capturedByWhite.length === 0
+    ) {
+        capturedByWhiteElement.textContent =
+            "-";
+    }
+    else {
+
+        capturedByWhiteElement.textContent =
+            game.capturedByWhite
+                .map(p =>
+                    PIECE_SYMBOLS
+                    [p.color]
+                    [p.type]
+                )
+                .join(" ");
+    }
+
+
+    if (
+        game.capturedByBlack.length === 0
+    ) {
+        capturedByBlackElement.textContent =
+            "-";
+    }
+    else {
+
+        capturedByBlackElement.textContent =
+            game.capturedByBlack
+                .map(p =>
+                    PIECE_SYMBOLS
+                    [p.color]
+                    [p.type]
+                )
+                .join(" ");
+    }
+}
+
+
+/* =========================================================
+   24. 기보 화면 표시
+========================================================= */
+
+function updateHistory() {
+
+    historyElement.innerHTML = "";
+
+
+    if (
+        game.notationHistory.length === 0
+    ) {
+
+        const empty =
+            document.createElement("div");
+
+        empty.className =
+            "history-empty";
+
+        empty.textContent =
+            "아직 이동 기록이 없습니다.";
+
+        historyElement.appendChild(empty);
+
+        return;
+    }
+
+
+    game.notationHistory.forEach(
+        (turn, index) => {
+
+            const row =
+                document.createElement("div");
+
+            row.className =
+                "history-row";
+
+
+            const number =
+                document.createElement("div");
+
+            number.className =
+                "move-number";
+
+            number.textContent =
+                (index + 1) + ".";
+
+
+            const white =
+                document.createElement("div");
+
+            white.className =
+                "move-white";
+
+            white.textContent =
+                turn.white || "";
+
+
+            const black =
+                document.createElement("div");
+
+            black.className =
+                "move-black";
+
+            black.textContent =
+                turn.black || "";
+
+
+            row.appendChild(number);
+            row.appendChild(white);
+            row.appendChild(black);
+
+            historyElement.appendChild(row);
+        }
+    );
+
+
+    historyElement.scrollTop =
+        historyElement.scrollHeight;
+}
+
+
+/* =========================================================
+   25. 모든 화면 갱신
+========================================================= */
+
+function renderAll() {
+
+    renderBoard();
+
+    updateStatus();
+
+    updateCapturedPieces();
+
+    updateHistory();
+
+    undoBtn.disabled =
+        aiThinking ||
+        game.undoStack.length === 0 ||
+        pendingPromotion !== null;
+}
+
+
+/* =========================================================
+   26. AI 위치 평가
+========================================================= */
+
+/*
+    평가값:
+    + 값 = 흰색에 유리
+    - 값 = 검은색 AI에 유리
+
+    AI는 검은색이므로
+    가능한 낮은 평가값을 찾는다.
+*/
+function evaluatePosition(state) {
+
+    let score = 0;
+
+    let whiteBishops = 0;
+    let blackBishops = 0;
+
+    let whiteMobility = 0;
+    let blackMobility = 0;
+
+
+    for (let row = 0; row < 8; row++) {
+
+        for (let col = 0; col < 8; col++) {
+
+            const p =
+                state.board[row][col];
+
+            if (!p) {
+                continue;
+            }
+
+            let value =
+                PIECE_VALUES[p.type];
+
+
+            /* =================================================
+               중앙 점유
+            ================================================= */
+
+            const distanceFromCenter =
+                Math.abs(3.5 - row) +
+                Math.abs(3.5 - col);
+
+            let positional = 0;
+
+
+            /* 폰 */
+            if (p.type === "p") {
+
+                positional +=
+                    Math.round(
+                        (7 - distanceFromCenter) * 3
+                    );
+
+                /*
+                    전진한 폰에 작은 보너스
+                */
+                if (p.color === WHITE) {
+
+                    positional +=
+                        (6 - row) * 4;
+                }
+                else {
+
+                    positional +=
+                        (row - 1) * 4;
+                }
+            }
+
+
+            /* 나이트 */
+            if (p.type === "n") {
+
+                positional +=
+                    Math.round(
+                        (7 - distanceFromCenter) * 7
+                    );
+
+                /*
+                    시작 위치에 그대로 있는 나이트보다
+                    전개된 나이트를 약간 선호.
+                */
+                if (
+                    p.color === WHITE &&
+                    row === 7 &&
+                    (col === 1 || col === 6)
+                ) {
+                    positional -= 12;
+                }
+
+                if (
+                    p.color === BLACK &&
+                    row === 0 &&
+                    (col === 1 || col === 6)
+                ) {
+                    positional -= 12;
+                }
+            }
+
+
+            /* 비숍 */
+            if (p.type === "b") {
+
+                positional +=
+                    Math.round(
+                        (7 - distanceFromCenter) * 4
+                    );
+
+                if (p.color === WHITE) {
+                    whiteBishops++;
+                }
+                else {
+                    blackBishops++;
+                }
+
+
+                if (
+                    p.color === WHITE &&
+                    row === 7 &&
+                    (col === 2 || col === 5)
+                ) {
+                    positional -= 10;
+                }
+
+                if (
+                    p.color === BLACK &&
+                    row === 0 &&
+                    (col === 2 || col === 5)
+                ) {
+                    positional -= 10;
+                }
+            }
+
+
+            /* 룩 */
+            if (p.type === "r") {
+
+                positional +=
+                    Math.round(
+                        (7 - distanceFromCenter) * 1.5
+                    );
+            }
+
+
+            /* 퀸 */
+            if (p.type === "q") {
+
+                positional +=
+                    Math.round(
+                        (7 - distanceFromCenter)
+                    );
+            }
+
+
+            /* 킹 */
+            if (p.type === "k") {
+
+                /*
+                    초중반에는 중앙에 있는 킹보다
+                    캐슬링한 킹을 선호.
+                */
+                if (p.color === WHITE) {
+
+                    if (
+                        row === 7 &&
+                        (
+                            col === 6 ||
+                            col === 2
+                        )
+                    ) {
+                        positional += 45;
+                    }
+
+                    if (
+                        row <= 5 &&
+                        col >= 2 &&
+                        col <= 5
+                    ) {
+                        positional -= 30;
+                    }
+                }
+                else {
+
+                    if (
+                        row === 0 &&
+                        (
+                            col === 6 ||
+                            col === 2
+                        )
+                    ) {
+                        positional += 45;
+                    }
+
+                    if (
+                        row >= 2 &&
+                        col >= 2 &&
+                        col <= 5
+                    ) {
+                        positional -= 30;
+                    }
+                }
+            }
+
+
+            value += positional;
+
+
+            if (p.color === WHITE) {
+                score += value;
+            }
+            else {
+                score -= value;
+            }
+        }
+    }
+
+
+    /* 비숍 쌍 보너스 */
+    if (whiteBishops >= 2) {
+        score += 22;
+    }
+
+    if (blackBishops >= 2) {
+        score -= 22;
+    }
+
+
+    /*
+        활동성 평가.
+        너무 많은 탐색 비용이 발생하지 않게
+        pseudo 이동 개수로 가볍게 계산.
+    */
+    whiteMobility =
+        countPseudoMobility(
+            state,
+            WHITE
+        );
+
+    blackMobility =
+        countPseudoMobility(
+            state,
+            BLACK
+        );
+
+    score +=
+        (
+            whiteMobility -
+            blackMobility
+        ) * 2;
+
+
+    /* 체크 보너스 */
+    if (
+        isKingInCheck(
+            state,
+            WHITE
+        )
+    ) {
+        score -= 35;
+    }
+
+    if (
+        isKingInCheck(
+            state,
+            BLACK
+        )
+    ) {
+        score += 35;
+    }
+
+
+    /* 킹 주변 폰 보호 */
+    score +=
+        kingSafetyScore(
+            state,
+            WHITE
+        );
+
+    score -=
+        kingSafetyScore(
+            state,
+            BLACK
+        );
+
+
+    /* 공격받는 고가 기물 평가 */
+    score +=
+        hangingPieceScore(
+            state,
+            WHITE
+        );
+
+    score -=
+        hangingPieceScore(
+            state,
+            BLACK
+        );
+
+
+    return score;
+}
+
+
+/* =========================================================
+   27. 활동성 계산
+========================================================= */
+
+function countPseudoMobility(
+    state,
+    color
+) {
+
+    let count = 0;
+
+    for (let row = 0; row < 8; row++) {
+
+        for (let col = 0; col < 8; col++) {
+
+            const p =
+                state.board[row][col];
+
+            if (
+                p &&
+                p.color === color
+            ) {
+
+                count +=
+                    generatePseudoMovesForPiece(
+                        state,
+                        row,
+                        col
+                    ).length;
+            }
+        }
+    }
+
+    return count;
+}
+
+
+/* =========================================================
+   28. 킹 안전성 평가
+========================================================= */
+
+function kingSafetyScore(
+    state,
+    color
+) {
+
+    const king =
+        findKing(state,color);
+
+    if (!king) {
+        return -10000;
+    }
+
+    let score = 0;
+
+    /*
+        킹 주변 아군 폰이 있으면
+        보호막으로 평가
+    */
+    for (
+        let dr = -1;
+        dr <= 1;
+        dr++
+    ) {
+
+        for (
+            let dc = -1;
+            dc <= 1;
+            dc++
+        ) {
+
+            if (
+                dr === 0 &&
+                dc === 0
+            ) {
+                continue;
+            }
+
+            const r =
+                king.row + dr;
+
+            const c =
+                king.col + dc;
+
+            if (!isInside(r,c)) {
+                continue;
+            }
+
+            const p =
+                state.board[r][c];
+
+            if (
+                p &&
+                p.color === color &&
+                p.type === "p"
+            ) {
+                score += 8;
+            }
+        }
+    }
+
+    return score;
+}
+
+
+/* =========================================================
+   29. 위험에 노출된 기물 평가
+========================================================= */
+
+function hangingPieceScore(
+    state,
+    color
+) {
+
+    const enemy =
+        color === WHITE
+            ? BLACK
+            : WHITE;
+
+    let score = 0;
+
+    for (let row = 0; row < 8; row++) {
+
+        for (let col = 0; col < 8; col++) {
+
+            const p =
+                state.board[row][col];
+
+            if (
+                !p ||
+                p.color !== color ||
+                p.type === "k"
+            ) {
+                continue;
+            }
+
+
+            const attacked =
+                isSquareAttacked(
+                    state,
+                    row,
+                    col,
+                    enemy
+                );
+
+
+            if (!attacked) {
+                continue;
+            }
+
+
+            const defended =
+                isSquareAttacked(
+                    state,
+                    row,
+                    col,
+                    color
+                );
+
+
+            const penalty =
+                Math.round(
+                    PIECE_VALUES[p.type] *
+                    (
+                        defended
+                            ? 0.025
+                            : 0.07
+                    )
+                );
+
+            score -= penalty;
+        }
+    }
+
+    return score;
+}
+
+
+/* =========================================================
+   30. AI 이동 정렬
+========================================================= */
+
+/*
+    좋은 후보를 먼저 탐색하면 Alpha-Beta 가지치기가
+    더 많이 일어나므로 모바일에서도 속도가 좋아진다.
+*/
+function moveOrderingScore(
+    state,
+    move
+) {
+
+    let score = 0;
+
+    const movingPiece =
+        state.board
+        [move.from.row]
+        [move.from.col];
+
+    let captured =
+        state.board
+        [move.to.row]
+        [move.to.col];
+
+
+    if (move.enPassant) {
+
+        const direction =
+            movingPiece.color === WHITE
+                ? -1
+                : 1;
+
+        captured =
+            state.board
+            [move.to.row - direction]
+            [move.to.col];
+    }
+
+
+    /* 잡는 수 */
+    if (captured) {
+
+        score +=
+            PIECE_VALUES[captured.type] * 10;
+
+        score -=
+            PIECE_VALUES[movingPiece.type];
+    }
+
+
+    /* 프로모션 */
+    if (move.promotion) {
+
+        score +=
+            PIECE_VALUES[move.promotion] * 6;
+    }
+
+
+    /* 중앙 이동 */
+    const centerDistance =
+        Math.abs(3.5 - move.to.row) +
+        Math.abs(3.5 - move.to.col);
+
+    score +=
+        Math.round(
+            (7 - centerDistance) * 5
+        );
+
+
+    /* 캐슬링 */
+    if (move.castle) {
+        score += 160;
+    }
+
+
+    /*
+        직접 한 번 적용해서 체크인지 검사
+    */
+    const test =
+        cloneGame(state);
+
+    applyMove(
+        test,
+        move,
+        false
+    );
+
+    const enemy =
+        move.color === WHITE
+            ? BLACK
+            : WHITE;
+
+    if (
+        isKingInCheck(
+            test,
+            enemy
+        )
+    ) {
+        score += 220;
+    }
+
+
+    return score;
+}
+
+
+function orderMoves(
+    state,
+    moves,
+    maximizingWhite
+) {
+
+    const scored =
+        moves.map(move => ({
+            move:move,
+            score:
+                moveOrderingScore(
+                    state,
+                    move
+                )
+        }));
+
+    scored.sort(
+        (a,b) =>
+            b.score - a.score
+    );
+
+    return scored.map(
+        item => item.move
+    );
+}
+
+
+/* =========================================================
+   31. AI Minimax + Alpha-Beta Pruning
+========================================================= */
+
+const CHECKMATE_SCORE = 999999;
+
+
+/*
+    maximizingWhite:
+    true  = 흰색 차례라 점수를 크게
+    false = 검은색 AI 차례라 점수를 작게
+*/
+function minimax(
+    state,
+    depth,
+    alpha,
+    beta,
+    maximizingWhite,
+    ply
+) {
+
+    /*
+        어려움에서 스마트폰이 지나치게 느려지는 것을
+        방지하기 위한 시간 제한
+    */
+    if (
+        performance.now() >
+        aiSearchDeadline
+    ) {
+
+        aiSearchAborted = true;
+
+        return evaluatePosition(state);
+    }
+
+
+    const color =
+        maximizingWhite
+            ? WHITE
+            : BLACK;
+
+    const legalMoves =
+        generateLegalMoves(
+            state,
+            color
+        );
+
+
+    /* 체크메이트 / 스테일메이트 */
+    if (legalMoves.length === 0) {
+
+        if (
+            isKingInCheck(
+                state,
+                color
+            )
+        ) {
+
+            /*
+                흰색이 체크메이트면
+                매우 큰 음수 = AI 승리.
+
+                검은색이 체크메이트면
+                매우 큰 양수 = 사용자 승리.
+            */
+            if (color === WHITE) {
+
+                return (
+                    -CHECKMATE_SCORE +
+                    ply
+                );
+            }
+            else {
+
+                return (
+                    CHECKMATE_SCORE -
+                    ply
+                );
+            }
+        }
+
+        /* 스테일메이트 */
+        return 0;
+    }
+
+
+    if (depth <= 0) {
+
+        return evaluatePosition(
+            state
+        );
+    }
+
+
+    const orderedMoves =
+        orderMoves(
+            state,
+            legalMoves,
+            maximizingWhite
+        );
+
+
+    if (maximizingWhite) {
+
+        let best =
+            -Infinity;
+
+        for (
+            const move
+            of orderedMoves
+        ) {
+
+            const child =
+                cloneGame(state);
+
+            applyMove(
+                child,
+                move,
+                false
+            );
+
+            child.turn = BLACK;
+
+            const score =
+                minimax(
+                    child,
+                    depth - 1,
+                    alpha,
+                    beta,
+                    false,
+                    ply + 1
+                );
+
+            best =
+                Math.max(
+                    best,
+                    score
+                );
+
+            alpha =
+                Math.max(
+                    alpha,
+                    best
+                );
+
+            if (beta <= alpha) {
+                break;
+            }
+
+            if (aiSearchAborted) {
+                break;
+            }
+        }
+
+        return best;
+    }
+    else {
+
+        let best =
+            Infinity;
+
+        for (
+            const move
+            of orderedMoves
+        ) {
+
+            const child =
+                cloneGame(state);
+
+            applyMove(
+                child,
+                move,
+                false
+            );
+
+            child.turn = WHITE;
+
+            const score =
+                minimax(
+                    child,
+                    depth - 1,
+                    alpha,
+                    beta,
+                    true,
+                    ply + 1
+                );
+
+            best =
+                Math.min(
+                    best,
+                    score
+                );
+
+            beta =
+                Math.min(
+                    beta,
+                    best
+                );
+
+            if (beta <= alpha) {
+                break;
+            }
+
+            if (aiSearchAborted) {
+                break;
+            }
+        }
+
+        return best;
+    }
+}
+
+
+/* =========================================================
+   32. AI 최적 이동 선택
+========================================================= */
+
+function findBestAIMove() {
+
+    const allMoves =
+        generateLegalMoves(
+            game,
+            BLACK
+        );
+
+    if (allMoves.length === 0) {
+        return null;
+    }
+
+
+    const difficulty =
+        difficultySelect.value;
+
+
+    let depth = 2;
+    let timeLimit = 1200;
+
+
+    if (difficulty === "easy") {
+        depth = 1;
+        timeLimit = 400;
+    }
+
+    if (difficulty === "normal") {
+        depth = 2;
+        timeLimit = 850;
+    }
+
+    if (difficulty === "hard") {
+        depth = 3;
+
+        /*
+            PC는 약간 더 긴 탐색 허용.
+            모바일에서는 계산량 제한.
+        */
+        const mobile =
+            window.innerWidth <= 900;
+
+        timeLimit =
+            mobile
+                ? 1500
+                : 2400;
+    }
+
+
+    aiSearchDeadline =
+        performance.now() +
+        timeLimit;
+
+    aiSearchAborted = false;
+
+
+    const orderedMoves =
+        orderMoves(
+            game,
+            allMoves,
+            false
+        );
+
+
+    /*
+        체크메이트 가능한 수는
+        탐색 전에 즉시 찾는다.
+    */
+    for (
+        const move
+        of orderedMoves
+    ) {
+
+        const test =
+            cloneGame(game);
+
+        applyMove(
+            test,
+            move,
+            false
+        );
+
+        test.turn = WHITE;
+
+        const whiteMoves =
+            generateLegalMoves(
+                test,
+                WHITE
+            );
+
+        if (
+            whiteMoves.length === 0 &&
+            isKingInCheck(
+                test,
+                WHITE
+            )
+        ) {
+            return move;
+        }
+    }
+
+
+    /*
+        쉬움 난이도는 약 28% 확률로
+        최선수 대신 다른 합법적인 수를 선택한다.
+    */
+    if (
+        difficulty === "easy" &&
+        Math.random() < 0.28
+    ) {
+
+        /*
+            완전 랜덤보다 조금 자연스럽도록
+            정렬된 상위 60% 정도에서 선택
+        */
+        const candidateCount =
+            Math.max(
+                2,
+                Math.ceil(
+                    orderedMoves.length *
+                    0.6
+                )
+            );
+
+        return orderedMoves[
+            Math.floor(
+                Math.random() *
+                candidateCount
+            )
+        ];
+    }
+
+
+    let bestMove =
+        orderedMoves[0];
+
+    let bestScore =
+        Infinity;
+
+
+    /*
+        같은 평가의 수가 여러 개이면
+        게임이 매번 완전히 똑같지 않도록 후보 저장.
+    */
+    let bestMoves = [];
+
+
+    for (
+        const move
+        of orderedMoves
+    ) {
+
+        const child =
+            cloneGame(game);
+
+        applyMove(
+            child,
+            move,
+            false
+        );
+
+        child.turn = WHITE;
+
+
+        const score =
+            minimax(
+                child,
+
+                /*
+                    루트에서 이미 1수를 두었으므로
+                    남은 탐색 깊이는 depth-1
+                */
+                depth - 1,
+
+                -Infinity,
+                Infinity,
+
+                true,
+                1
+            );
+
+
+        if (
+            score <
+            bestScore - 0.01
+        ) {
+
+            bestScore = score;
+            bestMove = move;
+            bestMoves = [move];
+        }
+        else if (
+            Math.abs(
+                score - bestScore
+            ) < 0.01
+        ) {
+
+            bestMoves.push(move);
+        }
+
+
+        if (aiSearchAborted) {
+            break;
+        }
+    }
+
+
+    if (bestMoves.length > 0) {
+
+        return bestMoves[
+            Math.floor(
+                Math.random() *
+                bestMoves.length
+            )
+        ];
+    }
+
+
+    return bestMove;
+}
+
+
+/* =========================================================
+   33. AI 실행 예약
+========================================================= */
+
+function scheduleAI() {
+
+    if (
+        game.gameOver ||
+        game.turn !== BLACK
+    ) {
+        return;
+    }
+
+
+    aiThinking = true;
+
+    selectedSquare = null;
+    selectedMoves = [];
+
+    renderAll();
+
+
+    /*
+        AI가 바로 움직이지 않고
+        300~700ms 정도 생각하는 듯 보이게 한다.
+    */
+    const visualDelay =
+        300 +
+        Math.floor(
+            Math.random() * 401
+        );
+
+
+    if (aiTimer) {
+
+        clearTimeout(aiTimer);
+    }
+
+
+    aiTimer = setTimeout(
+        function () {
+
+            /*
+                먼저 UI를 그린 뒤 계산하도록
+                한 번 더 이벤트 루프에 양보한다.
+            */
+            setTimeout(
+                function () {
+
+                    if (
+                        game.gameOver ||
+                        game.turn !== BLACK
+                    ) {
+
+                        aiThinking = false;
+                        renderAll();
+                        return;
+                    }
+
+
+                    const bestMove =
+                        findBestAIMove();
+
+
+                    aiThinking = false;
+
+
+                    if (!bestMove) {
+
+                        renderAll();
+                        checkGameEnd();
+                        return;
+                    }
+
+
+                    makeRealMove(
+                        bestMove
+                    );
+
+                },
+                20
+            );
+
+        },
+        visualDelay
+    );
+}
+
+
+/* =========================================================
+   34. 새 게임
+========================================================= */
+
+function newGame() {
+
+    if (aiTimer) {
+        clearTimeout(aiTimer);
+        aiTimer = null;
+    }
+
+    game =
+        createInitialGame();
+
+    selectedSquare = null;
+    selectedMoves = [];
+
+    aiThinking = false;
+
+    pendingPromotion = null;
+
+    resultModal
+        .classList
+        .remove("show");
+
+    promotionModal
+        .classList
+        .remove("show");
+
+    renderAll();
+}
+
+
+/* =========================================================
+   35. 무르기
+========================================================= */
+
+function undoMove() {
+
+    if (
+        aiThinking ||
+        pendingPromotion ||
+        game.undoStack.length === 0
+    ) {
+        return;
+    }
+
+
+    if (aiTimer) {
+        clearTimeout(aiTimer);
+        aiTimer = null;
+    }
+
+
+    /*
+        사용자 vs AI 게임이므로
+        가능하면 사용자와 AI의 최근 한 수씩,
+        즉 한 턴 전체를 되돌린다.
+
+        예:
+        사용자 e4
+        AI e5
+
+        → 무르기
+        두 수 모두 취소하고 다시 사용자 차례.
+    */
+
+    let snapshot =
+        game.undoStack.pop();
+
+
+    restoreSnapshot(snapshot);
+
+
+    /*
+        복원 후 AI 차례가 되었다는 것은
+        바로 직전 사용자의 수까지만 되돌아간 상태이다.
+
+        그 이전 스냅샷이 있으면
+        AI 수까지 함께 되돌려 사용자의 차례로 만든다.
+    */
+    if (
+        game.turn === BLACK &&
+        game.undoStack.length > 0
+    ) {
+
+        snapshot =
+            game.undoStack.pop();
+
+        restoreSnapshot(snapshot);
+    }
+
+
+    game.gameOver = false;
+
+    aiThinking = false;
+
+    selectedSquare = null;
+    selectedMoves = [];
+
+    resultModal
+        .classList
+        .remove("show");
+
+    renderAll();
+}
+
+
+/* =========================================================
+   36. 결과 팝업
+========================================================= */
+
+function showResult(
+    title,
+    message
+) {
+
+    aiThinking = false;
+
+    resultTitle.textContent =
+        title;
+
+    resultMessage.textContent =
+        message;
+
+    resultModal
+        .classList
+        .add("show");
+
+    updateStatus();
+}
+
+
+/* =========================================================
+   37. 버튼 이벤트
+========================================================= */
+
+newGameBtn.addEventListener(
+    "click",
+    newGame
+);
+
+restartBtn.addEventListener(
+    "click",
+    newGame
+);
+
+undoBtn.addEventListener(
+    "click",
+    undoMove
+);
+
+
+/*
+    난이도 변경은 현재 게임에서도 즉시 적용된다.
+*/
+difficultySelect.addEventListener(
+    "change",
+    function () {
+
+        if (
+            game &&
+            !game.gameOver &&
+            game.turn === WHITE
+        ) {
+
+            statusText.textContent =
+                "AI 난이도가 변경되었습니다.";
+        }
+    }
+);
+
+
+/* =========================================================
+   38. 키보드 접근성 보조
+========================================================= */
+
+/*
+    PC에서 Esc를 누르면
+    선택된 말을 취소한다.
+*/
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (event.key === "Escape") {
+
+            if (
+                pendingPromotion ||
+                game.gameOver
+            ) {
+                return;
+            }
+
+            selectedSquare = null;
+            selectedMoves = [];
+
+            renderBoard();
+        }
+    }
+);
+
+
+/* =========================================================
+   39. 모바일 확대 문제 최소화
+========================================================= */
+
+/*
+    일부 모바일 환경에서 빠르게 버튼을 두 번 눌렀을 때
+    더블 탭 확대가 일어나는 것을 줄인다.
+
+    브라우저의 일반적인 접근성 확대 기능은 막지 않고,
+    게임 UI의 연속 터치만 안정화한다.
+*/
+let lastTouchEnd = 0;
+
+document.addEventListener(
+    "touchend",
+    function (event) {
+
+        const now =
+            Date.now();
+
+        /*
+            게임판과 버튼에서만
+            지나치게 빠른 연속 터치 방지.
+        */
+        const target =
+            event.target;
+
+        const interactive =
+            target.closest(
+                ".board, button, select"
+            );
+
+        if (
+            interactive &&
+            now - lastTouchEnd <= 250
+        ) {
+
+            /*
+                preventDefault를 무조건 쓰면
+                일부 Safari에서 클릭 이벤트까지 막을 수 있으므로
+                touch-action CSS를 주 방식으로 사용하고
+                여기서는 시간만 기록한다.
+            */
+        }
+
+        lastTouchEnd = now;
+
+    },
+    {
+        passive:true
+    }
+);
+
+
+/* =========================================================
+   40. 초기 게임 시작
+========================================================= */
+
+newGame();
+
+</script>
+
+</body>
+</html>

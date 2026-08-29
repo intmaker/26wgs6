@@ -452,6 +452,16 @@ main {
    게임별 배경색
 ======================================== */
 
+.game0 .game-icon {
+    background:
+        linear-gradient(
+            135deg,
+            #232526,
+            #6b7280,
+            #d4af37
+        );
+}
+
 .game1 .game-icon {
     background:
         linear-gradient(
@@ -568,6 +578,68 @@ main {
 .game16 .game-icon {
     background: linear-gradient(135deg, #56c271, #34a853, #7ed957);
 }
+
+.game17 .game-icon {
+    background: linear-gradient(135deg, #8ec5fc, #e0c3fc);
+}
+
+.game18 .game-icon {
+    background: linear-gradient(135deg, #f6d365, #fda085);
+}
+
+.game19 .game-icon {
+    background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+}
+
+.game20 .game-icon {
+    background: linear-gradient(135deg, #84fab0, #8fd3f4);
+}
+
+.game21 .game-icon {
+    background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+}
+
+.game22 .game-icon {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+}
+
+.game23 .game-icon {
+    background: linear-gradient(135deg, #f6d365, #fda085);
+}
+
+.game24 .game-icon {
+    background: linear-gradient(135deg, #c471f5, #fa71cd);
+}
+
+.game25 .game-icon {
+    background: linear-gradient(135deg, #3a86ff, #7b2ff7);
+}
+
+.game26 .game-icon {
+    background: linear-gradient(135deg, #45f1c2, #54a0ff);
+}
+
+/* GAME 27–46 아이콘 그라데이션 */
+.game27 .game-icon { background: linear-gradient(135deg, #00c6ff, #5b4bff); }
+.game28 .game-icon { background: linear-gradient(135deg, #ff9966, #ff5e62); }
+.game29 .game-icon { background: linear-gradient(135deg, #36d1dc, #5b86e5); }
+.game30 .game-icon { background: linear-gradient(135deg, #00b4db, #0083b0); }
+.game31 .game-icon { background: linear-gradient(135deg, #f7971e, #ffd200); }
+.game32 .game-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
+.game33 .game-icon { background: linear-gradient(135deg, #11998e, #38ef7d); }
+.game34 .game-icon { background: linear-gradient(135deg, #434343, #8e9eab); }
+.game35 .game-icon { background: linear-gradient(135deg, #fce38a, #f38181); }
+.game36 .game-icon { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+.game37 .game-icon { background: linear-gradient(135deg, #89f7fe, #66a6ff); }
+.game38 .game-icon { background: linear-gradient(135deg, #8e2de2, #4a00e0); }
+.game39 .game-icon { background: linear-gradient(135deg, #fc5c7d, #6a82fb); }
+.game40 .game-icon { background: linear-gradient(135deg, #30cfd0, #330867); }
+.game41 .game-icon { background: linear-gradient(135deg, #12c2e9, #c471ed, #f64f59); }
+.game42 .game-icon { background: linear-gradient(135deg, #a8edea, #fed6e3); }
+.game43 .game-icon { background: linear-gradient(135deg, #ff416c, #ffb347); }
+.game44 .game-icon { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+.game45 .game-icon { background: linear-gradient(135deg, #654ea3, #eaafc8); }
+.game46 .game-icon { background: linear-gradient(135deg, #f857a6, #ff5858); }
 
 /* ========================================
    게임 정보
@@ -1094,8 +1166,8 @@ footer strong {
             🕹️ MY GAME COLLECTION
         </h2>
 
-        <span class="game-count">
-            16 GAMES
+        <span class="game-count" id="gameCount">
+            47 GAMES
         </span>
 
     </div>
@@ -1103,6 +1175,44 @@ footer strong {
 
 
     <div class="game-grid">
+
+
+        <!-- =================================
+             GAME 0
+        ================================== -->
+
+        <article
+            class="game-card game0"
+            data-link="00_체스.html"
+        >
+
+            <div class="game-icon">
+
+                <div class="icon">
+                    ♟️
+                </div>
+
+            </div>
+
+
+            <div class="game-info">
+
+                <h3 class="game-title">
+                    ♟️ AI 체스
+                </h3>
+
+                <p class="game-description">
+                    백으로 플레이하며 인터넷 없이
+                    인공지능 흑과 체스 대결을 펼쳐보세요!
+                </p>
+
+                <button class="play-button">
+                    ▶ PLAY
+                </button>
+
+            </div>
+
+        </article>
 
 
         <!-- =================================
@@ -1667,6 +1777,259 @@ footer strong {
         </article>
 
 
+        <!-- =================================
+             GAME 17
+        ================================== -->
+
+        <article
+            class="game-card game17"
+            data-link="17_별따기.html"
+        >
+            <div class="game-icon">
+                <div class="icon">🌟</div>
+            </div>
+
+            <div class="game-info">
+                <h3 class="game-title">🌟 별따기</h3>
+                <p class="game-description">
+                    하늘에서 떠 있는 별을 빠르게 눌러
+                    점수를 올려보세요!
+                </p>
+                <button class="play-button">▶ PLAY</button>
+            </div>
+        </article>
+
+
+        <!-- =================================
+             GAME 18
+        ================================== -->
+
+        <article
+            class="game-card game18"
+            data-link="18_숫자폭탄.html"
+        >
+            <div class="game-icon">
+                <div class="icon">🔢</div>
+            </div>
+
+            <div class="game-info">
+                <h3 class="game-title">🔢 숫자 폭탄</h3>
+                <p class="game-description">
+                    계산 문제를 맞혀서
+                    점수를 쌓아보세요!
+                </p>
+                <button class="play-button">▶ PLAY</button>
+            </div>
+        </article>
+
+
+        <!-- =================================
+             GAME 19
+        ================================== -->
+
+        <article
+            class="game-card game19"
+            data-link="19_도형스택.html"
+        >
+            <div class="game-icon">
+                <div class="icon">📐</div>
+            </div>
+
+            <div class="game-info">
+                <h3 class="game-title">📐 도형 스택</h3>
+                <p class="game-description">
+                    움직이는 블록을 정확히 멈춰서
+                    높게 쌓아보세요!
+                </p>
+                <button class="play-button">▶ PLAY</button>
+            </div>
+        </article>
+
+
+        <!-- =================================
+             GAME 20
+        ================================== -->
+
+        <article
+            class="game-card game20"
+            data-link="20_미로탈출.html"
+        >
+            <div class="game-icon">
+                <div class="icon">🧭</div>
+            </div>
+
+            <div class="game-info">
+                <h3 class="game-title">🧭 미로 탈출</h3>
+                <p class="game-description">
+                    방향을 잘 정해 출구까지
+                    빠르게 도착해 보세요!
+                </p>
+                <button class="play-button">▶ PLAY</button>
+            </div>
+        </article>
+
+
+        <!-- =================================
+             GAME 21
+        ================================== -->
+
+        <article
+            class="game-card game21"
+            data-link="21_풍선터뜨리기.html"
+        >
+            <div class="game-icon">
+                <div class="icon">🎈</div>
+            </div>
+
+            <div class="game-info">
+                <h3 class="game-title">🎈 풍선 터뜨리기</h3>
+                <p class="game-description">
+                    떠 있는 풍선을 해치우며
+                    높은 점수를 만들어요!
+                </p>
+                <button class="play-button">▶ PLAY</button>
+            </div>
+        </article>
+
+
+        <!-- =================================
+             GAME 22
+        ================================== -->
+
+        <article
+            class="game-card game22"
+            data-link="22_빙고게임.html"
+        >
+            <div class="game-icon">
+                <div class="icon">🎯</div>
+            </div>
+
+            <div class="game-info">
+                <h3 class="game-title">🎯 빙고 게임</h3>
+                <p class="game-description">
+                    숫자를 선택해 빙고 줄을
+                    완성해 보세요!
+                </p>
+                <button class="play-button">▶ PLAY</button>
+            </div>
+        </article>
+
+
+        <!-- =================================
+             GAME 23
+        ================================== -->
+
+        <article
+            class="game-card game23"
+            data-link="23_동전모으기.html"
+        >
+            <div class="game-icon">
+                <div class="icon">🪙</div>
+            </div>
+
+            <div class="game-info">
+                <h3 class="game-title">🪙 동전 모으기</h3>
+                <p class="game-description">
+                    떠다니는 동전을 빠르게 눌러
+                    점수를 쌓아보세요!
+                </p>
+                <button class="play-button">▶ PLAY</button>
+            </div>
+        </article>
+
+
+        <!-- =================================
+             GAME 24
+        ================================== -->
+
+        <article
+            class="game-card game24"
+            data-link="24_순서맞추기.html"
+        >
+            <div class="game-icon">
+                <div class="icon">🔢</div>
+            </div>
+
+            <div class="game-info">
+                <h3 class="game-title">🔢 순서 맞추기</h3>
+                <p class="game-description">
+                    숫자를 올바른 순서대로 누르고
+                    연속 성공을 노려보세요!
+                </p>
+                <button class="play-button">▶ PLAY</button>
+            </div>
+        </article>
+
+
+        <!-- =================================
+             GAME 25
+        ================================== -->
+
+        <article
+            class="game-card game25"
+            data-link="25_색상치기.html"
+        >
+            <div class="game-icon">
+                <div class="icon">🎨</div>
+            </div>
+
+            <div class="game-info">
+                <h3 class="game-title">🎨 색상치기</h3>
+                <p class="game-description">
+                    글자의 색과 이름을 맞춰서
+                    빠르게 정답을 고르세요!
+                </p>
+                <button class="play-button">▶ PLAY</button>
+            </div>
+        </article>
+
+
+        <!-- =================================
+             GAME 26
+        ================================== -->
+
+        <article
+            class="game-card game26"
+            data-link="26_스피드타자.html"
+        >
+            <div class="game-icon">
+                <div class="icon">⌨️</div>
+            </div>
+
+            <div class="game-info">
+                <h3 class="game-title">⌨️ 스피드 타자</h3>
+                <p class="game-description">
+                    제시된 단어를 빠르게 입력해
+                    고득점을 목표로 하세요!
+                </p>
+                <button class="play-button">▶ PLAY</button>
+            </div>
+        </article>
+
+
+        <!-- GAME 27–46: 새로운 미니 아케이드 -->
+        <article class="game-card game27" data-link="27_네온레이서.html"><div class="game-icon"><div class="icon">🏎️</div></div><div class="game-info"><h3 class="game-title">🏎️ 네온 레이서</h3><p class="game-description">차선을 바꿔 장애물을 피하며 질주하세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game28" data-link="28_벽돌깨기.html"><div class="game-icon"><div class="icon">🧱</div></div><div class="game-info"><h3 class="game-title">🧱 벽돌깨기</h3><p class="game-description">공을 받아 네온 벽돌을 모두 부수세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game29" data-link="29_슈퍼골키퍼.html"><div class="game-icon"><div class="icon">🥅</div></div><div class="game-info"><h3 class="game-title">🥅 슈퍼 골키퍼</h3><p class="game-description">날아오는 슛을 빠르게 막아내세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game30" data-link="30_심해낚시.html"><div class="game-icon"><div class="icon">🎣</div></div><div class="game-info"><h3 class="game-title">🎣 심해 낚시</h3><p class="game-description">초록 구간을 노려 희귀 물고기를 낚으세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game31" data-link="31_바람의궁수.html"><div class="game-icon"><div class="icon">🏹</div></div><div class="game-info"><h3 class="game-title">🏹 바람의 궁수</h3><p class="game-description">움직이는 과녁의 중심을 정확히 맞히세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game32" data-link="32_금고해제.html"><div class="game-icon"><div class="icon">🔐</div></div><div class="game-info"><h3 class="game-title">🔐 금고 해제</h3><p class="game-description">다이얼을 목표 숫자에 정확히 멈추세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game33" data-link="33_파이프연결.html"><div class="game-icon"><div class="icon">🔧</div></div><div class="game-info"><h3 class="game-title">🔧 파이프 연결</h3><p class="game-description">파이프를 회전해 끊어진 물길을 이으세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game34" data-link="34_지뢰찾기.html"><div class="game-icon"><div class="icon">💣</div></div><div class="game-info"><h3 class="game-title">💣 지뢰찾기</h3><p class="game-description">숫자 단서로 안전한 칸을 찾아내세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game35" data-link="35_라이트아웃.html"><div class="game-icon"><div class="icon">💡</div></div><div class="game-info"><h3 class="game-title">💡 라이트 아웃</h3><p class="game-description">연쇄 전환을 이용해 모든 불을 끄세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game36" data-link="36_네온스네이크.html"><div class="game-icon"><div class="icon">🐍</div></div><div class="game-info"><h3 class="game-title">🐍 네온 스네이크</h3><p class="game-description">에너지를 먹고 꼬리를 피해 성장하세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game37" data-link="37_구름점프.html"><div class="game-icon"><div class="icon">☁️</div></div><div class="game-info"><h3 class="game-title">☁️ 구름 점프</h3><p class="game-description">구름 발판을 밟으며 하늘로 올라가세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game38" data-link="38_궤도탈출.html"><div class="game-icon"><div class="icon">🪐</div></div><div class="game-info"><h3 class="game-title">🪐 궤도 탈출</h3><p class="game-description">정확한 순간 다음 행성으로 이동하세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game39" data-link="39_동굴비행.html"><div class="game-icon"><div class="icon">🐦</div></div><div class="game-info"><h3 class="game-title">🐦 동굴 비행</h3><p class="game-description">날갯짓으로 좁은 동굴을 통과하세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game40" data-link="40_에어하키.html"><div class="game-icon"><div class="icon">🏒</div></div><div class="game-info"><h3 class="game-title">🏒 에어 하키</h3><p class="game-description">퍽을 튕겨 상대 골문을 공략하세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game41" data-link="41_레이저미러.html"><div class="game-icon"><div class="icon">🔭</div></div><div class="game-info"><h3 class="game-title">🔭 레이저 미러</h3><p class="game-description">거울을 돌려 빛을 목표까지 보내세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game42" data-link="42_보석스왑.html"><div class="game-icon"><div class="icon">💎</div></div><div class="game-info"><h3 class="game-title">💎 보석 스왑</h3><p class="game-description">보석을 바꿔 같은 색 세 개를 만드세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game43" data-link="43_과일슬라이스.html"><div class="game-icon"><div class="icon">🍉</div></div><div class="game-info"><h3 class="game-title">🍉 과일 슬라이스</h3><p class="game-description">폭탄을 피해 신선한 과일만 베세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game44" data-link="44_주차마스터.html"><div class="game-icon"><div class="icon">🅿️</div></div><div class="game-info"><h3 class="game-title">🅿️ 주차 마스터</h3><p class="game-description">벽을 피해 지정된 공간에 주차하세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game45" data-link="45_달착륙선.html"><div class="game-icon"><div class="icon">🚀</div></div><div class="game-info"><h3 class="game-title">🚀 달 착륙선</h3><p class="game-description">추진력을 조절해 부드럽게 착륙하세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game46" data-link="46_균형다리.html"><div class="game-icon"><div class="icon">⚖️</div></div><div class="game-info"><h3 class="game-title">⚖️ 균형 다리</h3><p class="game-description">좌우 균형을 잡아 화물을 지켜내세요!</p><button class="play-button">▶ PLAY</button></div></article>
+
+
     </div>
 
 </main>
@@ -1755,6 +2118,19 @@ const gameCards =
     document.querySelectorAll(
         ".game-card"
     );
+
+
+/* 등록된 게임 카드 수를 자동으로 표시 */
+
+const gameCount =
+    document.getElementById(
+        "gameCount"
+    );
+
+if (gameCount) {
+    gameCount.textContent =
+        `${gameCards.length} GAMES`;
+}
 
 
 /* 게임 실행 화면 */

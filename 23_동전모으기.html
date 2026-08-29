@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>동전 모으기</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #1f2937, #f59e0b, #facc15);
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+    .game {
+      width: min(92vw, 700px);
+      background: rgba(255,255,255,0.1);
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.25);
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    h1 { margin: 0; font-size: clamp(24px, 4vw, 34px); }
+    .badge { background: rgba(255,255,255,0.12); padding: 8px 12px; border-radius: 999px; font-weight: 800; }
+    .field {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      height: 420px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.2), rgba(0,0,0,0.4));
+      border: 2px solid rgba(255,255,255,0.18);
+    }
+    .coin {
+      position: absolute;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 25%, #fff7c2, #fbbf24 50%, #d97706);
+      border: 3px solid rgba(255,255,255,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: #78350f;
+      pointer-events:none;
+      animation: bob 1.2s ease-in-out infinite alternate;
+    }
+    .player{position:absolute;width:44px;height:44px;border-radius:14px;background:#38bdf8;display:grid;place-items:center;font-size:25px;box-shadow:0 7px 18px #0007;z-index:2;transition:left .06s linear,top .06s linear}
+    @keyframes bob {
+      from { transform: translateY(0); }
+      to { transform: translateY(-6px); }
+    }
+    .message {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      min-height: 28px;
+    }
+    #startBtn { display:block; margin:12px auto 0; border:0; border-radius:12px; padding:11px 20px; background:linear-gradient(135deg,#fde047,#fb923c); font-weight:900; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <div class="game">
+    <div class="top">
+      <h1>🪙 동전 모으기</h1>
+      <div class="badge">점수: <span id="score">0</span></div>
+    </div>
+    <div class="field" id="field"><div class="player" id="player">🏃</div></div>
+    <div class="message" id="message">방향키나 화면 터치로 캐릭터를 움직이세요!</div>
+    <button id="startBtn">게임 시작</button>
+  </div>
+
+  <script>
+    const field = document.getElementById('field');
+    const scoreEl = document.getElementById('score');
+    const messageEl = document.getElementById('message');
+    const startBtn = document.getElementById('startBtn');
+
+    let score = 0;
+    let timer = null;
+    let px=20,py=20,playing=false,keys={};
+
+    function createCoin() {
+      const coin = document.createElement('div');
+      coin.className = 'coin';
+      coin.textContent = '₩';
+      const left = Math.random() * (field.clientWidth - 60);
+      const top = Math.random() * (field.clientHeight - 60);
+      coin.style.left = `${left}px`;
+      coin.style.top = `${top}px`;
+      field.appendChild(coin);
+    }
+
+    function startGame() {
+      score = 0;
+      field.innerHTML = '<div class="player" id="player">🏃</div>';
+      px=20;py=20;playing=true;startBtn.disabled=true;startBtn.textContent='게임 진행 중';
+      scoreEl.textContent = score;
+      messageEl.textContent = '직접 움직여 동전을 모으세요!';
+      for (let i = 0; i < 10; i++) createCoin();
+      timer = setInterval(() => {
+        if (field.children.length < 12) createCoin();
+      }, 700);
+      setTimeout(() => {
+        clearInterval(timer);
+        playing=false;startBtn.disabled=false;startBtn.textContent='다시 시작';messageEl.textContent = `게임 종료! 점수는 ${score}점입니다.`;
+      }, 15000);
+    }
+
+    function loop(){if(playing){const s=4;if(keys.ArrowLeft||keys.a)px-=s;if(keys.ArrowRight||keys.d)px+=s;if(keys.ArrowUp||keys.w)py-=s;if(keys.ArrowDown||keys.s)py+=s;px=Math.max(0,Math.min(field.clientWidth-44,px));py=Math.max(0,Math.min(field.clientHeight-44,py));const p=field.querySelector('.player');if(p){p.style.left=px+'px';p.style.top=py+'px'}field.querySelectorAll('.coin').forEach(c=>{const x=parseFloat(c.style.left),y=parseFloat(c.style.top);if(px<x+52&&px+44>x&&py<y+52&&py+44>y){c.remove();score++;scoreEl.textContent=score;messageEl.textContent='동전 획득! 🪙'}})}requestAnimationFrame(loop)}
+    addEventListener('keydown',e=>keys[e.key]=true);addEventListener('keyup',e=>keys[e.key]=false);field.addEventListener('pointerdown',e=>{const r=field.getBoundingClientRect();px=e.clientX-r.left-22;py=e.clientY-r.top-22});loop();
+
+    startBtn.addEventListener('click', startGame);
+  </script>
+</body>
+</html>

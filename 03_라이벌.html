@@ -290,6 +290,7 @@
         }
 
         #mobile-controls { display: none; }
+        .mobile-guide { display: none; }
 
         @media (hover: none), (pointer: coarse) {
             #game-container { border-radius: 0; }
@@ -307,6 +308,8 @@
             .screen-overlay h1 { font-size: clamp(1.45rem, 6vw, 3rem); margin-bottom: 1%; }
             .screen-overlay p { font-size: clamp(.72rem, 2.4vw, 1.1rem); margin-bottom: 2%; }
             .guide-box { padding: 2% 3%; margin-bottom: 3%; font-size: clamp(.65rem, 2vw, .95rem); }
+            .desktop-guide { display: none; }
+            .mobile-guide { display: block; text-align: center; }
             .btn { padding: 2.2% 6%; font-size: clamp(.8rem, 2.5vw, 1.2rem); }
             #minimap { width: 13%; height: auto; top: 2%; left: 2%; }
             .ui-layer { padding: 2%; }
@@ -314,6 +317,14 @@
             .stats-box, .hp-box, .weapon-box { padding: 1% 2%; }
             .stats-box div, .hp-box, .weapon-box .ammo { font-size: clamp(.65rem, 2.3vw, 1.2rem); }
             .weapon-box .w-name { font-size: clamp(.55rem, 1.7vw, .9rem); }
+        }
+
+        @media (hover: none) and (orientation: portrait), (pointer: coarse) and (orientation: portrait) {
+            .screen-overlay { padding: 2%; }
+            .screen-overlay h1 { font-size: clamp(1.15rem, 5vw, 1.7rem); }
+            .screen-overlay p { margin-bottom: 1.5%; line-height: 1.25; }
+            .guide-box { margin-bottom: 1.5%; padding: 1.5% 2%; line-height: 1.25; }
+            .btn { flex: 0 0 auto; padding: 1.8% 7%; }
         }
     </style>
 </head>
@@ -365,13 +376,15 @@
             <h1>AI FPS ARENA</h1>
             <p>적 총 20마리를 처치하여 승리하세요! 탄약이 다 떨어지면 자동으로 재장전됩니다.</p>
             <div class="guide-box">
-                <b>[조작 방법]</b><br>
-                • 이동 : W, A, S, D | 달리기 : Shift<br>
-                • 시점 변경 : 마우스 이동<br>
-                • 사격 : 마우스 좌클릭 | 수동 재장전 : R (탄약 소진 시 자동 재장전)<br>
-                • 저격총(3번) 장착 후 **우클릭** : 스코프 줌인 / 줌아웃 토글<br>
-                • 무기 교체 : 1 (돌격소총), 2 (샷건), 3 (저격총)<br>
-                • 모바일 : 왼쪽 스틱 이동 · 오른쪽 화면 드래그 조준 · FIRE 사격
+                <div class="desktop-guide">
+                    <b>[조작 방법]</b><br>
+                    • 이동 : W, A, S, D | 달리기 : Shift<br>
+                    • 시점 변경 : 마우스 이동<br>
+                    • 사격 : 마우스 좌클릭 | 수동 재장전 : R (탄약 소진 시 자동 재장전)<br>
+                    • 저격총(3번) 장착 후 우클릭 : 스코프 줌인 / 줌아웃 토글<br>
+                    • 무기 교체 : 1 (돌격소총), 2 (샷건), 3 (저격총)
+                </div>
+                <div class="mobile-guide"><b>[모바일 조작]</b><br>왼쪽 스틱 이동 · 오른쪽 드래그 조준 · FIRE 사격</div>
             </div>
             <button class="btn" onclick="startGame()">START GAME</button>
         </div>
