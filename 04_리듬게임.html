@@ -138,6 +138,7 @@
       font-weight: 900;
       letter-spacing: 4px;
       background: linear-gradient(135deg, #ff0055, #00e5ff, #00ff66);
+      background-clip: text;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       text-shadow: 0 0 25px rgba(0, 229, 255, 0.5);
@@ -147,6 +148,34 @@
       letter-spacing: 2px;
       color: #a0a5c0;
       margin-top: 6px;
+    }
+
+    .song-select {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      max-width: 560px;
+    }
+    .song-btn {
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.04);
+      color: #d5d9ee;
+      border-radius: 999px;
+      padding: 9px 16px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .song-btn.selected {
+      background: linear-gradient(135deg, #ff0055, #00e5ff);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 0 18px rgba(0, 229, 255, 0.4);
+      transform: translateY(-1px);
     }
 
     /* 난이도 선택 버튼 */
@@ -255,6 +284,7 @@
         <h1 class="main-title">BEAT STEP</h1>
         <p class="sub-title">리듬을 타고 STEP!</p>
       </div>
+      <div id="song-select" class="song-select" aria-label="음악 선택"></div>
       <div class="difficulty-select">
         <button class="diff-btn" data-diff="easy">EASY</button>
         <button class="diff-btn selected" data-diff="normal">NORMAL</button>
@@ -327,10 +357,16 @@
       MISS:    { name: 'MISS',     score: 0,    window: 0.260, color: '#666688', life: -12 }
     };
 
-    const BPM = 132;
-    const SECONDS_PER_BEAT = 60 / BPM;
+    const DEFAULT_BPM = 132;
     const SONG_BEATS = 128; // 총 32마디 곡 (약 58초)
-    const TARGET_Y_RATIO = 0.18; // 판정선 높이 비율 (상단 18%)
+    const TARGET_Y_RATIO = 0.82; // 판정선 높이 비율 (하단 18% 영역)
+
+    const SONG_LIBRARY = [
+      { id: 'neon', name: 'Neon Pulse', bpm: 132, accent: '#00e5ff' },
+      { id: 'sunset', name: 'Sunset Drift', bpm: 118, accent: '#ff8a65' },
+      { id: 'arcade', name: 'Arcade Rush', bpm: 146, accent: '#00ff66' },
+      { id: 'midnight', name: 'Midnight Echo', bpm: 124, accent: '#9c6bff' }
+    ];
 
     // --- 2. 오디오 합성 엔진 (Web Audio API) ---
     class RhythmAudioEngine {
@@ -339,6 +375,14 @@
         this.masterGain = null;
         this.isMuted = false;
         this.scheduledBeats = 0;
+        this.bpm = DEFAULT_BPM;
+        this.songName = 'Neon Pulse';
+      }
+
+      setSong(song) {
+        if (!song) return;
+        this.bpm = song.bpm || DEFAULT_BPM;
+        this.songName = song.name || 'Neon Pulse';
       }
 
       init() {
@@ -449,9 +493,10 @@
 
       // 오디오 룩어헤드 스케줄러 (BPM 동기화 음악)
       scheduleMusic(gameStartTime, currentAudioTime) {
+        const secondsPerBeat = 60 / this.bpm;
         const lookahead = 0.2; // 200ms 앞서 스케줄
-        while ((this.scheduledBeats * SECONDS_PER_BEAT) < (currentAudioTime - gameStartTime + lookahead) && this.scheduledBeats < SONG_BEATS) {
-          const beatTime = gameStartTime + this.scheduledBeats * SECONDS_PER_BEAT;
+        while ((this.scheduledBeats * secondsPerBeat) < (currentAudioTime - gameStartTime + lookahead) && this.scheduledBeats < SONG_BEATS) {
+          const beatTime = gameStartTime + this.scheduledBeats * secondsPerBeat;
           const beatNum = this.scheduledBeats % 16;
           const measure = Math.floor(this.scheduledBeats / 16);
 
@@ -460,13 +505,13 @@
             if (beatNum % 4 === 0) this.playKick(beatTime);
             if (beatNum % 4 === 2) this.playSnare(beatTime);
             this.playHihat(beatTime);
-            if (beatNum % 2 === 1) this.playHihat(beatTime + SECONDS_PER_BEAT * 0.5);
+            if (beatNum % 2 === 1) this.playHihat(beatTime + secondsPerBeat * 0.5);
 
             // 신스 멜로디 / 베이스라인 (펜타토닉 음계 기반 전개)
             const notes = [220, 261.63, 293.66, 329.63, 392.00]; // A, C, D, E, G
             const pitch = notes[(this.scheduledBeats * 3) % notes.length];
             const multiplier = measure >= 4 ? 2 : 1; // 후반 클라이맥스 옥타브업
-            this.playSynth(beatTime, pitch * multiplier, SECONDS_PER_BEAT * 0.8);
+            this.playSynth(beatTime, pitch * multiplier, secondsPerBeat * 0.8);
           }
           this.scheduledBeats++;
         }
@@ -478,19 +523,20 @@
     }
 
     // --- 3. 차트 생성기 (리듬 패턴 빌더) ---
-    function generateChart(difficulty) {
+    function generateChart(difficulty, bpm = DEFAULT_BPM) {
       const notes = [];
       let idCounter = 0;
       const totalMeasures = 8; // 8마디 루프 x 4회 = 32마디
       const speedMap = { easy: 1.4, normal: 1.0, hard: 0.75 }; // 화면 이동 시간(초)
       const travelDuration = speedMap[difficulty] || 1.0;
+      const beatDuration = 60 / bpm;
 
       for (let m = 0; m < 4; m++) {
         for (let b = 0; b < 32; b++) {
           const currentBeat = m * 32 + b;
           if (currentBeat < 4 || currentBeat > SONG_BEATS - 4) continue; // 앞뒤 여유 1마디
 
-          const hitTime = currentBeat * SECONDS_PER_BEAT;
+          const hitTime = currentBeat * beatDuration;
           const intensity = m; // 난이도 점진적 상승
 
           // 1) 기본 4비트 노트
@@ -524,7 +570,7 @@
 
           // 3) 롱 노트
           if (b % 16 === 12 && intensity >= 1) {
-            const holdDuration = SECONDS_PER_BEAT * (difficulty === 'hard' ? 3 : 2);
+            const holdDuration = beatDuration * (difficulty === 'hard' ? 3 : 2);
             notes.push({
               id: idCounter++,
               lane: (m + 1) % 4,
@@ -564,12 +610,14 @@
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d', { alpha: false });
         this.audio = new RhythmAudioEngine();
+        this.song = SONG_LIBRARY[0];
 
         // 게임 상태
         this.state = 'TITLE'; // TITLE, COUNTDOWN, PLAYING, PAUSED, RESULT, GAMEOVER
         this.difficulty = 'normal';
         this.notes = [];
         this.travelDuration = 1.0;
+        this.beatDuration = 60 / this.song.bpm;
         
         // 동기화 타이머
         this.gameTime = 0;
@@ -623,6 +671,7 @@
           diffChangeBtn: document.getElementById('diff-change-btn'),
           diffBtns: document.querySelectorAll('.diff-btn[data-diff]'),
           touchBtns: document.querySelectorAll('.touch-btn'),
+          songSelect: document.getElementById('song-select'),
           resScore: document.getElementById('res-score'),
           resCombo: document.getElementById('res-combo'),
           resAcc: document.getElementById('res-acc'),
@@ -632,6 +681,8 @@
           resMiss: document.getElementById('res-miss'),
           rankDisplay: document.getElementById('rank-display')
         };
+
+        this.buildSongSelector();
 
         // 난이도 선택 리스너
         this.ui.diffBtns.forEach(btn => {
@@ -666,6 +717,25 @@
         });
       }
 
+      buildSongSelector() {
+        this.ui.songSelect.innerHTML = '';
+        SONG_LIBRARY.forEach(song => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'song-btn';
+          btn.textContent = song.name;
+          btn.dataset.songId = song.id;
+          if (this.song && this.song.id === song.id) btn.classList.add('selected');
+          btn.addEventListener('click', () => {
+            this.song = song;
+            this.beatDuration = 60 / song.bpm;
+            this.audio.setSong(song);
+            this.ui.songSelect.querySelectorAll('.song-btn').forEach(el => el.classList.toggle('selected', el.dataset.songId === song.id));
+          });
+          this.ui.songSelect.appendChild(btn);
+        });
+      }
+
       showScreen(screenName) {
         ['startScreen', 'pauseScreen', 'resultScreen'].forEach(key => {
           if (key === screenName) this.ui[key].classList.remove('hidden');
@@ -687,7 +757,7 @@
           this.trackWidth = this.laneWidth * 4;
           this.trackX = (this.width - this.trackWidth) / 2;
           this.targetY = this.height * TARGET_Y_RATIO;
-          this.spawnY = this.height + 60;
+          this.spawnY = -60;
         };
         window.addEventListener('resize', resize);
         resize();
@@ -895,8 +965,9 @@
       // --- 게임 흐름 제어 ---
       startCountdown() {
         this.audio.init();
+        this.audio.setSong(this.song);
         this.audio.resetScheduler();
-        const chart = generateChart(this.difficulty);
+        const chart = generateChart(this.difficulty, this.song.bpm);
         this.notes = chart.notes;
         this.travelDuration = chart.travelDuration;
 
@@ -1104,7 +1175,8 @@
         this.ctx.fillStyle = '#05050d';
         this.ctx.fillRect(0, 0, this.width, this.height);
 
-        const beatPulse = (this.state === 'PLAYING') ? Math.sin((this.gameTime / SECONDS_PER_BEAT) * Math.PI) * 0.08 : 0;
+        const beatLength = 60 / (this.song?.bpm || DEFAULT_BPM);
+        const beatPulse = (this.state === 'PLAYING') ? Math.sin((this.gameTime / beatLength) * Math.PI) * 0.08 : 0;
         if (beatPulse > 0) {
           const bgGrad = this.ctx.createRadialGradient(this.width/2, this.height/2, 10, this.width/2, this.height/2, this.width);
           bgGrad.addColorStop(0, `rgba(0, 229, 255, ${beatPulse * 0.3})`);
@@ -1231,14 +1303,14 @@
 
           // 시간 기반 Y 좌표 보간 계산 (아래 -> 위로 상승)
           const timeToHit = note.hitTime - this.gameTime;
-          const currentY = this.targetY + (timeToHit / timeWindow) * (this.spawnY - this.targetY);
+          const currentY = this.targetY - (timeToHit / timeWindow) * (this.targetY - this.spawnY);
           const cx = this.getLaneCenterX(note.lane);
           const color = LANES[note.lane].color;
 
           // 1) 롱노트 몸체 렌더링
           if (note.type === 'hold') {
-            const holdTailY = this.targetY + ((note.hitTime + note.duration - this.gameTime) / timeWindow) * (this.spawnY - this.targetY);
-            const bodyTop = Math.max(this.targetY, Math.min(currentY, holdTailY));
+            const holdTailY = this.targetY - ((note.hitTime + note.duration - this.gameTime) / timeWindow) * (this.targetY - this.spawnY);
+            const bodyTop = Math.min(this.targetY, Math.max(currentY, holdTailY));
             const bodyBottom = Math.max(currentY, holdTailY);
 
             if (bodyBottom > 0 && bodyTop < this.height) {
