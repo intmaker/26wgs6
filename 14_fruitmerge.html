@@ -91,6 +91,7 @@ const fruits=[
  {name:'수박',r:79,c:'#55b86e',c2:'#2f8e55',mass:4.3,bounce:.12,face:3}
 ];
 let W=0,H=0,dpr=1,scale=1, fruitsOn=[],particles=[],effects=[]; let current=0,next=0,dropX=0,ready=false,playing=false,gameOver=false,lastDrop=0, score=0,best=+localStorage.getItem('fruitMergeBest')||0,biggest=0,bestChain=0,chainCount=0,chainDeadline=0,dangerSince=0,dangerBeep=0,lastT=0,acc=0,audioCtx=null,soundOn=true, pointerInside=false, newRecordShown=false,runToken=0;
+const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
 bestEl.textContent=best.toLocaleString();
 function baseScale(){return Math.max(.78,Math.min(1.12,W/430));}
 function R(level){return fruits[level].r*scale}
@@ -110,13 +111,34 @@ canvas.addEventListener('pointerdown',e=>{e.preventDefault();pointerInside=true;
 canvas.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'||pointerInside){e.preventDefault();pointX(e.clientX)}},{passive:false});
 canvas.addEventListener('pointerup',e=>{e.preventDefault();pointX(e.clientX);pointerInside=false;drop()},{passive:false});canvas.addEventListener('pointercancel',()=>pointerInside=false);
 window.addEventListener('keydown',e=>{if(!playing||gameOver)return;if(e.key==='ArrowLeft'){e.preventDefault();dropX=Math.max(R(current)+3,dropX-22*scale)}else if(e.key==='ArrowRight'){e.preventDefault();dropX=Math.min(W-R(current)-3,dropX+22*scale)}else if(e.code==='Space'){e.preventDefault();drop()}});
-function physics(dt){const g=1250*scale; const floor=H-20; for(const f of fruitsOn){if(f.dead||f.merging)continue;const slow=f.slow>0?.38:1;f.slow=Math.max(0,f.slow-dt);f.vy+=g*dt*slow;f.x+=f.vx*dt*slow;f.y+=f.vy*dt*slow;f.ang+=f.av*dt*slow;const r=R(f.level);if(f.x-r<3){f.x=r+3;f.vx=Math.abs(f.vx)*fruits[f.level].bounce;f.av+=f.vy*.002}else if(f.x+r>W-3){f.x=W-r-3;f.vx=-Math.abs(f.vx)*fruits[f.level].bounce;f.av+=f.vy*.002}if(f.y+r>floor){f.y=floor-r;if(f.vy>0)f.vy=-f.vy*fruits[f.level].bounce;f.vx*=.975;f.av=f.vx/(r||1)*.45;if(Math.abs(f.vy)<15)f.vy=0}f.vx*=Math.pow(.995,dt*60)}
+function physics(dt){
+  const g=1250*scale; const floor=H-20; const maxSpin=4.5;
+  for(const f of fruitsOn){
+    if(f.dead||f.merging)continue;
+    const slow=f.slow>0?.38:1;f.slow=Math.max(0,f.slow-dt);
+    f.vy+=g*dt*slow;
+    f.x+=f.vx*dt*slow;f.y+=f.vy*dt*slow;
+    f.ang+=f.av*dt*slow;
+    f.av*=0.96;
+    f.av=clamp(f.av,-maxSpin,maxSpin);
+    if(Math.abs(f.av)<.02)f.av=0;
+    const r=R(f.level);
+    if(f.x-r<3){
+      f.x=r+3;f.vx=Math.abs(f.vx)*fruits[f.level].bounce;f.av=clamp(f.av + f.vy*.0012,-maxSpin,maxSpin);
+    }else if(f.x+r>W-3){
+      f.x=W-r-3;f.vx=-Math.abs(f.vx)*fruits[f.level].bounce;f.av=clamp(f.av - f.vy*.0012,-maxSpin,maxSpin);
+    }
+    if(f.y+r>floor){
+      f.y=floor-r;if(f.vy>0)f.vy=-f.vy*fruits[f.level].bounce;f.vx*=.975;f.av=clamp(f.vx/(r||1)*.25 + f.av*.35,-maxSpin,maxSpin);if(Math.abs(f.vy)<15)f.vy=0
+    }
+    f.vx*=Math.pow(.995,dt*60)
+  }
  // pair collisions
  for(let i=0;i<fruitsOn.length;i++){const a=fruitsOn[i];if(a.dead||a.merging)continue;for(let j=i+1;j<fruitsOn.length;j++){const b=fruitsOn[j];if(b.dead||b.merging)continue;let dx=b.x-a.x,dy=b.y-a.y,dist2=dx*dx+dy*dy,rr=R(a.level)+R(b.level);if(dist2>=rr*rr)continue;let dist=Math.sqrt(dist2)||.001,nx=dx/dist,ny=dy/dist,over=rr-dist;
    // rainbow resolves to partner on contact
    if(a.special==='rainbow'&&b.special!=='rainbow'){a.level=b.level;a.special=null;rr=R(a.level)+R(b.level);spark(a.x,a.y,8,'rainbow');tone('merge')}else if(b.special==='rainbow'&&a.special!=='rainbow'){b.level=a.level;b.special=null;rr=R(a.level)+R(b.level);spark(b.x,b.y,8,'rainbow');tone('merge')}
    if(a.level===b.level&&!a.special&&!b.special){mergePair(a,b);continue}
-   const ma=fruits[a.level].mass,mb=fruits[b.level].mass,total=ma+mb;a.x-=nx*over*(mb/total);a.y-=ny*over*(mb/total);b.x+=nx*over*(ma/total);b.y+=ny*over*(ma/total);const rvx=b.vx-a.vx,rvy=b.vy-a.vy,vel=rvx*nx+rvy*ny;if(vel<0){const e=Math.min(fruits[a.level].bounce,fruits[b.level].bounce);const imp=-(1+e)*vel/(1/ma+1/mb);a.vx-=imp*nx/ma;a.vy-=imp*ny/ma;b.vx+=imp*nx/mb;b.vy+=imp*ny/mb;a.av-=rvy*.002;b.av+=rvy*.002}}
+   const ma=fruits[a.level].mass,mb=fruits[b.level].mass,total=ma+mb;a.x-=nx*over*(mb/total);a.y-=ny*over*(mb/total);b.x+=nx*over*(ma/total);b.y+=ny*over*(ma/total);const rvx=b.vx-a.vx,rvy=b.vy-a.vy,vel=rvx*nx+rvy*ny;if(vel<0){const e=Math.min(fruits[a.level].bounce,fruits[b.level].bounce);const imp=-(1+e)*vel/(1/ma+1/mb);a.vx-=imp*nx/ma;a.vy-=imp*ny/ma;b.vx+=imp*nx/mb;b.vy+=imp*ny/mb;a.av=clamp(a.av-rvy*.002,-maxSpin,maxSpin);b.av=clamp(b.av+rvy*.002,-maxSpin,maxSpin)}}
  }
  fruitsOn=fruitsOn.filter(f=>!f.dead);
 }
