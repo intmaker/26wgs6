@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AI FPS ARENA</title>
     <style>
         * {
@@ -18,6 +18,7 @@
             color: #ffffff;
             width: 100vw;
             height: 100vh;
+            height: 100dvh;
             overflow: hidden;
             display: flex;
             justify-content: center;
@@ -26,12 +27,14 @@
 
         #game-container {
             position: relative;
-            width: 1000px;
-            height: 600px;
+            width: min(1000px, 100vw, calc(100dvh * 5 / 3));
+            aspect-ratio: 5 / 3;
+            max-height: 100dvh;
             background: #0f1016;
             border-radius: 12px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.6);
             overflow: hidden;
+            touch-action: none;
         }
 
         canvas {
@@ -285,6 +288,33 @@
         #game-over-screen {
             display: none;
         }
+
+        #mobile-controls { display: none; }
+
+        @media (hover: none), (pointer: coarse) {
+            #game-container { border-radius: 0; }
+            #mobile-controls { position: absolute; inset: 0; display: block; z-index: 18; pointer-events: none; }
+            #move-pad, #look-zone, .mobile-action { pointer-events: auto; touch-action: none; }
+            #look-zone { position: absolute; top: 0; right: 0; width: 55%; height: 75%; }
+            #move-pad { position: absolute; left: 4%; bottom: 7%; width: 18%; aspect-ratio: 1; border-radius: 50%; background: rgba(255,255,255,.12); border: 2px solid rgba(255,255,255,.28); }
+            #move-stick { position: absolute; width: 44%; aspect-ratio: 1; left: 28%; top: 28%; border-radius: 50%; background: rgba(72,219,251,.75); box-shadow: 0 0 12px rgba(72,219,251,.5); }
+            .mobile-action { position: absolute; border: 2px solid rgba(255,255,255,.45); color: white; background: rgba(255,107,107,.65); border-radius: 50%; font-weight: 800; width: 10%; aspect-ratio: 1; min-width: 42px; }
+            #fire-btn { right: 5%; bottom: 8%; width: 14%; background: rgba(255,71,87,.72); }
+            #reload-btn { right: 21%; bottom: 8%; }
+            #weapon-btn { right: 6%; bottom: 31%; background: rgba(52,152,219,.7); }
+            #scope-btn { right: 19%; bottom: 30%; background: rgba(46,213,115,.65); }
+            .screen-overlay { padding: 4%; }
+            .screen-overlay h1 { font-size: clamp(1.45rem, 6vw, 3rem); margin-bottom: 1%; }
+            .screen-overlay p { font-size: clamp(.72rem, 2.4vw, 1.1rem); margin-bottom: 2%; }
+            .guide-box { padding: 2% 3%; margin-bottom: 3%; font-size: clamp(.65rem, 2vw, .95rem); }
+            .btn { padding: 2.2% 6%; font-size: clamp(.8rem, 2.5vw, 1.2rem); }
+            #minimap { width: 13%; height: auto; top: 2%; left: 2%; }
+            .ui-layer { padding: 2%; }
+            .timer-box { top: 2%; left: 17%; padding: 1% 2%; font-size: clamp(.7rem, 2.5vw, 1.3rem); }
+            .stats-box, .hp-box, .weapon-box { padding: 1% 2%; }
+            .stats-box div, .hp-box, .weapon-box .ammo { font-size: clamp(.65rem, 2.3vw, 1.2rem); }
+            .weapon-box .w-name { font-size: clamp(.55rem, 1.7vw, .9rem); }
+        }
     </style>
 </head>
 <body>
@@ -322,6 +352,15 @@
             </div>
         </div>
 
+        <div id="mobile-controls" aria-label="모바일 게임 조작">
+            <div id="look-zone" aria-label="드래그하여 시점 이동"></div>
+            <div id="move-pad"><div id="move-stick"></div></div>
+            <button id="fire-btn" class="mobile-action" aria-label="사격">FIRE</button>
+            <button id="reload-btn" class="mobile-action" aria-label="재장전">R</button>
+            <button id="weapon-btn" class="mobile-action" aria-label="무기 교체">1/2/3</button>
+            <button id="scope-btn" class="mobile-action" aria-label="스코프">SCOPE</button>
+        </div>
+
         <div id="start-screen" class="screen-overlay">
             <h1>AI FPS ARENA</h1>
             <p>적 총 20마리를 처치하여 승리하세요! 탄약이 다 떨어지면 자동으로 재장전됩니다.</p>
@@ -331,7 +370,8 @@
                 • 시점 변경 : 마우스 이동<br>
                 • 사격 : 마우스 좌클릭 | 수동 재장전 : R (탄약 소진 시 자동 재장전)<br>
                 • 저격총(3번) 장착 후 **우클릭** : 스코프 줌인 / 줌아웃 토글<br>
-                • 무기 교체 : 1 (돌격소총), 2 (샷건), 3 (저격총)
+                • 무기 교체 : 1 (돌격소총), 2 (샷건), 3 (저격총)<br>
+                • 모바일 : 왼쪽 스틱 이동 · 오른쪽 화면 드래그 조준 · FIRE 사격
             </div>
             <button class="btn" onclick="startGame()">START GAME</button>
         </div>
@@ -425,7 +465,7 @@
         });
 
         canvas.addEventListener('click', () => {
-            if (gameState === 'PLAYING') {
+            if (gameState === 'PLAYING' && window.matchMedia('(hover: hover) and (pointer: fine)').matches && canvas.requestPointerLock) {
                 canvas.requestPointerLock();
             }
         });
@@ -433,19 +473,7 @@
         canvas.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             if (gameState === 'PLAYING' && currentWeaponIndex === 2) {
-                isSniperZoomed = !isSniperZoomed;
-                let scopeEl = document.getElementById('sniper-scope');
-                let crosshairEl = document.getElementById('crosshair');
-
-                if (isSniperZoomed) {
-                    player.fov = Math.PI / 10;
-                    scopeEl.style.display = 'flex';
-                    crosshairEl.style.display = 'none';
-                } else {
-                    player.fov = Math.PI / 3;
-                    scopeEl.style.display = 'none';
-                    crosshairEl.style.display = 'block';
-                }
+                toggleSniperScope();
             }
         });
 
@@ -465,6 +493,71 @@
         window.addEventListener('mouseup', (e) => {
             if (e.button === 0) isMouseDown = false;
         });
+
+        // 모바일 터치 조작: 왼쪽 가상 스틱으로 이동, 오른쪽 영역 드래그로 조준
+        const movePad = document.getElementById('move-pad');
+        const moveStick = document.getElementById('move-stick');
+        const lookZone = document.getElementById('look-zone');
+        let movePointerId = null;
+        let lookPointerId = null;
+        let lastLookX = 0;
+
+        function resetMoveStick() {
+            movePointerId = null;
+            keys.w = keys.a = keys.s = keys.d = false;
+            moveStick.style.transform = 'translate(0, 0)';
+        }
+
+        function updateMoveStick(e) {
+            const rect = movePad.getBoundingClientRect();
+            const radius = rect.width * 0.36;
+            let x = e.clientX - (rect.left + rect.width / 2);
+            let y = e.clientY - (rect.top + rect.height / 2);
+            const length = Math.hypot(x, y);
+            if (length > radius) { x *= radius / length; y *= radius / length; }
+            moveStick.style.transform = `translate(${x}px, ${y}px)`;
+            const threshold = radius * 0.25;
+            keys.w = y < -threshold; keys.s = y > threshold;
+            keys.a = x < -threshold; keys.d = x > threshold;
+        }
+
+        movePad.addEventListener('pointerdown', (e) => {
+            if (gameState !== 'PLAYING') return;
+            movePointerId = e.pointerId; movePad.setPointerCapture(e.pointerId); updateMoveStick(e);
+        });
+        movePad.addEventListener('pointermove', (e) => { if (e.pointerId === movePointerId) updateMoveStick(e); });
+        movePad.addEventListener('pointerup', resetMoveStick);
+        movePad.addEventListener('pointercancel', resetMoveStick);
+
+        lookZone.addEventListener('pointerdown', (e) => {
+            if (gameState !== 'PLAYING') return;
+            lookPointerId = e.pointerId; lastLookX = e.clientX; lookZone.setPointerCapture(e.pointerId);
+        });
+        lookZone.addEventListener('pointermove', (e) => {
+            if (e.pointerId !== lookPointerId || gameState !== 'PLAYING') return;
+            player.angle += (e.clientX - lastLookX) * 0.008; lastLookX = e.clientX;
+        });
+        const stopLooking = (e) => { if (e.pointerId === lookPointerId) lookPointerId = null; };
+        lookZone.addEventListener('pointerup', stopLooking);
+        lookZone.addEventListener('pointercancel', stopLooking);
+
+        function bindHoldButton(id, onStart, onEnd) {
+            const button = document.getElementById(id);
+            button.addEventListener('pointerdown', (e) => { e.preventDefault(); onStart(); });
+            button.addEventListener('pointerup', (e) => { e.preventDefault(); onEnd(); });
+            button.addEventListener('pointercancel', onEnd);
+        }
+        bindHoldButton('fire-btn', () => { if (gameState === 'PLAYING') { isMouseDown = true; shootWeapon(); } }, () => { isMouseDown = false; });
+        document.getElementById('reload-btn').addEventListener('pointerdown', (e) => { e.preventDefault(); reloadWeapon(); });
+        document.getElementById('weapon-btn').addEventListener('pointerdown', (e) => { e.preventDefault(); switchWeapon((currentWeaponIndex + 1) % weapons.length); });
+        document.getElementById('scope-btn').addEventListener('pointerdown', (e) => { e.preventDefault(); if (gameState === 'PLAYING' && currentWeaponIndex === 2) toggleSniperScope(); });
+
+        function toggleSniperScope() {
+            isSniperZoomed = !isSniperZoomed;
+            document.getElementById('sniper-scope').style.display = isSniperZoomed ? 'flex' : 'none';
+            document.getElementById('crosshair').style.display = isSniperZoomed ? 'none' : 'block';
+            player.fov = isSniperZoomed ? Math.PI / 10 : Math.PI / 3;
+        }
 
         function switchWeapon(index) {
             if (isReloading) return;
@@ -639,6 +732,8 @@
         function startGame() {
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('game-ui').style.display = 'flex';
+            resetMoveStick();
+            isMouseDown = false;
             
             gameState = 'PLAYING';
             score = 0;
@@ -673,6 +768,8 @@
         function endGame(isVictory) {
             gameState = 'GAMEOVER';
             clearInterval(timerInterval);
+            resetMoveStick();
+            isMouseDown = false;
             if (document.pointerLockElement === canvas) document.exitPointerLock();
 
             document.getElementById('sniper-scope').style.display = 'none';
