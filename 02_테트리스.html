@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AI TETRIS - Mobile Optimized</title>
     <style>
         /* 전체 페이지 스타일 및 깔끔하고 밝은 테마 설정 */
@@ -18,36 +18,106 @@
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             color: #333;
             overflow-x: hidden;
-            padding: 10px;
+            padding:
+                max(12px, env(safe-area-inset-top))
+                max(12px, env(safe-area-inset-right))
+                max(12px, env(safe-area-inset-bottom))
+                max(12px, env(safe-area-inset-left));
         }
 
         header {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             text-align: center;
         }
 
         h1 {
             color: #2c3e50;
-            font-size: 1.8rem;
+            font-size: clamp(1.2rem, 3.2vw, 1.8rem);
             letter-spacing: 2px;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
         }
 
-        /* 게임 메인 레이아웃 (보드 + 사이드 패널) */
+        /* 게임 메인 레이아웃 */
         .game-container {
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: min(92vw, 420px);
             background: #ffffff;
-            padding: 15px;
+            padding: 12px;
             border-radius: 15px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            gap: 15px;
+            gap: 10px;
             position: relative;
+        }
+
+        .top-panel {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 8px;
+            align-items: stretch;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            padding: 6px 8px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            text-align: center;
+            min-height: 56px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .info-box h3 {
+            font-size: 0.62rem;
+            color: #7f8c8d;
+            letter-spacing: 0.08em;
+            margin-bottom: 3px;
+        }
+
+        .info-box p {
+            font-size: 0.96rem;
+            font-weight: bold;
+            color: #2c3e50;
+            line-height: 1.2;
+        }
+
+        /* 다음 블록 미리보기 칸 */
+        #next-canvas {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin: 0 auto;
+            display: block;
+            width: 56px;
+            height: 56px;
+        }
+
+        /* 버튼 스타일 */
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 3px 6px rgba(52, 152, 219, 0.2);
+            width: 100%;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 56px;
         }
 
         /* 테트리스 보드 스타일 (격자무늬 구현) */
@@ -59,62 +129,11 @@
                 linear-gradient(to bottom, #eef2f7 1px, transparent 1px);
             background-size: 30px 30px;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
-            max-width: 100%;
+            width: min(82vw, 300px);
             height: auto;
-        }
-
-        /* 사이드 정보 패널 */
-        .side-panel {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            width: 130px;
-        }
-
-        .info-box {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
-            text-align: center;
-            margin-bottom: 8px;
-        }
-
-        .info-box h3 {
-            font-size: 0.75rem;
-            color: #7f8c8d;
-            margin-bottom: 3px;
-        }
-
-        .info-box p {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-
-        /* 다음 블록 미리보기 칸 */
-        #next-canvas {
-            background: #fff;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            margin: 0 auto;
+            aspect-ratio: 1 / 2;
+            max-height: calc(100dvh - 220px);
             display: block;
-        }
-
-        /* 버튼 스타일 */
-        .btn {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
-            width: 100%;
-            -webkit-tap-highlight-color: transparent;
         }
 
         .btn:hover {
@@ -220,57 +239,56 @@
         /* 미디어 쿼리: 모바일 화면 세로 모드 대응 */
         @media (max-width: 600px) {
             body {
-                padding: 5px;
+                padding-top: max(10px, env(safe-area-inset-top));
+                padding-bottom: max(10px, env(safe-area-inset-bottom));
                 justify-content: flex-start;
             }
             header {
                 margin-bottom: 5px;
             }
             h1 {
-                font-size: 1.4rem;
+                font-size: clamp(1.1rem, 5vw, 1.5rem);
             }
             .game-container {
-                flex-direction: column;
                 align-items: center;
                 padding: 10px;
-                gap: 10px;
-                width: 100%;
-                max-width: 340px;
+                gap: 8px;
+                width: min(94vw, 360px);
             }
-            canvas {
-                width: 240px;
-                height: 480px;
-            }
-            .side-panel {
-                width: 100%;
-                flex-direction: row;
-                flex-wrap: wrap;
-                gap: 5px;
+            .top-panel {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 6px;
             }
             .info-box {
-                flex: 1;
-                min-width: 70px;
-                margin-bottom: 0;
-                padding: 6px;
+                min-height: 52px;
             }
-            .info-box p {
-                font-size: 0.95rem;
+            canvas {
+                width: min(78vw, 250px);
+                max-height: calc(100dvh - 210px);
             }
             #next-canvas {
-                width: 45px;
-                height: 45px;
+                width: 46px;
+                height: 46px;
             }
-            .side-panel .btn {
-                flex: 1;
-                min-width: 90px;
-                padding: 8px;
-                font-size: 0.85rem;
+            .btn {
+                min-height: 52px;
+                font-size: 0.72rem;
             }
             .controls-guide {
                 display: none;
             }
             .mobile-controls {
                 display: flex;
+            }
+        }
+
+        @media (min-width: 900px) {
+            body {
+                padding-top: max(16px, env(safe-area-inset-top));
+                padding-bottom: max(16px, env(safe-area-inset-bottom));
+            }
+            .game-container {
+                width: min(70vw, 520px);
             }
         }
     </style>
@@ -289,11 +307,7 @@
             <button class="btn" onclick="resetGame()">다시 시작</button>
         </div>
 
-        <!-- 메인 테트리스 보드 -->
-        <canvas id="tetris" width="300" height="600"></canvas>
-
-        <!-- 사이드 정보창 -->
-        <div class="side-panel">
+        <div class="top-panel">
             <div class="info-box">
                 <h3>SCORE</h3>
                 <p id="score">0</p>
@@ -304,17 +318,21 @@
             </div>
             <div class="info-box">
                 <h3>NEXT</h3>
-                <canvas id="next-canvas" width="75" height="75"></canvas>
+                <canvas id="next-canvas" width="56" height="56"></canvas>
             </div>
-            <button class="btn" id="start-btn" onclick="startGame()">게임 시작</button>
-            
-            <div class="controls-guide">
-                <b>조작 방법</b><br>
-                ← → : 이동<br>
-                ↓ : 소프트 드롭<br>
-                ↑ : 회전<br>
-                Space : 하드 드롭
-            </div>
+            <button class="btn" id="pause-btn" onclick="togglePause()">중지</button>
+            <button class="btn" id="start-btn" onclick="startGame()">재시작</button>
+        </div>
+
+        <!-- 메인 테트리스 보드 -->
+        <canvas id="tetris" width="300" height="600"></canvas>
+
+        <div class="controls-guide">
+            <b>조작 방법</b><br>
+            ← → : 이동<br>
+            ↓ : 소프트 드롭<br>
+            ↑ : 회전<br>
+            Space : 하드 드롭
         </div>
     </div>
 
@@ -359,6 +377,7 @@
         let lastTime = 0;
         let isGameOver = false;
         let isPlaying = false;
+        let isPaused = false;
 
         const SHAPES = [
             null,
@@ -450,7 +469,7 @@
         }
 
         function moveLeft() {
-            if (!isPlaying) return;
+            if (!isPlaying || isPaused) return;
             player.pos.x--;
             if (collide(board, player)) {
                 player.pos.x++;
@@ -458,7 +477,7 @@
         }
 
         function moveRight() {
-            if (!isPlaying) return;
+            if (!isPlaying || isPaused) return;
             player.pos.x++;
             if (collide(board, player)) {
                 player.pos.x--;
@@ -466,7 +485,7 @@
         }
 
         function moveDown() {
-            if (!isPlaying) return;
+            if (!isPlaying || isPaused) return;
             player.pos.y++;
             if (collide(board, player)) {
                 player.pos.y--;
@@ -479,7 +498,7 @@
         }
 
         function hardDrop() {
-            if (!isPlaying) return;
+            if (!isPlaying || isPaused) return;
             while (!collide(board, player)) {
                 player.pos.y++;
             }
@@ -596,8 +615,26 @@
             document.getElementById('lines').innerText = totalLines;
         }
 
+        function togglePause() {
+            if (!isPlaying || isGameOver) return;
+
+            isPaused = !isPaused;
+            const pauseButton = document.getElementById('pause-btn');
+            pauseButton.innerText = isPaused ? '재개' : '중지';
+
+            if (!isPaused) {
+                lastTime = performance.now();
+                requestAnimationFrame(update);
+            } else {
+                draw();
+            }
+        }
+
         function update(time = 0) {
-            if (!isPlaying) return;
+            if (!isPlaying || isPaused) {
+                draw();
+                return;
+            }
 
             const deltaTime = time - lastTime;
             lastTime = time;
@@ -612,7 +649,7 @@
         }
 
         document.addEventListener('keydown', event => {
-            if (!isPlaying) return;
+            if (!isPlaying || isPaused) return;
 
             if (event.key === 'ArrowLeft') {
                 moveLeft();
@@ -625,6 +662,8 @@
             } else if (event.key === ' ') {
                 hardDrop();
                 event.preventDefault();
+            } else if (event.key.toLowerCase() === 'p') {
+                togglePause();
             }
         });
 
@@ -632,12 +671,14 @@
             board = createMatrix(COLS, ROWS);
             score = 0;
             totalLines = 0;
+            isPaused = false;
             updateScore();
             
             isGameOver = false;
             isPlaying = true;
             document.getElementById('game-over-screen').style.display = 'none';
             document.getElementById('start-btn').innerText = '재시작';
+            document.getElementById('pause-btn').innerText = '중지';
 
             playerReset();
             lastTime = performance.now();
