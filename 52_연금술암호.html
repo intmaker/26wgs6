@@ -1,12 +1,843 @@
-<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no"><title>⚗️ 연금술 암호</title><style>
-:root{--c1:#6d28d9;--c2:#e879f9}*{box-sizing:border-box}html,body{height:100%}body{margin:0;overflow:hidden;display:grid;place-items:center;color:#f8fafc;font-family:system-ui,"Noto Sans KR",sans-serif;background:radial-gradient(circle at 18% 10%,var(--c1),#11162e 52%,#030712);user-select:none;-webkit-user-select:none}.app{width:min(95vw,720px);height:min(95vh,860px);display:flex;flex-direction:column;gap:11px}.top{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:2px 4px}.brand small{display:block;color:#cbd5e1;font-size:10px;font-weight:900;letter-spacing:.2em}.brand h1{margin:2px 0 0;font-size:clamp(25px,5vw,38px);letter-spacing:-.05em}.hud{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.stat{min-width:67px;padding:7px 10px;text-align:center;border:1px solid #ffffff25;border-radius:14px;background:#0f172ac7}.stat small{display:block;color:#cbd5e1;font-size:9px}.stat b{font-size:19px}.stage{position:relative;flex:1;min-height:400px;overflow:hidden;border:1px solid #ffffff27;border-radius:25px;background:linear-gradient(145deg,#14203b,#090e21);box-shadow:0 25px 70px #0009;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:#050916e9}.overlay.hide{display:none}.card{width:min(100%,410px);padding:28px 24px;text-align:center;border:1px solid #ffffff25;border-radius:23px;background:#111a36ee;box-shadow:0 20px 55px #0008}.card .emoji{font-size:55px}.card h2{margin:8px;font-size:28px}.card p{margin:0 0 19px;color:#cbd5e1;font-size:14px;line-height:1.72;word-break:keep-all}.primary{min-height:48px;width:100%;padding:12px 18px;border:0;border-radius:13px;color:#08111f;background:linear-gradient(135deg,var(--c2),#fef3c7);font:900 15px system-ui;cursor:pointer}.tip{min-height:18px;text-align:center;color:#aebbd0;font-size:12px}.hidden{display:none!important}button{font-family:inherit}.alchemy{height:100%;display:flex;flex-direction:column;align-items:center;gap:10px;padding:15px;background:radial-gradient(circle at 50% 30%,#4c1d95,#1e123d 62%,#0c0718)}.cauldron{width:min(100%,430px);min-height:85px;display:grid;place-items:center;border:2px solid #c084fc;border-radius:50%;background:#090512;font-size:38px;letter-spacing:.2em;box-shadow:0 0 30px #a855f755,inset 0 0 20px #a855f744}.ingredients{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;width:min(100%,500px)}.ingredient{min-height:55px;border:1px solid #ffffff24;border-radius:13px;color:#fff;background:#ffffff0d;font-size:27px;cursor:pointer}.brew-actions{display:flex;gap:8px}.brew-actions button{min-height:45px;padding:9px 15px;border:1px solid #ffffff25;border-radius:11px;color:#fff;background:#6d28d9;font-weight:900}.history{width:min(100%,500px);flex:1;overflow:auto;display:flex;flex-direction:column;gap:6px}.attempt{display:flex;justify-content:space-between;padding:8px 11px;border-radius:10px;background:#ffffff0a;color:#e9d5ff}.clue-exact{color:#4ade80}.clue-near{color:#facc15}
-@media(max-width:520px){.app{width:100%;height:100%;padding:9px}.stage{min-height:0;border-radius:20px}.brand h1{font-size:25px}.stat{min-width:61px;padding:6px 8px}.card{padding:24px 19px}.tip{font-size:11px}}
-</style></head><body><main class="app"><header class="top"><div class="brand"><small>ALCHEMY CODE</small><h1>⚗️ 연금술 암호</h1></div><div class="hud" id="hud"></div></header><section class="stage" id="stage"><div class="alchemy"><div class="cauldron" id="guess">❔ ❔ ❔</div><div class="ingredients" id="ingredients"></div><div class="brew-actions"><button id="undoBtn">↶ 지우기</button><button id="brewBtn">⚗️ 조합 실험</button></div><div class="history" id="history"></div></div><div class="overlay" id="overlay"><div class="card"><div class="emoji" id="resultEmoji">⚗️</div><h2 id="resultTitle">연금술 암호</h2><p id="resultText">실험 결과의 위치·재료 단서를 비교해 세 칸의 비밀 레시피를 추리하세요.</p><button class="primary" id="startBtn">게임 시작</button></div></div></section><div class="tip">실험 결과의 위치·재료 단서를 비교해 세 칸의 비밀 레시피를 추리하세요.</div></main><script>
-const $=s=>document.querySelector(s),stage=$('#stage'),overlay=$('#overlay'),startBtn=$('#startBtn');
-const safeGet=(k,d=0)=>{try{return Number(localStorage.getItem(k))||d}catch(e){return d}},safeSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
-function showResult(icon,title,text,button='다시 하기'){ $('#resultEmoji').textContent=icon;$('#resultTitle').textContent=title;$('#resultText').innerHTML=text;startBtn.textContent=button;overlay.classList.remove('hide') }
-const icons=['🌿','🔥','💧','🍄','💎','🌙'],ingredients=$('#ingredients'),guessEl=$('#guess'),history=$('#history'),hud=$('#hud');let recipe=[],guess=[],attempts=8,level=1,score=0,playing=false;hud.innerHTML='<div class="stat"><small>레벨</small><b id="level">1</b></div><div class="stat"><small>남은 실험</small><b id="attempts">8</b></div><div class="stat"><small>점수</small><b id="score">0</b></div>';icons.forEach((v,i)=>{const b=document.createElement('button');b.className='ingredient';b.textContent=v;b.onclick=()=>add(i);ingredients.appendChild(b)});
-function startGame(){recipe=Array.from({length:3},()=>Math.floor(Math.random()*icons.length));guess=[];attempts=8;playing=true;history.innerHTML='';update();overlay.classList.add('hide')}function update(){guessEl.textContent=[0,1,2].map(i=>guess[i]===undefined?'❔':icons[guess[i]]).join(' ');$('#attempts').textContent=attempts;$('#level').textContent=level;$('#score').textContent=score}function add(i){if(playing&&guess.length<3){guess.push(i);update()}}$('#undoBtn').onclick=()=>{guess.pop();update()};
-function clue(){let exact=0,near=0,usedR=[false,false,false],usedG=[false,false,false];for(let i=0;i<3;i++)if(guess[i]===recipe[i]){exact++;usedR[i]=usedG[i]=true}for(let i=0;i<3;i++)if(!usedG[i])for(let j=0;j<3;j++)if(!usedR[j]&&guess[i]===recipe[j]){near++;usedR[j]=true;break}return{exact,near}}
-function brew(){if(!playing||guess.length<3)return;attempts--;const c=clue(),row=document.createElement('div');row.className='attempt';row.innerHTML=`<b>${guess.map(i=>icons[i]).join(' ')}</b><span><b class="clue-exact">● ${c.exact}</b> 정확 · <b class="clue-near">◆ ${c.near}</b> 재료</span>`;history.prepend(row);if(c.exact===3){playing=false;score+=100+attempts*20;level++;update();return showResult('🧪','전설의 물약 완성!',`${8-attempts}번의 실험으로 정확한 재료와 순서를 찾았습니다.<br>다음 레벨에서도 추리해 보세요.`,'다음 레시피')}guess=[];update();if(attempts<=0){playing=false;showResult('💨','실험 횟수 소진',`정답은 ${recipe.map(i=>icons[i]).join(' ')}였습니다.<br>정확한 위치와 포함된 재료 단서를 함께 비교해 보세요.`)}}$('#brewBtn').onclick=brew;startBtn.onclick=startGame;update();
-</script></body></html>
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no">
+<title>⚗️ 연금술 암호</title>
+
+<style>
+:root{
+  --c1:#6d28d9;
+  --c2:#e879f9
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+
+body{
+  margin:0;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  color:#f8fafc;
+  font-family:system-ui,"Noto Sans KR",sans-serif;
+  background:radial-gradient(circle at 18% 10%,var(--c1),#11162e 52%,#030712);
+  user-select:none;
+  -webkit-user-select:none
+}
+
+.app{
+  width:min(95vw,720px);
+  height:min(95vh,860px);
+  display:flex;
+  flex-direction:column;
+  gap:11px
+}
+
+.top{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:10px;
+  padding:2px 4px
+}
+
+.brand small{
+  display:block;
+  color:#cbd5e1;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.2em
+}
+
+.brand h1{
+  margin:2px 0 0;
+  font-size:clamp(25px,5vw,38px);
+  letter-spacing:-.05em
+}
+
+.hud{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  justify-content:flex-end
+}
+
+.stat{
+  min-width:67px;
+  padding:7px 10px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:14px;
+  background:#0f172ac7
+}
+
+.stat small{
+  display:block;
+  color:#cbd5e1;
+  font-size:9px
+}
+
+.stat b{font-size:19px}
+
+.stage{
+  position:relative;
+  flex:1;
+  min-height:400px;
+  overflow:hidden;
+  border:1px solid #ffffff27;
+  border-radius:25px;
+  background:linear-gradient(145deg,#14203b,#090e21);
+  box-shadow:0 25px 70px #0009;
+  touch-action:none
+}
+
+.stage.shake{
+  animation:shake .2s
+}
+
+@keyframes shake{
+  25%{transform:translateX(-5px)}
+  50%{transform:translateX(5px)}
+  75%{transform:translateX(-3px)}
+}
+
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:20;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:#050916e9
+}
+
+.overlay.hide{display:none}
+
+.card{
+  width:min(100%,410px);
+  padding:28px 24px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:23px;
+  background:#111a36ee;
+  box-shadow:0 20px 55px #0008
+}
+
+.card .emoji{font-size:55px}
+
+.card h2{
+  margin:8px;
+  font-size:28px
+}
+
+.card p{
+  margin:0 0 19px;
+  color:#cbd5e1;
+  font-size:14px;
+  line-height:1.72;
+  word-break:keep-all
+}
+
+.primary{
+  min-height:48px;
+  width:100%;
+  padding:12px 18px;
+  border:0;
+  border-radius:13px;
+  color:#08111f;
+  background:linear-gradient(135deg,var(--c2),#fef3c7);
+  font:900 15px system-ui;
+  cursor:pointer
+}
+
+.tip{
+  min-height:18px;
+  text-align:center;
+  color:#aebbd0;
+  font-size:12px
+}
+
+button{font-family:inherit}
+
+.alchemy{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  padding:15px;
+  background:radial-gradient(circle at 50% 30%,#4c1d95,#1e123d 62%,#0c0718)
+}
+
+.timer-wrap{
+  width:min(100%,500px);
+  height:9px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#ffffff17
+}
+
+.timer-bar{
+  width:100%;
+  height:100%;
+  background:linear-gradient(90deg,#4ade80,#facc15,#ef4444)
+}
+
+.cauldron{
+  width:min(100%,430px);
+  min-height:85px;
+  display:grid;
+  place-items:center;
+  border:2px solid #c084fc;
+  border-radius:50%;
+  background:#090512;
+  font-size:38px;
+  letter-spacing:.2em;
+  box-shadow:
+    0 0 30px #a855f755,
+    inset 0 0 20px #a855f744
+}
+
+.cauldron.success{
+  animation:success .45s
+}
+
+@keyframes success{
+  50%{
+    transform:scale(1.08);
+    box-shadow:
+      0 0 50px #4ade80,
+      inset 0 0 30px #4ade8066
+  }
+}
+
+.ingredients{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:7px;
+  width:min(100%,500px)
+}
+
+.ingredient{
+  min-height:55px;
+  border:1px solid #ffffff24;
+  border-radius:13px;
+  color:#fff;
+  background:#ffffff0d;
+  font-size:27px;
+  cursor:pointer
+}
+
+.ingredient:active{
+  transform:scale(.93)
+}
+
+.brew-actions{
+  display:flex;
+  gap:8px
+}
+
+.brew-actions button{
+  min-height:45px;
+  padding:9px 15px;
+  border:1px solid #ffffff25;
+  border-radius:11px;
+  color:#fff;
+  background:#6d28d9;
+  font-weight:900;
+  cursor:pointer
+}
+
+#brewBtn{
+  background:linear-gradient(135deg,#7c3aed,#c026d3)
+}
+
+.history{
+  width:min(100%,500px);
+  flex:1;
+  overflow:auto;
+  display:flex;
+  flex-direction:column;
+  gap:6px
+}
+
+.attempt{
+  display:flex;
+  justify-content:space-between;
+  gap:5px;
+  padding:8px 11px;
+  border-radius:10px;
+  background:#ffffff0a;
+  color:#e9d5ff;
+  font-size:12px
+}
+
+.clue-exact{color:#4ade80}
+.clue-near{color:#facc15}
+
+.message{
+  min-height:22px;
+  text-align:center;
+  color:#f5d0fe;
+  font-weight:800;
+  font-size:12px
+}
+
+.toast{
+  position:absolute;
+  left:50%;
+  top:22%;
+  z-index:10;
+  transform:translate(-50%,-50%);
+  padding:9px 17px;
+  border:1px solid #ffffff33;
+  border-radius:999px;
+  background:#0f172ae8;
+  font-weight:900;
+  opacity:0;
+  transition:.2s;
+  pointer-events:none;
+  white-space:nowrap
+}
+
+.toast.show{
+  opacity:1;
+  top:18%
+}
+
+@media(max-width:520px){
+  .app{
+    width:100%;
+    height:100%;
+    padding:9px
+  }
+
+  .stage{
+    min-height:0;
+    border-radius:20px
+  }
+
+  .brand h1{font-size:25px}
+
+  .stat{
+    min-width:58px;
+    padding:6px 7px
+  }
+
+  .card{padding:24px 19px}
+
+  .tip{font-size:11px}
+
+  .ingredient{
+    min-height:49px;
+    font-size:23px
+  }
+
+  .attempt{
+    font-size:10px
+  }
+}
+</style>
+</head>
+
+<body>
+
+<main class="app">
+
+<header class="top">
+
+<div class="brand">
+  <small>ALCHEMY CODE</small>
+  <h1>⚗️ 연금술 암호</h1>
+</div>
+
+<div class="hud">
+
+  <div class="stat">
+    <small>시간</small>
+    <b id="time">60</b>
+  </div>
+
+  <div class="stat">
+    <small>레시피</small>
+    <b id="level">1</b>
+  </div>
+
+  <div class="stat">
+    <small>점수</small>
+    <b id="score">500</b>
+  </div>
+
+  <div class="stat">
+    <small>연속 성공</small>
+    <b id="combo">0</b>
+  </div>
+
+</div>
+
+</header>
+
+<section class="stage" id="stage">
+
+<div class="alchemy">
+
+  <div class="timer-wrap">
+    <div class="timer-bar" id="timerBar"></div>
+  </div>
+
+  <div class="cauldron" id="guess">
+    ❔ ❔ ❔
+  </div>
+
+  <div class="ingredients" id="ingredients"></div>
+
+  <div class="brew-actions">
+    <button id="undoBtn">↶ 지우기</button>
+    <button id="brewBtn">⚗️ 조합 실험</button>
+  </div>
+
+  <div class="message" id="message">
+    비밀 레시피를 추리하세요.
+  </div>
+
+  <div class="history" id="history"></div>
+
+</div>
+
+<div class="toast" id="toast">
+  정답!
+</div>
+
+<div class="overlay" id="overlay">
+
+<div class="card">
+
+  <div class="emoji" id="resultEmoji">⚗️</div>
+
+  <h2 id="resultTitle">
+    연금술 암호
+  </h2>
+
+  <p id="resultText">
+    60초 동안 비밀 레시피를 최대한 많이 찾아내세요.<br><br>
+    <b style="color:#4ade80">● 정확</b> = 재료와 위치 모두 일치<br>
+    <b style="color:#facc15">◆ 재료</b> = 재료는 맞지만 위치가 다름<br><br>
+    틀린 실험은 점수가 감소하고<br>
+    <b>점수가 0이 되면 즉시 종료됩니다.</b>
+  </p>
+
+  <button class="primary" id="startBtn">
+    60초 게임 시작
+  </button>
+
+</div>
+
+</div>
+
+</section>
+
+<div class="tip">
+60초 연속 플레이 · 정답 +점수 · 틀린 실험 -점수 · 점수 0이면 종료
+</div>
+
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+
+const stage=$('#stage');
+const overlay=$('#overlay');
+const startBtn=$('#startBtn');
+
+const ingredients=$('#ingredients');
+const guessEl=$('#guess');
+const history=$('#history');
+
+const message=$('#message');
+const toast=$('#toast');
+
+const timeEl=$('#time');
+const levelEl=$('#level');
+const scoreEl=$('#score');
+const comboEl=$('#combo');
+const timerBar=$('#timerBar');
+
+const icons=[
+  '🌿',
+  '🔥',
+  '💧',
+  '🍄',
+  '💎',
+  '🌙'
+];
+
+let recipe=[];
+let guess=[];
+
+let level=1;
+let score=500;
+let combo=0;
+let bestCombo=0;
+let solved=0;
+let experiments=0;
+
+let playing=false;
+
+let duration=60;
+let remaining=60;
+let startTime=0;
+let raf=0;
+
+icons.forEach((v,i)=>{
+  const b=document.createElement('button');
+
+  b.className='ingredient';
+  b.textContent=v;
+
+  b.onclick=()=>add(i);
+
+  ingredients.appendChild(b);
+});
+
+function showToast(text){
+  toast.textContent=text;
+
+  toast.classList.remove('show');
+  void toast.offsetWidth;
+  toast.classList.add('show');
+
+  clearTimeout(showToast.timer);
+
+  showToast.timer=setTimeout(()=>{
+    toast.classList.remove('show');
+  },650);
+}
+
+function shake(){
+  stage.classList.remove('shake');
+  void stage.offsetWidth;
+  stage.classList.add('shake');
+}
+
+function newRecipe(){
+
+  recipe=
+    Array.from(
+      {length:3},
+      ()=>Math.floor(Math.random()*icons.length)
+    );
+
+  guess=[];
+
+  history.innerHTML='';
+
+  message.textContent=
+    `레시피 ${level} · 새로운 비밀 조합을 찾아보세요.`;
+
+  update();
+}
+
+function startGame(){
+
+  score=500;
+  combo=0;
+  bestCombo=0;
+  solved=0;
+  experiments=0;
+
+  level=1;
+
+  duration=60;
+  remaining=60;
+
+  playing=true;
+
+  overlay.classList.add('hide');
+
+  newRecipe();
+
+  startTime=performance.now();
+
+  cancelAnimationFrame(raf);
+  raf=requestAnimationFrame(loop);
+}
+
+function update(){
+
+  guessEl.textContent=
+    [0,1,2]
+    .map(i=>
+      guess[i]===undefined
+        ?'❔'
+        :icons[guess[i]]
+    )
+    .join(' ');
+
+  timeEl.textContent=
+    Math.ceil(remaining);
+
+  levelEl.textContent=level;
+
+  scoreEl.textContent=
+    Math.max(0,score);
+
+  comboEl.textContent=combo;
+
+  timerBar.style.width=
+    `${Math.max(0,remaining/duration*100)}%`;
+}
+
+function add(i){
+
+  if(
+    playing &&
+    guess.length<3
+  ){
+    guess.push(i);
+    update();
+  }
+}
+
+$('#undoBtn').onclick=()=>{
+
+  if(!playing)return;
+
+  guess.pop();
+  update();
+};
+
+function clue(){
+
+  let exact=0;
+  let near=0;
+
+  const usedR=[
+    false,false,false
+  ];
+
+  const usedG=[
+    false,false,false
+  ];
+
+  for(let i=0;i<3;i++){
+
+    if(guess[i]===recipe[i]){
+      exact++;
+      usedR[i]=true;
+      usedG[i]=true;
+    }
+  }
+
+  for(let i=0;i<3;i++){
+
+    if(usedG[i])continue;
+
+    for(let j=0;j<3;j++){
+
+      if(
+        !usedR[j] &&
+        guess[i]===recipe[j]
+      ){
+        near++;
+        usedR[j]=true;
+        break;
+      }
+    }
+  }
+
+  return{exact,near};
+}
+
+function brew(){
+
+  if(
+    !playing ||
+    guess.length<3
+  ){
+    return;
+  }
+
+  experiments++;
+
+  const currentGuess=[...guess];
+
+  const c=clue();
+
+  const row=
+    document.createElement('div');
+
+  row.className='attempt';
+
+  row.innerHTML=
+    `<b>${currentGuess.map(i=>icons[i]).join(' ')}</b>`+
+    `<span>`+
+    `<b class="clue-exact">● ${c.exact}</b> 정확 · `+
+    `<b class="clue-near">◆ ${c.near}</b> 재료`+
+    `</span>`;
+
+  history.prepend(row);
+
+  if(c.exact===3){
+
+    combo++;
+    bestCombo=
+      Math.max(bestCombo,combo);
+
+    solved++;
+
+    const comboBonus=
+      Math.min(150,combo*15);
+
+    const gain=
+      120+
+      comboBonus;
+
+    score+=gain;
+
+    showToast(
+      `🧪 정답! +${gain}`
+    );
+
+    message.textContent=
+      `✨ 레시피 완성! ${combo} 연속 성공`;
+
+    guessEl.classList.remove('success');
+    void guessEl.offsetWidth;
+    guessEl.classList.add('success');
+
+    level++;
+
+    update();
+
+    setTimeout(()=>{
+
+      if(!playing)return;
+
+      newRecipe();
+
+    },450);
+
+    return;
+  }
+
+  /*
+    완전 빗나갔을 때 더 큰 감점
+  */
+  let penalty=25;
+
+  if(c.exact===0&&c.near===0){
+    penalty=45;
+  }
+
+  if(c.exact>=2){
+    penalty=10;
+  }
+
+  score=
+    Math.max(
+      0,
+      score-penalty
+    );
+
+  combo=0;
+
+  showToast(
+    `❌ -${penalty}`
+  );
+
+  message.textContent=
+    c.exact===0&&c.near===0
+      ?'💨 완전히 다른 조합입니다.'
+      :`단서: 정확 ${c.exact} · 재료 ${c.near}`;
+
+  shake();
+
+  guess=[];
+
+  update();
+
+  if(score<=0){
+    endGame('score');
+  }
+}
+
+function loop(now){
+
+  if(!playing)return;
+
+  const elapsed=
+    (now-startTime)/1000;
+
+  remaining=
+    Math.max(
+      0,
+      duration-elapsed
+    );
+
+  update();
+
+  if(remaining<=0){
+
+    endGame('time');
+    return;
+  }
+
+  raf=requestAnimationFrame(loop);
+}
+
+function endGame(reason){
+
+  if(!playing)return;
+
+  playing=false;
+
+  cancelAnimationFrame(raf);
+
+  const success=
+    reason==='time';
+
+  $('#resultEmoji').textContent=
+    success?'🏆':'💨';
+
+  $('#resultTitle').textContent=
+    success
+      ?'60초 실험 완료!'
+      :'마력 점수 소진!';
+
+  let rank='C';
+
+  if(solved>=5)rank='B';
+  if(solved>=8)rank='A';
+  if(solved>=12)rank='S';
+
+  $('#resultText').innerHTML=
+    `<b style="font-size:30px;color:#fde047">RANK ${rank}</b><br><br>`+
+    (
+      success
+        ?'60초 동안 연금술 실험을 완료했습니다.'
+        :'점수가 0이 되어 실험이 종료되었습니다.'
+    )+
+    `<br><br>`+
+    `완성한 레시피 <b>${solved}</b>개<br>`+
+    `총 실험 <b>${experiments}</b>회<br>`+
+    `최고 연속 성공 <b>${bestCombo}</b>회<br>`+
+    `최종 점수 <b>${Math.max(0,score)}</b>점`;
+
+  startBtn.textContent=
+    '60초 다시 도전';
+
+  startBtn.onclick=startGame;
+
+  overlay.classList.remove('hide');
+}
+
+$('#brewBtn').onclick=brew;
+
+startBtn.onclick=startGame;
+
+update();
+</script>
+
+</body>
+</html>

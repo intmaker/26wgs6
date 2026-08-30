@@ -1,9 +1,1156 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>🔭 레이저 미러</title><style>
-*{box-sizing:border-box}html,body{height:100%}body{margin:0;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 70% 10%,#581c87,#11102e 48%,#030712);color:#fff;font-family:system-ui,"Noto Sans KR",sans-serif;user-select:none}.app{width:min(94vw,680px);height:min(94vh,820px);display:flex;flex-direction:column;gap:11px}.top{display:flex;justify-content:space-between;align-items:end}.tag{font-size:10px;letter-spacing:.2em;color:#f0abfc;font-weight:900}h1{font-size:clamp(26px,5vw,38px);margin:2px 0}.stats{display:flex;gap:7px}.stat{min-width:70px;padding:8px;text-align:center;border:1px solid #ffffff24;border-radius:14px;background:#241441cc}.stat small{display:block;color:#d8b4fe;font-size:9px}.stat b{font-size:20px}.game{position:relative;flex:1;min-height:390px;display:grid;place-items:center;padding:15px;border:1px solid #ffffff25;border-radius:25px;background:linear-gradient(145deg,#21113e,#09152d);box-shadow:0 25px 70px #0009}.board{position:relative;width:min(100%,520px);aspect-ratio:1;display:grid;grid-template-columns:repeat(6,1fr);gap:3px;background:#040a18;border:6px solid #263354;border-radius:15px;overflow:hidden}.cell{position:relative;border:1px solid #ffffff0d;background:#0c1630}.mirror{width:100%;height:100%;border:0;background:transparent;color:#e9d5ff;font:900 clamp(32px,8vw,61px)/1 monospace;cursor:pointer;text-shadow:0 0 12px #d946ef;transition:.15s}.mirror:hover{background:#d946ef15}.source,.target{display:grid;place-items:center;font-size:clamp(25px,6vw,45px)}.beam-layer{position:absolute;inset:0;pointer-events:none;z-index:2}.beam{position:absolute;background:#fb7185;box-shadow:0 0 7px #fff,0 0 18px #f43f5e;border-radius:4px}.overlay{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding:20px;border-radius:inherit;background:#080817e8}.overlay.hide{display:none}.card{max-width:390px;padding:28px 24px;text-align:center;border:1px solid #ffffff24;border-radius:23px;background:#221442}.ico{font-size:54px}.card h2{margin:8px;font-size:28px}.card p{color:#ddd6fe;font-size:14px;line-height:1.7}.card button{width:100%;padding:14px;border:0;border-radius:13px;background:linear-gradient(135deg,#e879f9,#818cf8);color:#1e103b;font-weight:900;font-size:15px;cursor:pointer}.tip{text-align:center;color:#c4b5fd;font-size:12px}@media(max-width:520px){.app{width:100%;height:100%;padding:9px}.game{padding:8px;border-radius:20px}.board{gap:2px;border-width:4px}}
-</style></head><body><main class="app"><header class="top"><div><div class="tag">LASER LAB</div><h1>🔭 레이저 미러</h1></div><div class="stats"><div class="stat"><small>회전</small><b id="moves">0</b></div><div class="stat"><small>목표</small><b>🎯</b></div></div></header><section class="game"><div class="board" id="board"><div class="beam-layer" id="beams"></div></div><div class="overlay" id="over"><div class="card"><div class="ico" id="ico">🔭</div><h2 id="title">빛의 길을 만드세요</h2><p id="desc">거울을 누르면 <b>/</b>와 <b>\</b> 방향이 바뀝니다.<br>왼쪽 레이저를 반사시켜 오른쪽 목표에 보내세요.<br>빛의 진행 경로가 실시간으로 표시됩니다.</p><button id="start">실험 시작</button></div></div></section><div class="tip">거울 클릭·터치로 회전 · 레이저를 🎯까지 연결</div></main><script>
-(()=>{const N=6,board=document.querySelector('#board'),beamBox=document.querySelector('#beams'),over=document.querySelector('#over'),movesEl=document.querySelector('#moves');let cells=[],moves=0,playing=false;const mirrorMap=new Map([[14,'\\'],[26,'/'],[24,'\\'],[6,'/'],[4,'/'],[21,'\\']]);
-function start(){cells=Array(N*N).fill(null);for(const [i,sol] of mirrorMap)cells[i]={v:Math.random()<.5?'/':'\\',sol};moves=0;movesEl.textContent=0;playing=true;over.classList.add('hide');render();trace()}
-function render(){[...board.querySelectorAll('.cell')].forEach(e=>e.remove());for(let i=0;i<N*N;i++){const c=document.createElement('div');c.className='cell';if(i===12){c.classList.add('source');c.textContent='🔴'}else if(i===11){c.classList.add('target');c.textContent='🎯'}else if(cells[i]){const b=document.createElement('button');b.className='mirror';b.textContent=cells[i].v;b.onclick=()=>{if(!playing)return;cells[i].v=cells[i].v==='/'?'\\':'/';movesEl.textContent=++moves;render();trace()};c.appendChild(b)}board.appendChild(c)}}
-function trace(){beamBox.innerHTML='';let x=0,y=2,d=1,seen=new Set,steps=[];for(let k=0;k<80;k++){const key=`${x},${y},${d}`;if(seen.has(key))break;seen.add(key);steps.push({x,y,d});const i=y*N+x,m=cells[i]?.v;if(m==='/')d=[1,0,3,2][d];if(m==='\\')d=[3,2,1,0][d];const nx=x+[0,1,0,-1][d],ny=y+[-1,0,1,0][d];if(nx===N&&ny===1){drawBeam(steps);return win()}if(nx<0||nx>=N||ny<0||ny>=N)break;x=nx;y=ny}drawBeam(steps)}
-function drawBeam(steps){const size=board.clientWidth/N;for(const s of steps){const b=document.createElement('i');b.className='beam';if(s.d%2){b.style.cssText=`left:${s.x*size}px;top:${s.y*size+size/2-2}px;width:${size}px;height:4px`}else{b.style.cssText=`left:${s.x*size+size/2-2}px;top:${s.y*size}px;width:4px;height:${size}px`}beamBox.appendChild(b)}}
-function win(){if(!playing)return;playing=false;document.querySelector('#ico').textContent='✨';document.querySelector('#title').textContent='레이저 연결 성공!';document.querySelector('#desc').innerHTML=`${moves}번 회전으로 목표를 밝혔습니다.<br>다른 배치로 다시 실험해 보세요.`;document.querySelector('#start').textContent='새 실험';setTimeout(()=>over.classList.remove('hide'),500)}document.querySelector('#start').onclick=start;addEventListener('resize',()=>playing&&trace())})();</script></body></html>
+```html
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🔭 레이저 미러 챌린지</title>
+
+<style>
+*{box-sizing:border-box}
+html,body{height:100%}
+
+body{
+  margin:0;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 70% 10%,#581c87,#11102e 48%,#030712);
+  color:#fff;
+  font-family:system-ui,"Noto Sans KR",sans-serif;
+  user-select:none
+}
+
+.app{
+  width:min(95vw,700px);
+  height:min(96vh,840px);
+  display:flex;
+  flex-direction:column;
+  gap:10px
+}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  gap:8px
+}
+
+.tag{
+  font-size:10px;
+  letter-spacing:.2em;
+  color:#f0abfc;
+  font-weight:900
+}
+
+h1{
+  font-size:clamp(25px,5vw,38px);
+  margin:2px 0
+}
+
+.stats{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  justify-content:flex-end
+}
+
+.stat{
+  min-width:59px;
+  padding:7px;
+  text-align:center;
+  border:1px solid #ffffff24;
+  border-radius:13px;
+  background:#241441dd
+}
+
+.stat small{
+  display:block;
+  color:#d8b4fe;
+  font-size:9px
+}
+
+.stat b{
+  font-size:17px
+}
+
+.game{
+  position:relative;
+  flex:1;
+  min-height:400px;
+  display:grid;
+  place-items:center;
+  padding:15px;
+  border:1px solid #ffffff25;
+  border-radius:25px;
+  background:
+    linear-gradient(145deg,#21113e,#09152d);
+  box-shadow:0 25px 70px #0009;
+  touch-action:manipulation
+}
+
+.game.shake{
+  animation:shake .2s
+}
+
+@keyframes shake{
+  25%{transform:translateX(-4px)}
+  50%{transform:translateX(4px)}
+  75%{transform:translateX(-2px)}
+}
+
+.timer-wrap{
+  position:absolute;
+  left:15px;
+  right:15px;
+  top:12px;
+  height:8px;
+  border-radius:999px;
+  overflow:hidden;
+  background:#ffffff18;
+  z-index:4
+}
+
+.timer-bar{
+  height:100%;
+  width:100%;
+  background:
+    linear-gradient(90deg,#4ade80,#fde047,#fb7185)
+}
+
+.board{
+  position:relative;
+  width:min(100%,520px);
+  aspect-ratio:1;
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:3px;
+  background:#040a18;
+  border:6px solid #263354;
+  border-radius:15px;
+  overflow:hidden
+}
+
+.cell{
+  position:relative;
+  display:grid;
+  place-items:center;
+  border:1px solid #ffffff0d;
+  background:#0c1630
+}
+
+.mirror{
+  width:100%;
+  height:100%;
+  border:0;
+  background:transparent;
+  color:#f0abfc;
+  font:900 clamp(30px,8vw,58px)/1 system-ui,sans-serif;
+  cursor:pointer;
+  text-shadow:
+    0 0 9px #fff,
+    0 0 18px #d946ef;
+  transition:.1s
+}
+
+.mirror:active{
+  transform:scale(.88);
+  background:#d946ef22
+}
+
+.source,
+.target{
+  font-size:clamp(24px,6vw,43px)
+}
+
+.target.active{
+  animation:targetPulse .5s infinite alternate
+}
+
+@keyframes targetPulse{
+  to{
+    transform:scale(1.18);
+    filter:drop-shadow(0 0 12px #fde047)
+  }
+}
+
+.beam-layer{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:2
+}
+
+.beam{
+  position:absolute;
+  background:#fb7185;
+  box-shadow:
+    0 0 5px #fff,
+    0 0 14px #f43f5e,
+    0 0 24px #f43f5e;
+  border-radius:4px
+}
+
+.beam.success{
+  background:#fde047;
+  box-shadow:
+    0 0 7px #fff,
+    0 0 18px #fde047,
+    0 0 35px #f59e0b
+}
+
+.status{
+  position:absolute;
+  left:15px;
+  right:15px;
+  bottom:12px;
+  z-index:4;
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:8px 12px;
+  border:1px solid #ffffff24;
+  border-radius:12px;
+  background:#080817dd;
+  color:#e9d5ff;
+  font-size:12px;
+  font-weight:800;
+  text-align:center
+}
+
+.toast{
+  position:absolute;
+  left:50%;
+  top:22%;
+  z-index:8;
+  transform:translate(-50%,-50%);
+  padding:9px 17px;
+  border-radius:999px;
+  border:1px solid #ffffff33;
+  background:#111827e8;
+  font-weight:900;
+  opacity:0;
+  transition:.2s;
+  pointer-events:none;
+  white-space:nowrap
+}
+
+.toast.show{
+  opacity:1;
+  top:18%
+}
+
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:10;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  border-radius:inherit;
+  background:#080817e8
+}
+
+.overlay.hide{
+  display:none
+}
+
+.card{
+  width:min(100%,400px);
+  padding:28px 24px;
+  text-align:center;
+  border:1px solid #ffffff24;
+  border-radius:23px;
+  background:#221442
+}
+
+.ico{
+  font-size:54px
+}
+
+.card h2{
+  margin:8px;
+  font-size:28px
+}
+
+.card p{
+  color:#ddd6fe;
+  font-size:14px;
+  line-height:1.7
+}
+
+.card button{
+  width:100%;
+  min-height:48px;
+  padding:14px;
+  border:0;
+  border-radius:13px;
+  background:
+    linear-gradient(135deg,#e879f9,#818cf8);
+  color:#1e103b;
+  font-weight:900;
+  font-size:15px;
+  cursor:pointer
+}
+
+.tip{
+  text-align:center;
+  color:#c4b5fd;
+  font-size:12px
+}
+
+@media(max-width:520px){
+
+  .app{
+    width:100%;
+    height:100%;
+    padding:8px
+  }
+
+  .game{
+    padding:8px;
+    border-radius:20px
+  }
+
+  .board{
+    gap:2px;
+    border-width:4px
+  }
+
+  .stat{
+    min-width:53px;
+    padding:6px
+  }
+
+  .stat b{
+    font-size:15px
+  }
+}
+</style>
+</head>
+
+<body>
+
+<main class="app">
+
+<header class="top">
+
+<div>
+  <div class="tag">LASER LAB CHALLENGE</div>
+  <h1>🔭 레이저 미러</h1>
+</div>
+
+<div class="stats">
+
+  <div class="stat">
+    <small>시간</small>
+    <b id="time">60</b>
+  </div>
+
+  <div class="stat">
+    <small>퍼즐</small>
+    <b id="round">1</b>
+  </div>
+
+  <div class="stat">
+    <small>점수</small>
+    <b id="score">500</b>
+  </div>
+
+  <div class="stat">
+    <small>콤보</small>
+    <b id="combo">0</b>
+  </div>
+
+</div>
+
+</header>
+
+<section class="game" id="game">
+
+<div class="timer-wrap">
+  <div class="timer-bar" id="timerBar"></div>
+</div>
+
+<div class="board" id="board">
+  <div class="beam-layer" id="beams"></div>
+</div>
+
+<div class="toast" id="toast">
+  ✨ 연결 성공!
+</div>
+
+<div class="status" id="status">
+  거울을 눌러 레이저를 🎯까지 연결하세요.
+</div>
+
+<div class="overlay" id="over">
+
+<div class="card">
+
+  <div class="ico" id="ico">🔭</div>
+
+  <h2 id="title">
+    빛의 길을 만드세요
+  </h2>
+
+  <p id="desc">
+    거울을 누르면
+    <b style="font-size:20px">╱</b> 와
+    <b style="font-size:20px">╲</b>
+    방향이 바뀝니다.<br><br>
+
+    레이저를 반사해 🎯에 연결하세요.<br>
+    성공하면 바로 다음 퍼즐이 시작됩니다.<br><br>
+
+    <b>60초 동안 최대한 많은 퍼즐을 해결하세요!</b>
+  </p>
+
+  <button id="start">
+    60초 실험 시작
+  </button>
+
+</div>
+
+</div>
+
+</section>
+
+<div class="tip">
+╱ ╲ 거울 클릭·터치 · 레이저 연결 · 60초 연속 퍼즐
+</div>
+
+</main>
+
+<script>
+(()=>{
+const N=6;
+
+const board=
+  document.querySelector('#board');
+
+const beamBox=
+  document.querySelector('#beams');
+
+const over=
+  document.querySelector('#over');
+
+const game=
+  document.querySelector('#game');
+
+const timeEl=
+  document.querySelector('#time');
+
+const roundEl=
+  document.querySelector('#round');
+
+const scoreEl=
+  document.querySelector('#score');
+
+const comboEl=
+  document.querySelector('#combo');
+
+const timerBar=
+  document.querySelector('#timerBar');
+
+const status=
+  document.querySelector('#status');
+
+const toast=
+  document.querySelector('#toast');
+
+let cells=[];
+
+let playing=false;
+
+let round=1;
+let score=500;
+let combo=0;
+let solved=0;
+let totalMoves=0;
+
+let startTime=0;
+let duration=60;
+let remaining=60;
+let raf=0;
+
+let sourceRow=2;
+let targetRow=1;
+
+/*
+  화면에는 ╱ ╲ 를 표시하지만
+  내부 계산은 / 와 \ 를 사용합니다.
+*/
+
+function mirrorSymbol(v){
+  return v==='/' ? '╱' : '╲';
+}
+
+function showToast(text){
+
+  toast.textContent=text;
+
+  toast.classList.remove('show');
+  void toast.offsetWidth;
+  toast.classList.add('show');
+
+  clearTimeout(showToast.timer);
+
+  showToast.timer=
+    setTimeout(()=>{
+      toast.classList.remove('show');
+    },650);
+}
+
+function shake(){
+
+  game.classList.remove('shake');
+  void game.offsetWidth;
+  game.classList.add('shake');
+}
+
+/*
+  여러 가지 퍼즐 패턴
+*/
+
+const puzzles=[
+
+  {
+    source:2,
+    target:1,
+    mirrors:[
+      [14,'\\'],
+      [26,'/'],
+      [24,'\\'],
+      [6,'/'],
+      [4,'/'],
+      [21,'\\']
+    ]
+  },
+
+  {
+    source:3,
+    target:0,
+    mirrors:[
+      [18,'/'],
+      [20,'\\'],
+      [8,'/'],
+      [10,'\\'],
+      [5,'/'],
+      [27,'\\'],
+      [29,'/']
+    ]
+  },
+
+  {
+    source:1,
+    target:4,
+    mirrors:[
+      [7,'\\'],
+      [19,'/'],
+      [21,'\\'],
+      [27,'/'],
+      [29,'\\'],
+      [11,'/']
+    ]
+  },
+
+  {
+    source:4,
+    target:2,
+    mirrors:[
+      [24,'/'],
+      [26,'\\'],
+      [14,'/'],
+      [16,'\\'],
+      [4,'/'],
+      [10,'\\'],
+      [17,'/']
+    ]
+  },
+
+  {
+    source:0,
+    target:5,
+    mirrors:[
+      [0,'\\'],
+      [12,'/'],
+      [14,'\\'],
+      [26,'/'],
+      [28,'\\'],
+      [34,'/'],
+      [23,'\\']
+    ]
+  }
+
+];
+
+let activePuzzle=null;
+
+function makePuzzle(){
+
+  activePuzzle=
+    puzzles[
+      Math.floor(
+        Math.random()*puzzles.length
+      )
+    ];
+
+  sourceRow=
+    activePuzzle.source;
+
+  targetRow=
+    activePuzzle.target;
+
+  cells=
+    Array(N*N)
+    .fill(null);
+
+  for(
+    const [i,solution]
+    of activePuzzle.mirrors
+  ){
+
+    /*
+      약 50% 확률로 정답과 반대로 시작
+    */
+
+    let value=
+      Math.random()<.5
+        ?solution
+        :(solution==='/'?'\\':'/');
+
+    cells[i]={
+      v:value,
+      sol:solution
+    };
+  }
+
+  /*
+    최소 한두 개는 틀린 상태로 시작
+  */
+
+  let wrong=
+    activePuzzle.mirrors
+    .filter(([i])=>
+      cells[i].v!==
+      cells[i].sol
+    );
+
+  if(wrong.length<2){
+
+    for(let n=0;n<2;n++){
+
+      const pick=
+        activePuzzle.mirrors[
+          Math.floor(
+            Math.random()*
+            activePuzzle.mirrors.length
+          )
+        ][0];
+
+      cells[pick].v=
+        cells[pick].sol==='/'?'\\':'/';
+    }
+  }
+
+  render();
+  trace();
+}
+
+function start(){
+
+  playing=true;
+
+  round=1;
+  score=500;
+  combo=0;
+  solved=0;
+  totalMoves=0;
+
+  duration=60;
+  remaining=60;
+
+  roundEl.textContent=1;
+  scoreEl.textContent=500;
+  comboEl.textContent=0;
+  timeEl.textContent=60;
+
+  timerBar.style.width='100%';
+
+  status.textContent=
+    '거울을 돌려 레이저를 🎯까지 연결하세요.';
+
+  over.classList.add('hide');
+
+  makePuzzle();
+
+  startTime=
+    performance.now();
+
+  cancelAnimationFrame(raf);
+
+  raf=
+    requestAnimationFrame(loop);
+}
+
+function render(){
+
+  [
+    ...board.querySelectorAll('.cell')
+  ].forEach(e=>e.remove());
+
+  for(let i=0;i<N*N;i++){
+
+    const x=i%N;
+    const y=Math.floor(i/N);
+
+    const c=
+      document.createElement('div');
+
+    c.className='cell';
+
+    /*
+      왼쪽 레이저 출발점
+    */
+
+    if(
+      x===0 &&
+      y===sourceRow
+    ){
+
+      c.classList.add('source');
+
+      const s=
+        document.createElement('span');
+
+      s.textContent='🔴';
+
+      c.appendChild(s);
+    }
+
+    /*
+      오른쪽 목표
+    */
+
+    if(
+      x===N-1 &&
+      y===targetRow
+    ){
+
+      c.classList.add('target');
+
+      const t=
+        document.createElement('span');
+
+      t.textContent='🎯';
+
+      c.appendChild(t);
+    }
+
+    /*
+      거울
+    */
+
+    if(cells[i]){
+
+      const b=
+        document.createElement('button');
+
+      b.className='mirror';
+
+      /*
+        역슬래시 대신
+        Unicode 대각선 기호 사용
+      */
+
+      b.textContent=
+        mirrorSymbol(
+          cells[i].v
+        );
+
+      b.onclick=()=>{
+
+        if(!playing)return;
+
+        cells[i].v=
+          cells[i].v==='/'?'\\':'/';
+
+        totalMoves++;
+
+        /*
+          거울 1회 회전은 아주 작은 감점
+          무작정 누르는 플레이 방지
+        */
+
+        score=
+          Math.max(
+            0,
+            score-2
+          );
+
+        scoreEl.textContent=score;
+
+        render();
+
+        const success=
+          trace();
+
+        if(
+          score<=0 &&
+          playing
+        ){
+          endGame('score');
+        }
+
+        if(success){
+          solvePuzzle();
+        }
+      };
+
+      c.appendChild(b);
+    }
+
+    board.appendChild(c);
+  }
+}
+
+function trace(){
+
+  beamBox.innerHTML='';
+
+  let x=0;
+  let y=sourceRow;
+
+  /*
+    0 위
+    1 오른쪽
+    2 아래
+    3 왼쪽
+  */
+
+  let d=1;
+
+  const seen=
+    new Set();
+
+  const steps=[];
+
+  let success=false;
+
+  for(let k=0;k<100;k++){
+
+    const key=
+      `${x},${y},${d}`;
+
+    if(seen.has(key)){
+      break;
+    }
+
+    seen.add(key);
+
+    steps.push({
+      x,y,d
+    });
+
+    const i=
+      y*N+x;
+
+    const m=
+      cells[i]?.v;
+
+    if(m==='/'){
+
+      d=[
+        1,
+        0,
+        3,
+        2
+      ][d];
+    }
+
+    if(m==='\\'){
+
+      d=[
+        3,
+        2,
+        1,
+        0
+      ][d];
+    }
+
+    const nx=
+      x+
+      [0,1,0,-1][d];
+
+    const ny=
+      y+
+      [-1,0,1,0][d];
+
+    /*
+      오른쪽 목표 도착
+    */
+
+    if(
+      nx===N &&
+      ny===targetRow
+    ){
+
+      success=true;
+      break;
+    }
+
+    if(
+      nx<0||
+      nx>=N||
+      ny<0||
+      ny>=N
+    ){
+      break;
+    }
+
+    x=nx;
+    y=ny;
+  }
+
+  drawBeam(
+    steps,
+    success
+  );
+
+  return success;
+}
+
+function drawBeam(
+  steps,
+  success=false
+){
+
+  /*
+    board 내부 실제 칸 크기 계산
+  */
+
+  const size=
+    board.clientWidth/N;
+
+  for(const s of steps){
+
+    const b=
+      document.createElement('i');
+
+    b.className=
+      'beam'+
+      (success?' success':'');
+
+    if(s.d%2){
+
+      b.style.left=
+        `${s.x*size}px`;
+
+      b.style.top=
+        `${s.y*size+size/2-2}px`;
+
+      b.style.width=
+        `${size}px`;
+
+      b.style.height='4px';
+
+    }else{
+
+      b.style.left=
+        `${s.x*size+size/2-2}px`;
+
+      b.style.top=
+        `${s.y*size}px`;
+
+      b.style.width='4px';
+
+      b.style.height=
+        `${size}px`;
+    }
+
+    beamBox.appendChild(b);
+  }
+}
+
+function solvePuzzle(){
+
+  if(!playing)return;
+
+  /*
+    중복 성공 방지
+  */
+
+  playing=false;
+
+  combo++;
+  solved++;
+
+  const comboBonus=
+    Math.min(
+      150,
+      combo*20
+    );
+
+  const gain=
+    100+
+    comboBonus;
+
+  score+=gain;
+
+  scoreEl.textContent=score;
+  comboEl.textContent=combo;
+
+  showToast(
+    `✨ 연결 성공 +${gain}`
+  );
+
+  status.textContent=
+    `${combo} 콤보! 다음 광학 퍼즐 준비...`;
+
+  document
+    .querySelectorAll('.target')
+    .forEach(e=>
+      e.classList.add('active')
+    );
+
+  setTimeout(()=>{
+
+    /*
+      시간이 이미 끝났다면 종료
+    */
+
+    const now=
+      performance.now();
+
+    const elapsed=
+      (now-startTime)/1000;
+
+    if(elapsed>=duration){
+
+      endGame('time');
+      return;
+    }
+
+    round++;
+
+    roundEl.textContent=
+      round;
+
+    /*
+      다시 플레이 활성화
+    */
+
+    playing=true;
+
+    makePuzzle();
+
+    status.textContent=
+      `퍼즐 ${round} · 레이저를 🎯까지 연결하세요.`;
+
+  },500);
+}
+
+function loop(now){
+
+  /*
+    퍼즐 전환 중에도
+    전체 60초 시간은 계속 흐름
+  */
+
+  const elapsed=
+    (now-startTime)/1000;
+
+  remaining=
+    Math.max(
+      0,
+      duration-elapsed
+    );
+
+  timeEl.textContent=
+    Math.ceil(remaining);
+
+  timerBar.style.width=
+    `${remaining/duration*100}%`;
+
+  if(
+    remaining<=0 &&
+    startTime>0
+  ){
+
+    endGame('time');
+    return;
+  }
+
+  raf=
+    requestAnimationFrame(loop);
+}
+
+function endGame(reason){
+
+  cancelAnimationFrame(raf);
+
+  playing=false;
+
+  startTime=0;
+
+  const success=
+    reason==='time';
+
+  let rank='C';
+
+  if(solved>=4)rank='B';
+  if(solved>=7)rank='A';
+  if(solved>=10)rank='S';
+
+  document.querySelector('#ico')
+    .textContent=
+    success?'🏆':'💥';
+
+  document.querySelector('#title')
+    .textContent=
+    success
+      ?'60초 실험 완료!'
+      :'에너지 소진!';
+
+  document.querySelector('#desc')
+    .innerHTML=
+    `<b style="font-size:29px;color:#fde047">RANK ${rank}</b><br><br>`+
+    (
+      success
+        ?'60초 동안 광학 실험을 완료했습니다!'
+        :'점수가 0이 되어 실험이 종료되었습니다.'
+    )+
+    `<br><br>`+
+    `해결한 퍼즐 <b>${solved}</b>개<br>`+
+    `최고 콤보 <b>${combo}</b>회<br>`+
+    `거울 회전 <b>${totalMoves}</b>회<br>`+
+    `최종 점수 <b>${Math.max(0,score)}</b>점`;
+
+  document.querySelector('#start')
+    .textContent=
+    '60초 다시 도전';
+
+  over.classList.remove('hide');
+}
+
+document.querySelector('#start')
+  .onclick=start;
+
+addEventListener(
+  'resize',
+  ()=>{
+    if(startTime>0){
+      render();
+      trace();
+    }
+  }
+);
+
+})();
+</script>
+
+</body>
+</html>

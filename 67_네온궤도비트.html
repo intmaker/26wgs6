@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>✨ 네온 궤도 비트</title><style>
 :root{--a:#45f3ff;--b:#b65cff;--c:#ff5ca8;--bg:#07091e}*{box-sizing:border-box}html,body{margin:0;min-height:100%;overflow-x:hidden}body{min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 50% 0,#28266b,#0b102d 46%,#050716);color:#f8fafc;font-family:system-ui,-apple-system,sans-serif;user-select:none;-webkit-user-select:none;touch-action:manipulation}.app{width:min(100%,1020px);min-height:100vh;display:flex;flex-direction:column;padding:8px}.top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 5px}.brand h1{margin:0;font-size:clamp(21px,4vw,32px)}.brand small{color:#9feafb;font-weight:800}.hud{display:flex;justify-content:flex-end;gap:5px;flex-wrap:wrap}.stat{min-width:66px;padding:5px 7px;text-align:center;border:1px solid #ffffff24;border-radius:10px;background:#ffffff0d}.stat small{display:block;color:#a8b2d8;font-size:9px}.stat b{font-size:15px}.icon-btn{min-height:42px;border:0;border-radius:10px;background:#ffffff16;color:#fff;font-weight:800}.bars{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:5px}.bar-wrap{display:flex;align-items:center;gap:7px;color:#cbd5e1;font-size:10px;font-weight:900}.bar{flex:1;height:9px;overflow:hidden;border-radius:99px;background:#ffffff17}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--a),var(--b));transition:.2s}.fever-bar.hot i{box-shadow:0 0 14px #ff8a00;background:linear-gradient(90deg,#ffd000,#ff5c00)}.stage{position:relative;flex:1;min-height:470px;overflow:hidden;border:1px solid #ffffff26;border-radius:22px;background:linear-gradient(160deg,#121846,#080b22);box-shadow:0 24px 65px #0008;cursor:pointer}.stage.fever{box-shadow:0 0 45px var(--c),inset 0 0 45px #ff5caa22;animation:feverBg .8s alternate infinite}@keyframes feverBg{to{filter:brightness(1.18)}}.stage.shake{animation:shake .25s}@keyframes shake{25%{translate:-4px}75%{translate:4px}}canvas{display:block;width:100%;height:100%;min-height:470px}.judge,.streak,.fever-label{position:absolute;left:50%;pointer-events:none;text-align:center;font-weight:1000;text-shadow:0 0 22px currentColor;opacity:0}.judge{top:21%;transform:translate(-50%,-50%);font-size:clamp(27px,7vw,52px)}.judge.show{animation:pop .55s}.streak{top:32%;transform:translateX(-50%);font-size:clamp(17px,4vw,28px);color:#fef08a}.streak.show{animation:pop .8s}.fever-label{top:8%;transform:translateX(-50%);font-size:clamp(19px,5vw,34px);color:#ffd000}.fever-label.on{opacity:1;animation:pulse .5s alternate infinite}@keyframes pop{0%{opacity:0;scale:.7}25%{opacity:1;scale:1.08}100%{opacity:0;translate:0 -25px}}@keyframes pulse{to{scale:1.08;text-shadow:0 0 35px #ff6a00}}.count{position:absolute;inset:0;z-index:8;display:none;place-items:center;text-align:center;padding:18px;background:#080b22dd;font-size:clamp(50px,15vw,110px);font-weight:1000;text-shadow:0 0 35px var(--a);pointer-events:none}.count.show{display:grid}.count.intro{font-size:clamp(25px,7vw,52px);line-height:1.5}.touch-wave{position:absolute;width:20px;height:20px;border:3px solid var(--a);border-radius:50%;pointer-events:none;animation:wave .38s forwards}@keyframes wave{to{scale:3;opacity:0}}.overlay{position:absolute;inset:0;z-index:10;display:grid;place-items:center;padding:15px;background:#06091cee;cursor:default}.overlay.hide{display:none}.card{width:min(100%,570px);max-height:94%;overflow:auto;padding:22px;text-align:center;border:1px solid #ffffff28;border-radius:22px;background:linear-gradient(150deg,#1d2454,#111631);box-shadow:0 20px 60px #0009}.logo{font-size:52px}.card h2{margin:5px;font-size:28px}.card p{color:#c5cbea;line-height:1.55;word-break:keep-all}.primary,.modal-actions button,.mode-row button,.theme-row button{min-height:46px;border:0;border-radius:12px;padding:8px 12px;font-weight:900;cursor:pointer}.primary{width:100%;color:#071020;background:linear-gradient(135deg,var(--a),#c4b5fd)}.stage-list{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:12px 0}.stage-btn{min-height:64px;border:1px solid #ffffff20;border-radius:12px;color:#fff;background:#ffffff0d;font-weight:900}.stage-btn small{display:block}.stage-btn:disabled{opacity:.38;filter:grayscale(1)}.mode-row,.theme-row,.modal-actions{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin:9px 0}.mode-row button,.theme-row button,.modal-actions button{color:#fff;background:#ffffff14}.mode-row button.active,.theme-row button.active{outline:2px solid var(--a);background:#ffffff25}.results{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}.results span{padding:8px 4px;border-radius:10px;background:#ffffff0c;font-size:11px}.results b{display:block;color:var(--a);font-size:18px}.rank{font-size:45px;font-weight:1000;color:#fef08a}.stars{font-size:32px;letter-spacing:5px;color:#fde047}.hint{position:absolute;inset:auto 12px 8px;text-align:center;color:#a8b2d8;font-size:11px;pointer-events:none}@media(max-width:680px){.app{padding:4px}.top{align-items:flex-start}.brand small{display:none}.stat{min-width:55px;padding:4px}.stat b{font-size:13px}.bars{grid-template-columns:1fr}.stage,canvas{min-height:430px}.stage-list{grid-template-columns:repeat(3,1fr)}.card{padding:16px}.results{grid-template-columns:repeat(3,1fr)}}@media(max-height:650px) and (orientation:landscape){.stage,canvas{min-height:330px}.hint{display:none}}
-</style></head><body><main class="app"><header class="top"><div class="brand"><small>ONE BUTTON RHYTHM</small><h1>✨ 네온 궤도 비트</h1></div><div class="hud"><span class="stat"><small>STAGE</small><b id="level">1/10</b></span><span class="stat"><small>BPM</small><b id="bpm">72</b></span><span class="stat"><small>SCORE</small><b id="score">0</b></span><span class="stat"><small>COMBO</small><b id="combo">0</b></span><span class="stat"><small>ACCURACY</small><b id="accuracy">100%</b></span><span class="stat"><small>LIFE</small><b id="life">♥♥♥</b></span><button class="icon-btn" id="sound">🔊</button><button class="icon-btn" id="metro">🥁 OFF</button></div></header><div class="bars"><div class="bar-wrap">NODE <span id="nodeText">1/6</span><div class="bar"><i id="nodeBar"></i></div></div><div class="bar-wrap">FEVER <span id="feverText">0%</span><div class="bar fever-bar" id="feverBar"><i id="feverFill"></i></div></div></div><section class="stage" id="stage"><canvas id="canvas"></canvas><div class="judge" id="judge"></div><div class="streak" id="streak"></div><div class="fever-label" id="feverLabel">🔥 FEVER x2</div><div class="count" id="count"></div><div class="hint">SPACE · ENTER · 클릭 · 화면 터치</div><div class="overlay" id="overlay"><div class="card"><div class="logo" id="modalIcon">🔵🟣</div><h2 id="modalTitle">네온 궤도 비트</h2><div id="modalBody"><p>두 구체가 다음 노드와 만나는 순간 터치하세요.<br>PERFECT · GREAT · GOOD · MISS</p></div><div class="modal-actions" id="modalActions"><button class="primary" data-action="select">게임 시작</button></div></div></div></section></main><script>
+</style></head><body><main class="app"><header class="top"><div class="brand"><small>ONE BUTTON RHYTHM</small><h1>✨ 네온 궤도 비트</h1></div><div class="hud"><span class="stat"><small>STAGE</small><b id="level">1/10</b></span><span class="stat"><small>BPM</small><b id="bpm">72</b></span><span class="stat"><small>SCORE</small><b id="score">0</b></span><span class="stat"><small>COMBO</small><b id="combo">0</b></span><span class="stat"><small>ACCURACY</small><b id="accuracy">100%</b></span><span class="stat"><small>LIFE</small><b id="life">♥♥♥</b></span><button class="icon-btn" id="sound">🔊</button><button class="icon-btn" id="metro">🥁 OFF</button></div></header><div class="bars"><div class="bar-wrap">TIME <span id="nodeText">60.0초</span><div class="bar"><i id="nodeBar"></i></div></div><div class="bar-wrap">FEVER <span id="feverText">0%</span><div class="bar fever-bar" id="feverBar"><i id="feverFill"></i></div></div></div><section class="stage" id="stage"><canvas id="canvas"></canvas><div class="judge" id="judge"></div><div class="streak" id="streak"></div><div class="fever-label" id="feverLabel">🔥 FEVER x2</div><div class="count" id="count"></div><div class="hint">SPACE · ENTER · 클릭 · 화면 터치</div><div class="overlay" id="overlay"><div class="card"><div class="logo" id="modalIcon">🔵🟣</div><h2 id="modalTitle">네온 궤도 비트</h2><div id="modalBody"><p>두 구체가 다음 노드와 만나는 순간 터치하세요.<br>PERFECT · GREAT · GOOD · MISS</p></div><div class="modal-actions" id="modalActions"><button class="primary" data-action="select">게임 시작</button></div></div></div></section></main><script>
 const $=s=>document.querySelector(s),canvas=$('#canvas'),ctx=canvas.getContext('2d'),stageEl=$('#stage');
 // 기존 BPM/박자 배열 구조를 유지한 10개 스테이지
 const rawStages=[
@@ -18,7 +18,7 @@ const rawStages=[
 ];
 const themes={basic:['#45f3ff','#b65cff','#ff5ca8'],pink:['#ff7eb3','#d946ef','#fb7185'],blue:['#38bdf8','#2563eb','#22d3ee'],gold:['#fde047','#f59e0b','#fff7ae']};
 let records={unlocked:1,stars:Array(10).fill(0),scores:Array(10).fill(0),accuracy:Array(10).fill(0),ranks:Array(10).fill(''),bestScore:0,bestCombo:0,theme:'basic'};try{let r=JSON.parse(localStorage.getItem('neonOrbitBeatV2'));if(r)records={...records,...r}}catch(e){}
-let dpr=1,W=1,H=1,level=0,node=0,nextBeat=0,interval=900,playing=false,counting=false,practice=false,speed=1,score=0,combo=0,maxCombo=0,life=3,total=0,earned=0,lastInput=0,missedThisBeat=false,soundOn=true,metroOn=false,metroPlayed=false,audio=null,stats={},fever=0,feverUntil=0,perfectStreak=0,checkpoint=0,checkpointUsed=false,trails=[],bgStars=[];
+let dpr=1,W=1,H=1,level=0,node=0,nextBeat=0,interval=900,playing=false,counting=false,practice=false,speed=1,score=500,combo=0,maxCombo=0,life=3,total=0,earned=0,lastInput=0,missedThisBeat=false,soundOn=true,metroOn=false,metroPlayed=false,audio=null,stats={},fever=0,feverUntil=0,perfectStreak=0,checkpoint=0,checkpointUsed=false,trails=[],bgStars=[],gameStart=0,gameDuration=60000;
 function save(){try{localStorage.setItem('neonOrbitBeatV2',JSON.stringify(records))}catch(e){}}
 function setTheme(name){records.theme=name;let t=themes[name]||themes.basic;document.documentElement.style.setProperty('--a',t[0]);document.documentElement.style.setProperty('--b',t[1]);document.documentElement.style.setProperty('--c',t[2]);save()}
 setTheme(records.theme);
@@ -27,12 +27,80 @@ function tone(freq,d=.07,type='sine',gain=.07){if(!soundOn)return;try{if(!audio)
 function melody(up=true){(up?[520,700,920]:[360,250,150]).forEach((f,i)=>setTimeout(()=>tone(f,.11),i*100))}
 function data(){return rawStages[level]}function pos(i){let p=data().path[i];return{x:p[0]*W,y:p[1]*H}}function totalStars(){return records.stars.reduce((a,b)=>a+b,0)}
 function nextInterval(){return 60000/data().bpm*data().beats[Math.min(node,data().beats.length-1)]/speed}
-function updateHud(now=performance.now()){let count=data().path.length;$('#level').textContent=`${level+1}/10`;$('#bpm').textContent=Math.round(data().bpm*speed);$('#score').textContent=score;$('#combo').textContent=combo;$('#accuracy').textContent=total?`${(earned/total*100).toFixed(1)}%`:'100%';$('#life').textContent=practice?'∞':'♥'.repeat(life)+'♡'.repeat(3-life);$('#nodeText').textContent=`${node+1}/${count}`;$('#nodeBar').style.width=`${node/(count-1)*100}%`;let hot=now<feverUntil;$('#feverFill').style.width=`${hot?100:fever}%`;$('#feverText').textContent=hot?'x2':`${Math.round(fever)}%`;$('#feverBar').classList.toggle('hot',hot);stageEl.classList.toggle('fever',hot);$('#feverLabel').classList.toggle('on',hot)}
+function updateHud(now=performance.now()){
+  let remain=playing?Math.max(0,gameDuration-(now-gameStart)):gameDuration;
+  $('#level').textContent='60초';
+  $('#bpm').textContent=Math.round(data().bpm*speed);
+  $('#score').textContent=Math.max(0,Math.round(score));
+  $('#combo').textContent=combo;
+  $('#accuracy').textContent=total?`${(earned/total*100).toFixed(1)}%`:'100%';
+  $('#life').textContent='∞';
+  $('#nodeText').textContent=`${(remain/1000).toFixed(1)}초`;
+  $('#nodeBar').style.width=`${Math.max(0,remain/gameDuration*100)}%`;
+  let hot=now<feverUntil;
+  $('#feverFill').style.width=`${hot?100:fever}%`;
+  $('#feverText').textContent=hot?'x2':`${Math.round(fever)}%`;
+  $('#feverBar').classList.toggle('hot',hot);
+  stageEl.classList.toggle('fever',hot);
+  $('#feverLabel').classList.toggle('on',hot)
+}
 function flash(id,text,color){let e=$(id);e.textContent=text;if(color)e.style.color=color;e.classList.remove('show');void e.offsetWidth;e.classList.add('show')}
-function stageSelect(){playing=false;counting=false;let stars=totalStars(),unlocks={pink:10,blue:20,gold:30};$('#modalIcon').textContent='✨';$('#modalTitle').textContent='STAGE SELECT';$('#modalBody').innerHTML=`<p>⭐ 총 별 ${stars} / 30</p><div class="mode-row"><button data-mode="normal" class="${!practice?'active':''}">🏆 기록 모드</button><button data-mode="practice" class="${practice?'active':''}">🎧 연습 모드</button></div><div class="mode-row" id="speedRow" style="${practice?'':'display:none'}"><button data-speed=".8" class="${speed===.8?'active':''}">🐢 0.8x</button><button data-speed="1" class="${speed===1?'active':''}">▶ 1.0x</button><button data-speed="1.2" class="${speed===1.2?'active':''}">🔥 1.2x</button></div><div class="stage-list">${rawStages.map((s,i)=>`<button class="stage-btn" data-stage="${i}" ${i>=records.unlocked?'disabled':''}>${i+1}<small>${i>=records.unlocked?'🔒':'★'.repeat(records.stars[i])+'☆'.repeat(3-records.stars[i])}</small></button>`).join('')}</div><div class="theme-row">${Object.keys(themes).map((t,i)=>{let need=[0,10,20,30][i],label=['🔵 기본','🌸 핑크','🌊 블루','🌟 골드'][i];return `<button data-theme="${t}" ${stars<need?'disabled':''} class="${records.theme===t?'active':''}">${stars<need?'🔒 ':''}${label}</button>`}).join('')}</div>`;$('#modalActions').innerHTML='';$('#overlay').classList.remove('hide')}
+function stageSelect(){
+  playing=false;
+  counting=false;
+  let stars=totalStars();
+  $('#modalIcon').textContent='✨';
+  $('#modalTitle').textContent='60초 무한 리듬';
+  $('#modalBody').innerHTML=
+    `<p>한 판은 약 <b>60초</b> 동안 계속 이어집니다.<br>`+
+    `PERFECT · GREAT · GOOD은 점수를 올리고,<br>`+
+    `<b>MISS는 점수를 깎습니다.</b><br>`+
+    `60초가 되거나 점수가 0이 되면 종료됩니다.</p>`+
+    `<div class="results"><span>시작 점수<b>500</b></span><span>MISS<b>-85</b></span><span>시간<b>60초</b></span></div>`;
+  $('#modalActions').innerHTML='<button class="primary" data-action="start">60초 게임 시작</button>';
+  $('#overlay').classList.remove('hide')
+}
 function stageIntro(){let s=data();$('#modalIcon').textContent='🪐';$('#modalTitle').textContent=`STAGE ${level+1} · ${s.name}`;$('#modalBody').innerHTML=`<p>${s.desc}</p><div class="results"><span>BPM<b>${Math.round(s.bpm*speed)}</b></span><span>노드<b>${s.path.length}</b></span><span>모드<b>${practice?'연습':'기록'}</b></span></div>`;$('#modalActions').innerHTML='<button class="primary" data-action="start">시작하기</button><button data-action="select">스테이지 선택</button>';$('#overlay').classList.remove('hide')}
-function resetStats(start=0){node=start;score=start?Math.floor(score*.5):0;combo=0;maxCombo=0;life=3;total=earned=0;lastInput=0;missedThisBeat=false;stats={perfect:0,great:0,good:0,miss:0};fever=0;feverUntil=0;perfectStreak=0;checkpoint=start;checkpointUsed=start>0;trails=[];updateHud()}
-async function countdown(){counting=true;$('#overlay').classList.add('hide');let c=$('#count');c.className='count show intro';c.innerHTML=`STAGE ${level+1}<br>${data().name}<br><small>BPM ${Math.round(data().bpm*speed)}</small>`;await wait(1050);c.className='count show';for(const t of ['3','2','1','GO!']){c.textContent=t;tone(t==='GO!'?720:440,.07);await wait(t==='GO!'?420:580)}c.className='count';counting=false;playing=true;interval=nextInterval();nextBeat=performance.now()+interval;metroPlayed=false;missedThisBeat=false}
+function resetStats(start=0){
+  node=0;
+  score=500;
+  combo=0;
+  maxCombo=0;
+  life=3;
+  total=earned=0;
+  lastInput=0;
+  missedThisBeat=false;
+  stats={perfect:0,great:0,good:0,miss:0};
+  fever=0;
+  feverUntil=0;
+  perfectStreak=0;
+  checkpoint=0;
+  checkpointUsed=false;
+  trails=[];
+  updateHud()
+}
+async function countdown(){
+  counting=true;
+  $('#overlay').classList.add('hide');
+  let c=$('#count');
+  c.className='count show intro';
+  c.innerHTML=`60초 무한 리듬<br><small>점수가 0이 되면 종료!</small>`;
+  await wait(900);
+  c.className='count show';
+  for(const t of ['3','2','1','GO!']){
+    c.textContent=t;
+    tone(t==='GO!'?720:440,.07);
+    await wait(t==='GO!'?350:520)
+  }
+  c.className='count';
+  counting=false;
+  playing=true;
+  gameStart=performance.now();
+  interval=nextInterval();
+  nextBeat=gameStart+interval;
+  metroPlayed=false;
+  missedThisBeat=false
+}
 function wait(ms){return new Promise(r=>setTimeout(r,ms))}
 function showJudge(word,color){flash('#judge',word,color);if(word==='MISS'){stageEl.classList.remove('shake');void stageEl.offsetWidth;stageEl.classList.add('shake')}if(word==='PERFECT')particles(6)}
 function particles(n){for(let i=0;i<n;i++){let e=document.createElement('i');e.className='touch-wave';e.style.left=`${45+Math.random()*10}%`;e.style.top=`${22+Math.random()*8}%`;stageEl.appendChild(e);setTimeout(()=>e.remove(),400)}}
@@ -40,13 +108,84 @@ function streakBonus(){let words={5:'NICE!',10:'AWESOME!',20:'AMAZING!',30:'LEGE
 function addFever(amount,now){if(now<feverUntil)return;fever=Math.min(100,fever+amount);if(fever>=100){fever=0;feverUntil=now+6000;flash('#streak','🔥 FEVER START!');[500,650,800,1000].forEach((f,i)=>setTimeout(()=>tone(f,.09),i*80))}}
 function applySpecial(judgement){let type=data().special[node];if(!type)return;if(type==='bonus'){score+=judgement==='PERFECT'?500:200;flash('#streak','⭐ BONUS NODE!')}if(type==='perfect'&&judgement==='PERFECT'){score+=800;flash('#streak','💎 PERFECT BONUS!')}if(type==='life'&&(judgement==='PERFECT'||judgement==='GREAT')){life=Math.min(3,life+1);flash('#streak','❤️ LIFE UP!')}}
 function judgeInput(now){if(!playing||counting||now-lastInput<135)return;lastInput=now;let shock=data().special[node+1]==='shock',scale=shock ? .78 : 1,diff=Math.abs(now-nextBeat),word='',points=0,weight=0,color='';if(diff<=70*scale){word='PERFECT';points=100;weight=1;color='#45f3ff';stats.perfect++;perfectStreak++;addFever(12,now)}else if(diff<=135*scale){word='GREAT';points=75;weight=.75;color='#b65cff';stats.great++;perfectStreak=0;addFever(8,now)}else if(diff<=220*scale){word='GOOD';points=45;weight=.45;color='#fde047';stats.good++;perfectStreak=0;addFever(3,now)}else{return miss('TOO EARLY',now)}total++;earned+=weight;combo++;maxCombo=Math.max(maxCombo,combo);let mult=now<feverUntil?2:1;score+=(points+Math.min(combo*2,50))*mult;showJudge(word,color);streakBonus();tone(word==='PERFECT'?900:word==='GREAT'?680:500);advance(now,word)}
-function miss(label='MISS',now=performance.now()){if(!playing)return;total++;stats.miss++;combo=0;perfectStreak=0;fever=Math.max(0,fever-22);showJudge(label,'#fb7185');tone(145,.15,'sawtooth');if(!practice)life--;updateHud(now);if(life<=0&&!practice){playing=false;melody(false);setTimeout(()=>result(false),420)}else missedThisBeat=true}
-function advance(now,judgement='MISS'){node++;applySpecial(judgement);missedThisBeat=false;if(!checkpoint&&node>=Math.floor((data().path.length-1)/2)){checkpoint=node;flash('#streak','🚩 CHECKPOINT!')}updateHud(now);if(node>=data().path.length-1){playing=false;setTimeout(()=>result(true),450);return}interval=nextInterval();nextBeat=now+interval;metroPlayed=false}
+function miss(label='MISS',now=performance.now()){
+  if(!playing)return;
+  total++;
+  stats.miss++;
+  combo=0;
+  perfectStreak=0;
+  fever=Math.max(0,fever-22);
+  score=Math.max(0,score-85);
+  showJudge(label,'#fb7185');
+  tone(145,.15,'sawtooth');
+  missedThisBeat=true;
+  updateHud(now);
+  if(score<=0){
+    playing=false;
+    melody(false);
+    setTimeout(()=>result(false,'score'),350)
+  }
+}
+function advance(now,judgement='MISS'){
+  node++;
+  applySpecial(judgement);
+  missedThisBeat=false;
+
+  if(node>=data().path.length-1){
+    level=(level+1)%rawStages.length;
+    node=0;
+    flash('#streak',`🪐 ${data().name}`);
+  }
+
+  interval=nextInterval();
+  nextBeat=now+interval;
+  metroPlayed=false;
+  updateHud(now)
+}
 function rankFor(acc){return acc>=97?'S':acc>=90?'A':acc>=80?'B':'C'}
-function result(clear){let acc=total?earned/total*100:0,rank=rankFor(acc),stars=clear?(acc>=95&&stats.miss<=1?3:acc>=85?2:1):0;if(clear&&!practice){records.unlocked=Math.max(records.unlocked,Math.min(10,level+2));records.stars[level]=Math.max(records.stars[level],stars);records.scores[level]=Math.max(records.scores[level],score);records.accuracy[level]=Math.max(records.accuracy[level],acc);let ranks=['','C','B','A','S'];if(ranks.indexOf(rank)>ranks.indexOf(records.ranks[level]||''))records.ranks[level]=rank;records.bestScore=Math.max(records.bestScore,score);records.bestCombo=Math.max(records.bestCombo,maxCombo);save()}$('#modalIcon').textContent=clear?'🎉':'💥';$('#modalTitle').textContent=clear?'STAGE CLEAR!':'RHYTHM BREAK!';$('#modalBody').innerHTML=`<div class="rank">RANK ${rank}</div>${clear?`<div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</div>`:''}<p>${data().name}${practice?' · 연습 기록은 저장되지 않아요':''}</p><div class="results"><span>SCORE<b>${score}</b></span><span>ACCURACY<b>${acc.toFixed(1)}%</b></span><span>MAX COMBO<b>${maxCombo}</b></span><span>PERFECT<b>${stats.perfect}</b></span><span>GREAT<b>${stats.great}</b></span><span>GOOD / MISS<b>${stats.good} / ${stats.miss}</b></span></div>`;let buttons=clear&&level<9?'<button data-action="next">다음 스테이지</button>':'';buttons+='<button data-action="retry">다시 도전</button>';if(!clear)buttons+='<button data-action="practice">연습 모드</button>';if(!clear&&checkpoint)buttons+='<button data-action="checkpoint">체크포인트부터</button>';buttons+='<button data-action="select">스테이지 선택</button>';$('#modalActions').innerHTML=buttons;$('#overlay').classList.remove('hide');if(clear)melody(true)}
+function result(clear,reason='time'){
+  let acc=total?earned/total*100:0;
+  let rank=rankFor(acc);
+  playing=false;
+  $('#modalIcon').textContent=reason==='score'?'💥':'⏱️';
+  $('#modalTitle').textContent=reason==='score'?'SCORE BREAK!':'60초 COMPLETE!';
+  $('#modalBody').innerHTML=
+    `<div class="rank">RANK ${rank}</div>`+
+    `<p>${reason==='score'?'점수가 0이 되어 게임이 종료되었습니다.':'60초를 끝까지 버텼습니다!'}</p>`+
+    `<div class="results">`+
+    `<span>SCORE<b>${Math.max(0,Math.round(score))}</b></span>`+
+    `<span>ACCURACY<b>${acc.toFixed(1)}%</b></span>`+
+    `<span>MAX COMBO<b>${maxCombo}</b></span>`+
+    `<span>PERFECT<b>${stats.perfect}</b></span>`+
+    `<span>GREAT<b>${stats.great}</b></span>`+
+    `<span>GOOD / MISS<b>${stats.good} / ${stats.miss}</b></span>`+
+    `</div>`;
+  $('#modalActions').innerHTML='<button class="primary" data-action="retry">60초 다시 도전</button><button data-action="select">메뉴</button>';
+  $('#overlay').classList.remove('hide');
+  if(reason!=='score')melody(true)
+}
 function begin(start=0){resetStats(start);countdown()}
 // 단일 애니메이션 루프: 늦은 판정, 메트로놈, 그리기
-function tick(now){if(playing){if(metroOn&&!metroPlayed&&now>=nextBeat){tone(300,.025,'square',.025);metroPlayed=true}if(now>nextBeat+225){if(!missedThisBeat)miss('MISS',now);if(playing)advance(now,'MISS')}}draw(now);updateHud(now);requestAnimationFrame(tick)}
+function tick(now){
+  if(playing){
+    if(now-gameStart>=gameDuration){
+      playing=false;
+      result(true,'time');
+    }else{
+      if(metroOn&&!metroPlayed&&now>=nextBeat){
+        tone(300,.025,'square',.025);
+        metroPlayed=true
+      }
+      if(now>nextBeat+225){
+        if(!missedThisBeat)miss('MISS',now);
+        if(playing)advance(now,'MISS')
+      }
+    }
+  }
+  draw(now);
+  updateHud(now);
+  requestAnimationFrame(tick)
+}
 function draw(now){ctx.clearRect(0,0,W,H);let hot=now<feverUntil;bgStars.forEach(s=>{s.y+=s.v*(hot?3:1);if(s.y>H){s.y=0;s.x=Math.random()*W}ctx.globalAlpha=.25+Math.sin(now*.002+s.x)*.15;ctx.fillStyle=hot?'#fff7ae':'#c4d4ff';ctx.fillRect(s.x,s.y,s.s,s.s)});ctx.globalAlpha=1;let pts=data().path.map((_,i)=>pos(i));ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=hot?10:8;ctx.strokeStyle='#31385f';ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();if(node>0){let grad=ctx.createLinearGradient(pts[0].x,pts[0].y,pts[node].x,pts[node].y);grad.addColorStop(0,getComputedStyle(document.documentElement).getPropertyValue('--b'));grad.addColorStop(1,getComputedStyle(document.documentElement).getPropertyValue('--a'));ctx.strokeStyle=grad;ctx.shadowBlur=hot?28:14;ctx.shadowColor=hot?'#ffd000':'#735cff';ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);for(let i=1;i<=Math.min(node,pts.length-1);i++)ctx.lineTo(pts[i].x,pts[i].y);ctx.stroke();ctx.shadowBlur=0}pts.forEach((p,i)=>{let type=data().special[i],next=i===node+1,r=next?11+Math.sin(now/100)*2:8;ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fillStyle=i<node?'#805dff':i===node?'#fff':next?'#45f3ff':'#66708f';if(type==='bonus')ctx.fillStyle='#fde047';if(type==='perfect')ctx.fillStyle='#67e8f9';if(type==='life')ctx.fillStyle='#fb7185';if(type==='shock')ctx.fillStyle='#f97316';ctx.shadowBlur=next?22:0;ctx.shadowColor=ctx.fillStyle;ctx.fill();ctx.shadowBlur=0;if(type){ctx.fillStyle='#10132e';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.fillText({bonus:'★',perfect:'◆',life:'♥',shock:'⚡'}[type],p.x,p.y+3)}});let c=pts[Math.min(node,pts.length-1)],n=pts[Math.min(node+1,pts.length-1)],prog=playing?Math.max(0,Math.min(1,1-(nextBeat-now)/interval)):0,aim=Math.atan2(n.y-c.y,n.x-c.x),ang=aim+Math.PI*(prog-1),r=Math.min(24,Math.max(16,W/30)),colors=themes[records.theme]||themes.basic;let balls=[{x:c.x+Math.cos(ang)*r,y:c.y+Math.sin(ang)*r,c:colors[0]},{x:c.x+Math.cos(ang+Math.PI)*r,y:c.y+Math.sin(ang+Math.PI)*r,c:colors[1]}];trails.push(balls);let max=hot?10:6;if(trails.length>max)trails.shift();trails.forEach((pair,i)=>pair.forEach(b=>{ctx.globalAlpha=(i+1)/trails.length*.3;ctx.beginPath();ctx.arc(b.x,b.y,4,0,Math.PI*2);ctx.fillStyle=b.c;ctx.fill()}));ctx.globalAlpha=1;balls.forEach(b=>{ctx.beginPath();ctx.arc(b.x,b.y,10,0,Math.PI*2);ctx.fillStyle=b.c;ctx.shadowBlur=hot?28:18;ctx.shadowColor=b.c;ctx.fill();ctx.shadowBlur=0})}
 // 오버레이 조작
 $('#modalBody').onclick=e=>{let m=e.target.dataset.mode;if(m){practice=m==='practice';speed=1;stageSelect()}if(e.target.dataset.speed){speed=+e.target.dataset.speed;stageSelect()}let s=e.target.closest('[data-stage]');if(s&&!s.disabled){level=+s.dataset.stage;stageIntro()}if(e.target.dataset.theme){setTheme(e.target.dataset.theme);stageSelect()}};

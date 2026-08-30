@@ -1,16 +1,1174 @@
-<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no"><title>🧙 턴제 던전</title><style>
-:root{--c1:#3f3f46;--c2:#c4b5fd}*{box-sizing:border-box}html,body{height:100%}body{margin:0;overflow:hidden;display:grid;place-items:center;color:#f8fafc;font-family:system-ui,"Noto Sans KR",sans-serif;background:radial-gradient(circle at 18% 10%,var(--c1),#11162e 52%,#030712);user-select:none;-webkit-user-select:none}.app{width:min(95vw,720px);height:min(95vh,860px);display:flex;flex-direction:column;gap:11px}.top{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:2px 4px}.brand small{display:block;color:#cbd5e1;font-size:10px;font-weight:900;letter-spacing:.2em}.brand h1{margin:2px 0 0;font-size:clamp(25px,5vw,38px);letter-spacing:-.05em}.hud{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.stat{min-width:67px;padding:7px 10px;text-align:center;border:1px solid #ffffff25;border-radius:14px;background:#0f172ac7}.stat small{display:block;color:#cbd5e1;font-size:9px}.stat b{font-size:19px}.stage{position:relative;flex:1;min-height:400px;overflow:hidden;border:1px solid #ffffff27;border-radius:25px;background:linear-gradient(145deg,#14203b,#090e21);box-shadow:0 25px 70px #0009;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:#050916e9}.overlay.hide{display:none}.card{width:min(100%,410px);padding:28px 24px;text-align:center;border:1px solid #ffffff25;border-radius:23px;background:#111a36ee;box-shadow:0 20px 55px #0008}.card .emoji{font-size:55px}.card h2{margin:8px;font-size:28px}.card p{margin:0 0 19px;color:#cbd5e1;font-size:14px;line-height:1.72;word-break:keep-all}.primary{min-height:48px;width:100%;padding:12px 18px;border:0;border-radius:13px;color:#08111f;background:linear-gradient(135deg,var(--c2),#fef3c7);font:900 15px system-ui;cursor:pointer}.tip{min-height:18px;text-align:center;color:#aebbd0;font-size:12px}.hidden{display:none!important}button{font-family:inherit}.dungeon{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:11px;background:radial-gradient(circle,#312e3f,#09090b)}.dungeon-grid{width:min(96%,530px);aspect-ratio:1;display:grid;grid-template-columns:repeat(8,1fr);gap:2px;padding:5px;border:3px solid #52525b;border-radius:14px;background:#030712}.dcell{display:grid;place-items:center;border-radius:6px;background:#27272a;font-size:clamp(18px,5vw,35px)}.dcell.wall{background:#09090b}.dcell.seen{box-shadow:inset 0 0 18px #000}.dungeon-pad{display:grid;grid-template-columns:repeat(4,53px);gap:5px}.dungeon-pad button{min-height:46px;border:1px solid #ffffff25;border-radius:10px;background:#3f3f46;color:#fff;font-size:18px;font-weight:900}.dungeon-pad button:first-child{grid-column:2}.dungeon-pad button:nth-child(2){grid-column:1}.dungeon-pad button:nth-child(3){grid-column:2}.dungeon-pad button:nth-child(4){grid-column:3}.dungeon-pad #potionBtn{grid-column:4;grid-row:1/3;font-size:12px}#dungeonMsg{min-height:22px;text-align:center;color:#e4e4e7;font-weight:800}
-@media(max-width:520px){.app{width:100%;height:100%;padding:9px}.stage{min-height:0;border-radius:20px}.brand h1{font-size:25px}.stat{min-width:61px;padding:6px 8px}.card{padding:24px 19px}.tip{font-size:11px}}
-</style></head><body><main class="app"><header class="top"><div class="brand"><small>TURN DUNGEON</small><h1>🧙 턴제 던전</h1></div><div class="hud" id="hud"></div></header><section class="stage" id="stage"><div class="dungeon"><div class="dungeon-grid" id="dungeonGrid"></div><div class="dungeon-pad"><button data-d="U">▲</button><button data-d="L">◀</button><button data-d="D">▼</button><button data-d="R">▶</button><button id="potionBtn">🧪 회복</button></div><div id="dungeonMsg">열쇠를 찾고 출구 계단으로 이동하세요.</div></div><div class="overlay" id="overlay"><div class="card"><div class="emoji" id="resultEmoji">🧙</div><h2 id="resultTitle">턴제 던전</h2><p id="resultText">한 칸 움직일 때마다 적도 행동하는 던전에서 열쇠를 찾고 5개 층을 탈출하세요.</p><button class="primary" id="startBtn">게임 시작</button></div></div></section><div class="tip">한 칸 움직일 때마다 적도 행동하는 던전에서 열쇠를 찾고 5개 층을 탈출하세요.</div></main><script>
-const $=s=>document.querySelector(s),stage=$('#stage'),overlay=$('#overlay'),startBtn=$('#startBtn');
-const safeGet=(k,d=0)=>{try{return Number(localStorage.getItem(k))||d}catch(e){return d}},safeSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
-function showResult(icon,title,text,button='다시 하기'){ $('#resultEmoji').textContent=icon;$('#resultTitle').textContent=title;$('#resultText').innerHTML=text;startBtn.textContent=button;overlay.classList.remove('hide') }
-const N=8,gridEl=$('#dungeonGrid'),msg=$('#dungeonMsg'),hud=$('#hud');let floor=1,player,walls,enemies,keyPos,exitPos,potionPos,hasKey=false,hp=8,potions=1,playing=false;hud.innerHTML='<div class="stat"><small>층</small><b id="floor">1</b></div><div class="stat"><small>체력</small><b id="hp">8</b></div><div class="stat"><small>열쇠</small><b id="key">❌</b></div>';const idx=(x,y)=>y*N+x,dirs={U:[0,-1],D:[0,1],L:[-1,0],R:[1,0]};
-function reachable(start,target,set){const q=[start],seen=new Set([idx(...start)]);while(q.length){const[x,y]=q.shift();if(x===target[0]&&y===target[1])return true;for(const[dx,dy]of Object.values(dirs)){const nx=x+dx,ny=y+dy,k=idx(nx,ny);if(nx>=0&&nx<N&&ny>=0&&ny<N&&!set.has(k)&&!seen.has(k)){seen.add(k);q.push([nx,ny])}}}return false}
-function generate(){for(let tries=0;tries<200;tries++){player={x:0,y:N-1};keyPos=[Math.floor(Math.random()*N),Math.floor(Math.random()*N/2)+2];exitPos=[N-1,0];potionPos=[Math.floor(Math.random()*N),Math.floor(Math.random()*N)];walls=new Set;while(walls.size<9+floor)walls.add(Math.floor(Math.random()*N*N));[idx(player.x,player.y),idx(...keyPos),idx(...exitPos),idx(...potionPos)].forEach(k=>walls.delete(k));if(reachable([player.x,player.y],keyPos,walls)&&reachable(keyPos,exitPos,walls))break}enemies=[];while(enemies.length<Math.min(6,2+floor)){const e={x:Math.floor(Math.random()*N),y:Math.floor(Math.random()*N),hp:2};if(!walls.has(idx(e.x,e.y))&&Math.abs(e.x-player.x)+Math.abs(e.y-player.y)>3&&!enemies.some(q=>q.x===e.x&&q.y===e.y))enemies.push(e)}}
-function startGame(){floor=1;hp=8;potions=1;hasKey=false;playing=true;generate();overlay.classList.add('hide');updateHud();render();msg.textContent='열쇠를 얻은 뒤 오른쪽 위 계단으로 탈출하세요.'}function updateHud(){$('#floor').textContent=floor;$('#hp').textContent=hp;$('#key').textContent=hasKey?'✅':'❌'}
-function render(){gridEl.innerHTML='';for(let y=0;y<N;y++)for(let x=0;x<N;x++){const c=document.createElement('div'),enemy=enemies.find(e=>e.x===x&&e.y===y);c.className='dcell'+(walls.has(idx(x,y))?' wall':'');c.textContent=walls.has(idx(x,y))?'':player.x===x&&player.y===y?'🧙':enemy?'👾':!hasKey&&keyPos[0]===x&&keyPos[1]===y?'🗝️':exitPos[0]===x&&exitPos[1]===y?'🌀':potionPos&&potionPos[0]===x&&potionPos[1]===y?'🧪':'';gridEl.appendChild(c)}}
-function move(d){if(!playing)return;const[dx,dy]=dirs[d],nx=player.x+dx,ny=player.y+dy;if(nx<0||nx>=N||ny<0||ny>=N||walls.has(idx(nx,ny)))return;const ei=enemies.findIndex(e=>e.x===nx&&e.y===ny);if(ei>=0){enemies[ei].hp--;msg.textContent='마법 공격! 몬스터 체력 -1';if(enemies[ei].hp<=0)enemies.splice(ei,1)}else{player.x=nx;player.y=ny;if(!hasKey&&nx===keyPos[0]&&ny===keyPos[1]){hasKey=true;msg.textContent='던전 열쇠를 획득했습니다!'}if(potionPos&&nx===potionPos[0]&&ny===potionPos[1]){potions++;potionPos=null;msg.textContent='회복 물약을 발견했습니다.'}if(nx===exitPos[0]&&ny===exitPos[1]){if(hasKey)return nextFloor();msg.textContent='출구가 잠겨 있습니다. 열쇠가 필요해요.'}}enemyTurn();updateHud();render()}
-function enemyTurn(){for(const e of enemies){const dist=Math.abs(e.x-player.x)+Math.abs(e.y-player.y);if(dist===1){hp--;msg.textContent='몬스터의 공격을 받았습니다!'}else if(dist<6){const choices=Object.values(dirs).map(([dx,dy])=>({x:e.x+dx,y:e.y+dy})).filter(p=>p.x>=0&&p.x<N&&p.y>=0&&p.y<N&&!walls.has(idx(p.x,p.y))&&!(p.x===player.x&&p.y===player.y)&&!enemies.some(q=>q!==e&&q.x===p.x&&q.y===p.y)).sort((a,b)=>(Math.abs(a.x-player.x)+Math.abs(a.y-player.y))-(Math.abs(b.x-player.x)+Math.abs(b.y-player.y)));if(choices[0]){e.x=choices[0].x;e.y=choices[0].y}}}if(hp<=0)end(false)}function heal(){if(playing&&potions>0&&hp<8){potions--;hp=Math.min(8,hp+4);msg.textContent=`물약 사용! 남은 물약 ${potions}`;enemyTurn();updateHud();render()}}
-function nextFloor(){floor++;if(floor>5)return end(true);hasKey=false;hp=Math.min(8,hp+2);generate();updateHud();render();msg.textContent=`지하 ${floor}층 진입! 몬스터가 더 많아졌습니다.`}function end(win){playing=false;showResult(win?'🏆':'💀',win?'던전 완전 정복!':'모험 실패',win?'5개 층의 열쇠를 모아 무사히 탈출했습니다.':`지하 ${floor}층에서 쓰러졌습니다.<br>몬스터와 거리를 두고 물약을 아껴 사용하세요.`)}document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>move(b.dataset.d));addEventListener('keydown',e=>{const d={ArrowUp:'U',ArrowDown:'D',ArrowLeft:'L',ArrowRight:'R',w:'U',s:'D',a:'L',d:'R'}[e.key];if(d){e.preventDefault();move(d)}});$('#potionBtn').onclick=heal;startBtn.onclick=startGame;
-</script></body></html>
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no">
+<title>🧙 턴제 던전 챌린지</title>
+<style>
+:root{
+  --c1:#3f3f46;
+  --c2:#c4b5fd;
+  --good:#86efac;
+  --bad:#fb7185;
+  --gold:#fde047
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  color:#f8fafc;
+  font-family:system-ui,"Noto Sans KR",sans-serif;
+  background:radial-gradient(circle at 18% 10%,var(--c1),#11162e 52%,#030712);
+  user-select:none;
+  -webkit-user-select:none
+}
+.app{
+  width:min(96vw,730px);
+  height:min(97vh,870px);
+  display:flex;
+  flex-direction:column;
+  gap:10px
+}
+.top{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:10px;
+  padding:2px 4px
+}
+.brand small{
+  display:block;
+  color:#cbd5e1;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.2em
+}
+.brand h1{
+  margin:2px 0 0;
+  font-size:clamp(25px,5vw,38px);
+  letter-spacing:-.05em
+}
+.hud{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  justify-content:flex-end
+}
+.stat{
+  min-width:55px;
+  padding:7px 7px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:13px;
+  background:#0f172ad8
+}
+.stat small{
+  display:block;
+  color:#cbd5e1;
+  font-size:9px
+}
+.stat b{font-size:15px}
+.stage{
+  position:relative;
+  flex:1;
+  min-height:400px;
+  overflow:hidden;
+  border:1px solid #ffffff27;
+  border-radius:25px;
+  background:linear-gradient(145deg,#14203b,#090e21);
+  box-shadow:0 25px 70px #0009;
+  touch-action:none
+}
+.stage.shake{animation:shake .2s}
+@keyframes shake{
+  0%{transform:translate(0)}
+  25%{transform:translate(-5px,2px)}
+  50%{transform:translate(5px,-2px)}
+  75%{transform:translate(-3px,1px)}
+  100%{transform:translate(0)}
+}
+.dungeon{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:11px;
+  background:radial-gradient(circle,#312e3f,#09090b)
+}
+.floorTitle{
+  color:#ddd6fe;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.08em
+}
+.dungeon-grid{
+  width:min(96%,530px);
+  aspect-ratio:1;
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  gap:2px;
+  padding:5px;
+  border:3px solid #52525b;
+  border-radius:14px;
+  background:#030712;
+  box-shadow:inset 0 0 25px #000
+}
+.dcell{
+  position:relative;
+  display:grid;
+  place-items:center;
+  border-radius:6px;
+  background:#27272a;
+  font-size:clamp(17px,5vw,34px);
+  overflow:hidden
+}
+.dcell.wall{background:#09090b}
+.dcell.wall::after{
+  content:"";
+  position:absolute;
+  inset:3px;
+  border-radius:4px;
+  background:linear-gradient(135deg,#18181b,#27272a)
+}
+.dcell.trap{background:#3f1d1d}
+.dcell.exit{box-shadow:inset 0 0 16px #8b5cf6}
+.dcell.player{box-shadow:inset 0 0 18px #a78bfa}
+.enemyHp{
+  position:absolute;
+  left:3px;
+  right:3px;
+  bottom:2px;
+  height:4px;
+  border-radius:99px;
+  background:#ffffff1f
+}
+.enemyHp i{
+  display:block;
+  height:100%;
+  border-radius:99px;
+  background:#ef4444
+}
+.dungeon-pad{
+  display:grid;
+  grid-template-columns:repeat(5,50px);
+  gap:5px
+}
+.dungeon-pad button{
+  min-height:44px;
+  border:1px solid #ffffff25;
+  border-radius:10px;
+  background:#3f3f46;
+  color:#fff;
+  font-size:18px;
+  font-weight:900;
+  cursor:pointer
+}
+.dungeon-pad .up{grid-column:2}
+.dungeon-pad .left{grid-column:1}
+.dungeon-pad .down{grid-column:2}
+.dungeon-pad .right{grid-column:3}
+#potionBtn{
+  grid-column:4;
+  grid-row:1/3;
+  font-size:12px;
+  background:#065f46
+}
+#spellBtn{
+  grid-column:5;
+  grid-row:1/3;
+  font-size:12px;
+  background:#5b21b6
+}
+#dungeonMsg{
+  min-height:22px;
+  text-align:center;
+  color:#e4e4e7;
+  font-weight:800;
+  font-size:12px
+}
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:20;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:#050916e9;
+  backdrop-filter:blur(5px)
+}
+.overlay.hide{display:none}
+.card{
+  width:min(100%,420px);
+  padding:28px 24px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:23px;
+  background:#111a36f2;
+  box-shadow:0 20px 55px #0008
+}
+.card .emoji{font-size:56px}
+.card h2{
+  margin:8px;
+  font-size:28px
+}
+.card p{
+  margin:0 0 18px;
+  color:#cbd5e1;
+  font-size:14px;
+  line-height:1.72;
+  word-break:keep-all
+}
+.buttons{
+  display:grid;
+  gap:8px
+}
+.primary,.secondary{
+  min-height:48px;
+  width:100%;
+  padding:12px 18px;
+  border-radius:13px;
+  font:900 15px system-ui;
+  cursor:pointer
+}
+.primary{
+  border:0;
+  color:#08111f;
+  background:linear-gradient(135deg,var(--c2),#fef3c7)
+}
+.secondary{
+  border:1px solid #ffffff25;
+  color:#fff;
+  background:#ffffff0e
+}
+.tip{
+  min-height:18px;
+  text-align:center;
+  color:#aebbd0;
+  font-size:12px
+}
+.toast{
+  position:absolute;
+  left:50%;
+  top:22%;
+  z-index:12;
+  transform:translate(-50%,-50%);
+  padding:9px 16px;
+  border:1px solid #ffffff33;
+  border-radius:999px;
+  background:#0f172ae8;
+  font-weight:900;
+  opacity:0;
+  transition:.2s;
+  pointer-events:none;
+  white-space:nowrap
+}
+.toast.show{
+  opacity:1;
+  top:18%
+}
+@media(max-width:520px){
+  .app{width:100%;height:100%;padding:8px}
+  .stage{min-height:0;border-radius:18px}
+  .brand h1{font-size:24px}
+  .stat{min-width:49px;padding:6px 4px}
+  .stat b{font-size:13px}
+  .dungeon-pad{
+    grid-template-columns:repeat(5,46px)
+  }
+}
+</style>
+</head>
+<body>
+
+<main class="app">
+
+<header class="top">
+  <div class="brand">
+    <small>TURN DUNGEON ADVENTURE</small>
+    <h1>🧙 턴제 던전</h1>
+  </div>
+
+  <div class="hud">
+    <div class="stat"><small>층</small><b id="floor">1</b></div>
+    <div class="stat"><small>HP</small><b id="hp">10</b></div>
+    <div class="stat"><small>레벨</small><b id="lv">1</b></div>
+    <div class="stat"><small>EXP</small><b id="exp">0</b></div>
+    <div class="stat"><small>골드</small><b id="gold">0</b></div>
+    <div class="stat"><small>열쇠</small><b id="key">❌</b></div>
+  </div>
+</header>
+
+<section class="stage" id="stage">
+
+<div class="dungeon">
+
+  <div class="floorTitle" id="floorTitle">지하 1층</div>
+
+  <div class="dungeon-grid" id="dungeonGrid"></div>
+
+  <div class="dungeon-pad">
+    <button class="up" data-d="U">▲</button>
+    <button class="left" data-d="L">◀</button>
+    <button class="down" data-d="D">▼</button>
+    <button class="right" data-d="R">▶</button>
+    <button id="potionBtn">🧪 회복<br><span id="potionCount">1</span></button>
+    <button id="spellBtn">✨ 마법<br><span id="manaCount">2</span></button>
+  </div>
+
+  <div id="dungeonMsg">
+    열쇠를 찾고 출구로 탈출하세요.
+  </div>
+
+</div>
+
+<div class="toast" id="toast">아이템 획득!</div>
+
+<div class="overlay" id="overlay">
+  <div class="card">
+    <div class="emoji" id="resultEmoji">🧙</div>
+    <h2 id="resultTitle">턴제 던전</h2>
+
+    <p id="resultText">
+      한 칸 움직이면 몬스터도 한 턴 행동합니다.<br><br>
+      🗝️ 열쇠를 찾아 출구를 열고<br>
+      👾 몬스터를 쓰러뜨려 경험치를 얻으세요.<br>
+      🎁 보물상자와 함정을 조심하며 5층 보스를 물리치세요.
+    </p>
+
+    <div class="buttons">
+      <button class="primary" id="startBtn">모험 시작</button>
+      <button class="secondary" id="difficultyBtn">난이도 : 보통</button>
+    </div>
+  </div>
+</div>
+
+</section>
+
+<div class="tip">
+이동도 1턴 · 공격도 1턴 · 🧪 회복 · ✨ 범위마법 · 5층 보스 처치
+</div>
+
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+
+const stage=$('#stage');
+const overlay=$('#overlay');
+const startBtn=$('#startBtn');
+
+const gridEl=$('#dungeonGrid');
+const msg=$('#dungeonMsg');
+const toast=$('#toast');
+
+const N=8;
+
+const dirs={
+  U:[0,-1],
+  D:[0,1],
+  L:[-1,0],
+  R:[1,0]
+};
+
+const idx=(x,y)=>y*N+x;
+
+let floor=1;
+let player;
+let walls;
+let enemies=[];
+let keyPos;
+let exitPos;
+let potionPos;
+let chestPos;
+let trapSet;
+
+let hasKey=false;
+
+let hp=10;
+let maxHp=10;
+
+let potions=1;
+let mana=2;
+
+let level=1;
+let exp=0;
+let gold=0;
+
+let playing=false;
+let difficulty=1;
+
+const difficultyNames=['쉬움','보통','어려움'];
+
+function showToast(text){
+  toast.textContent=text;
+  toast.classList.remove('show');
+  void toast.offsetWidth;
+  toast.classList.add('show');
+
+  clearTimeout(showToast.timer);
+
+  showToast.timer=setTimeout(()=>{
+    toast.classList.remove('show');
+  },650);
+}
+
+function shake(){
+  stage.classList.remove('shake');
+  void stage.offsetWidth;
+  stage.classList.add('shake');
+}
+
+function reachable(start,target,set){
+  const q=[start];
+  const seen=new Set([idx(...start)]);
+
+  while(q.length){
+    const [x,y]=q.shift();
+
+    if(x===target[0]&&y===target[1]){
+      return true;
+    }
+
+    for(const [dx,dy] of Object.values(dirs)){
+      const nx=x+dx;
+      const ny=y+dy;
+      const k=idx(nx,ny);
+
+      if(
+        nx>=0&&nx<N&&
+        ny>=0&&ny<N&&
+        !set.has(k)&&
+        !seen.has(k)
+      ){
+        seen.add(k);
+        q.push([nx,ny]);
+      }
+    }
+  }
+
+  return false;
+}
+
+function randomFreeCell(){
+  for(let guard=0;guard<500;guard++){
+    const x=Math.floor(Math.random()*N);
+    const y=Math.floor(Math.random()*N);
+    const k=idx(x,y);
+
+    if(walls.has(k))continue;
+    if(x===player.x&&y===player.y)continue;
+    if(keyPos&&x===keyPos[0]&&y===keyPos[1])continue;
+    if(exitPos&&x===exitPos[0]&&y===exitPos[1])continue;
+    if(enemies.some(e=>e.x===x&&e.y===y))continue;
+
+    return [x,y];
+  }
+
+  return [3,3];
+}
+
+function generate(){
+
+  for(let tries=0;tries<300;tries++){
+
+    player={x:0,y:N-1};
+
+    exitPos=[N-1,0];
+
+    keyPos=[
+      Math.floor(Math.random()*(N-2))+1,
+      Math.floor(Math.random()*(N-3))+2
+    ];
+
+    walls=new Set();
+
+    const wallCount=
+      Math.min(18,8+floor*2);
+
+    while(walls.size<wallCount){
+      walls.add(
+        Math.floor(Math.random()*N*N)
+      );
+    }
+
+    [
+      idx(player.x,player.y),
+      idx(...keyPos),
+      idx(...exitPos)
+    ].forEach(k=>walls.delete(k));
+
+    if(
+      reachable([player.x,player.y],keyPos,walls)&&
+      reachable(keyPos,exitPos,walls)
+    ){
+      break;
+    }
+  }
+
+  enemies=[];
+
+  const enemyCount=
+    floor===5
+      ?3
+      :Math.min(7,2+floor);
+
+  for(let i=0;i<enemyCount;i++){
+
+    const pos=randomFreeCell();
+
+    const boss=
+      floor===5&&i===0;
+
+    enemies.push({
+      x:pos[0],
+      y:pos[1],
+      hp:boss?9+level:2+Math.floor(floor/2),
+      maxHp:boss?9+level:2+Math.floor(floor/2),
+      atk:boss?2:1,
+      boss
+    });
+  }
+
+  potionPos=randomFreeCell();
+  chestPos=randomFreeCell();
+
+  trapSet=new Set();
+
+  const traps=
+    Math.max(1,floor-1);
+
+  while(trapSet.size<traps){
+    const [x,y]=randomFreeCell();
+    trapSet.add(idx(x,y));
+  }
+}
+
+function startGame(){
+  floor=1;
+
+  maxHp=
+    difficulty===0?12:
+    difficulty===1?10:8;
+
+  hp=maxHp;
+
+  potions=
+    difficulty===0?2:1;
+
+  mana=
+    difficulty===2?1:2;
+
+  level=1;
+  exp=0;
+  gold=0;
+  hasKey=false;
+
+  playing=true;
+
+  generate();
+
+  overlay.classList.add('hide');
+
+  msg.textContent=
+    '🗝️ 열쇠를 찾은 뒤 오른쪽 위 출구로 이동하세요.';
+
+  updateHud();
+  render();
+}
+
+function updateHud(){
+  $('#floor').textContent=floor;
+  $('#hp').textContent=`${hp}/${maxHp}`;
+  $('#lv').textContent=level;
+  $('#exp').textContent=exp;
+  $('#gold').textContent=gold;
+  $('#key').textContent=hasKey?'✅':'❌';
+
+  $('#potionCount').textContent=potions;
+  $('#manaCount').textContent=mana;
+
+  $('#floorTitle').textContent=
+    floor===5
+      ?'🔥 지하 5층 · 보스의 방'
+      :`지하 ${floor}층`;
+}
+
+function render(){
+  gridEl.innerHTML='';
+
+  for(let y=0;y<N;y++){
+    for(let x=0;x<N;x++){
+
+      const c=document.createElement('div');
+      const k=idx(x,y);
+
+      const enemy=
+        enemies.find(
+          e=>e.x===x&&e.y===y
+        );
+
+      c.className='dcell';
+
+      if(walls.has(k)){
+        c.classList.add('wall');
+      }
+
+      if(trapSet.has(k)){
+        c.classList.add('trap');
+      }
+
+      if(
+        exitPos[0]===x &&
+        exitPos[1]===y
+      ){
+        c.classList.add('exit');
+      }
+
+      if(
+        player.x===x &&
+        player.y===y
+      ){
+        c.classList.add('player');
+      }
+
+      if(walls.has(k)){
+        c.textContent='';
+      }
+      else if(player.x===x&&player.y===y){
+        c.textContent='🧙';
+      }
+      else if(enemy){
+        c.textContent=
+          enemy.boss?'👹':'👾';
+
+        const hpbar=
+          document.createElement('span');
+
+        hpbar.className='enemyHp';
+
+        hpbar.innerHTML=
+          `<i style="width:${enemy.hp/enemy.maxHp*100}%"></i>`;
+
+        c.appendChild(hpbar);
+      }
+      else if(
+        !hasKey &&
+        keyPos[0]===x &&
+        keyPos[1]===y
+      ){
+        c.textContent='🗝️';
+      }
+      else if(
+        exitPos[0]===x &&
+        exitPos[1]===y
+      ){
+        c.textContent='🌀';
+      }
+      else if(
+        potionPos &&
+        potionPos[0]===x &&
+        potionPos[1]===y
+      ){
+        c.textContent='🧪';
+      }
+      else if(
+        chestPos &&
+        chestPos[0]===x &&
+        chestPos[1]===y
+      ){
+        c.textContent='🎁';
+      }
+      else if(trapSet.has(k)){
+        c.textContent='⚠️';
+      }
+
+      gridEl.appendChild(c);
+    }
+  }
+}
+
+function gainExp(amount){
+  exp+=amount;
+
+  const need=
+    level*4;
+
+  if(exp>=need){
+    exp-=need;
+    level++;
+
+    maxHp+=2;
+    hp=Math.min(maxHp,hp+3);
+
+    mana++;
+
+    showToast(`⬆️ LEVEL ${level}!`);
+
+    msg.textContent=
+      `레벨 업! 최대 체력 증가 · 마법 +1`;
+  }
+}
+
+function attackEnemy(e){
+
+  const damage=
+    1+
+    Math.floor((level-1)/2);
+
+  e.hp-=damage;
+
+  msg.textContent=
+    `⚔️ 마법 공격! ${damage} 피해`;
+
+  if(e.hp<=0){
+
+    const expGain=
+      e.boss?6:2;
+
+    const goldGain=
+      e.boss?50:10+Math.floor(Math.random()*10);
+
+    gold+=goldGain;
+
+    enemies=
+      enemies.filter(x=>x!==e);
+
+    gainExp(expGain);
+
+    showToast(
+      e.boss
+        ?'👹 보스 격파!'
+        :`👾 처치 +${goldGain}G`
+    );
+
+    if(e.boss){
+      hasKey=true;
+      msg.textContent=
+        '👑 보스를 쓰러뜨렸습니다! 출구가 열렸습니다.';
+    }
+  }
+}
+
+function move(d){
+  if(!playing)return;
+
+  const [dx,dy]=dirs[d];
+
+  const nx=player.x+dx;
+  const ny=player.y+dy;
+
+  if(
+    nx<0||nx>=N||
+    ny<0||ny>=N||
+    walls.has(idx(nx,ny))
+  ){
+    return;
+  }
+
+  const enemy=
+    enemies.find(
+      e=>e.x===nx&&e.y===ny
+    );
+
+  if(enemy){
+
+    attackEnemy(enemy);
+
+  }else{
+
+    player.x=nx;
+    player.y=ny;
+
+    if(
+      !hasKey &&
+      nx===keyPos[0] &&
+      ny===keyPos[1]
+    ){
+      hasKey=true;
+      showToast('🗝️ 열쇠 획득!');
+      msg.textContent='던전 열쇠를 찾았습니다.';
+    }
+
+    if(
+      potionPos &&
+      nx===potionPos[0] &&
+      ny===potionPos[1]
+    ){
+      potions++;
+      potionPos=null;
+
+      showToast('🧪 물약 +1');
+      msg.textContent='회복 물약을 발견했습니다.';
+    }
+
+    if(
+      chestPos &&
+      nx===chestPos[0] &&
+      ny===chestPos[1]
+    ){
+      const reward=
+        Math.random()<.5
+          ?20+floor*5
+          :30+floor*8;
+
+      gold+=reward;
+      chestPos=null;
+
+      if(Math.random()<.35){
+        potions++;
+        showToast(`🎁 ${reward}G + 물약`);
+      }else{
+        showToast(`🎁 ${reward}G`);
+      }
+
+      msg.textContent=
+        '보물상자를 열었습니다!';
+    }
+
+    const k=idx(nx,ny);
+
+    if(trapSet.has(k)){
+      trapSet.delete(k);
+
+      const damage=
+        difficulty===2?2:1;
+
+      hp-=damage;
+
+      showToast(`⚠️ 함정 -${damage} HP`);
+      msg.textContent='바닥 함정을 밟았습니다!';
+      shake();
+    }
+
+    if(
+      nx===exitPos[0] &&
+      ny===exitPos[1]
+    ){
+      if(hasKey){
+        nextFloor();
+        return;
+      }
+
+      msg.textContent=
+        '🔒 출구가 잠겨 있습니다. 열쇠가 필요합니다.';
+    }
+  }
+
+  enemyTurn();
+
+  updateHud();
+  render();
+
+  if(hp<=0){
+    end(false);
+  }
+}
+
+function enemyTurn(){
+
+  for(const e of enemies){
+
+    const dist=
+      Math.abs(e.x-player.x)+
+      Math.abs(e.y-player.y);
+
+    if(dist===1){
+
+      hp-=e.atk;
+
+      msg.textContent=
+        e.boss
+          ?'👹 보스의 강력한 공격!'
+          :'👾 몬스터에게 공격받았습니다!';
+
+      shake();
+
+    }else if(dist<6){
+
+      const choices=
+        Object.values(dirs)
+        .map(([dx,dy])=>({
+          x:e.x+dx,
+          y:e.y+dy
+        }))
+        .filter(p=>
+          p.x>=0&&p.x<N&&
+          p.y>=0&&p.y<N&&
+          !walls.has(idx(p.x,p.y))&&
+          !(p.x===player.x&&p.y===player.y)&&
+          !enemies.some(q=>
+            q!==e&&
+            q.x===p.x&&
+            q.y===p.y
+          )
+        )
+        .sort((a,b)=>
+          (
+            Math.abs(a.x-player.x)+
+            Math.abs(a.y-player.y)
+          )-
+          (
+            Math.abs(b.x-player.x)+
+            Math.abs(b.y-player.y)
+          )
+        );
+
+      if(
+        choices[0] &&
+        Math.random()<
+        (e.boss?.9:.72)
+      ){
+        e.x=choices[0].x;
+        e.y=choices[0].y;
+      }
+    }
+  }
+}
+
+function heal(){
+  if(!playing)return;
+
+  if(potions<=0){
+    showToast('물약이 없습니다.');
+    return;
+  }
+
+  if(hp>=maxHp){
+    showToast('체력이 가득 찼습니다.');
+    return;
+  }
+
+  potions--;
+
+  hp=Math.min(
+    maxHp,
+    hp+5
+  );
+
+  msg.textContent=
+    '🧪 회복 물약 사용! HP +5';
+
+  showToast('❤️ HP 회복');
+
+  enemyTurn();
+
+  updateHud();
+  render();
+
+  if(hp<=0){
+    end(false);
+  }
+}
+
+function spell(){
+  if(!playing)return;
+
+  if(mana<=0){
+    showToast('마법 횟수가 없습니다.');
+    return;
+  }
+
+  mana--;
+
+  const targets=
+    enemies.filter(e=>
+      Math.abs(e.x-player.x)<=1 &&
+      Math.abs(e.y-player.y)<=1
+    );
+
+  if(targets.length===0){
+
+    msg.textContent=
+      '✨ 마법을 사용했지만 주변에 적이 없습니다.';
+
+    showToast('마법 빗나감');
+
+  }else{
+
+    let kills=0;
+
+    for(const e of [...targets]){
+
+      e.hp-=3+Math.floor(level/2);
+
+      if(e.hp<=0){
+        kills++;
+
+        const g=
+          e.boss?50:15;
+
+        gold+=g;
+
+        enemies=
+          enemies.filter(x=>x!==e);
+
+        gainExp(e.boss?6:2);
+
+        if(e.boss){
+          hasKey=true;
+        }
+      }
+    }
+
+    msg.textContent=
+      `✨ 범위 마법! ${targets.length}마리 공격`;
+
+    showToast(
+      kills
+        ?`✨ ${kills}마리 처치!`
+        :`✨ ${targets.length}마리 명중`
+    );
+  }
+
+  enemyTurn();
+
+  updateHud();
+  render();
+
+  if(hp<=0){
+    end(false);
+  }
+}
+
+function nextFloor(){
+
+  if(floor>=5){
+    end(true);
+    return;
+  }
+
+  floor++;
+
+  hasKey=false;
+
+  hp=Math.min(
+    maxHp,
+    hp+2
+  );
+
+  if(floor===5){
+    hasKey=false;
+  }
+
+  generate();
+
+  msg.textContent=
+    floor===5
+      ?'👹 최종층! 보스를 처치하고 출구를 여세요.'
+      :`지하 ${floor}층 진입! 몬스터가 더 강해졌습니다.`;
+
+  showToast(`⬇️ 지하 ${floor}층`);
+
+  updateHud();
+  render();
+}
+
+function end(win){
+  if(!playing)return;
+
+  playing=false;
+
+  $('#resultEmoji').textContent=
+    win?'🏆':'💀';
+
+  $('#resultTitle').textContent=
+    win
+      ?'던전 완전 정복!'
+      :'모험 실패';
+
+  if(win){
+
+    let stars=1;
+
+    if(hp>=maxHp*.5){
+      stars=2;
+    }
+
+    if(
+      hp>=maxHp*.7 &&
+      gold>=100
+    ){
+      stars=3;
+    }
+
+    const rating=
+      '⭐'.repeat(stars)+
+      '☆'.repeat(3-stars);
+
+    $('#resultText').innerHTML=
+      `${rating}<br><br>`+
+      `5개 층을 모두 탈출했습니다.<br>`+
+      `최종 레벨 <b>${level}</b><br>`+
+      `남은 체력 <b>${hp}/${maxHp}</b><br>`+
+      `획득 골드 <b>${gold}G</b><br>`+
+      `남은 물약 <b>${potions}</b>개`;
+
+  }else{
+
+    $('#resultText').innerHTML=
+      `지하 <b>${floor}층</b>에서 쓰러졌습니다.<br><br>`+
+      `최종 레벨 ${level}<br>`+
+      `획득 골드 ${gold}G<br><br>`+
+      `몬스터와 거리를 유지하고<br>`+
+      `여러 적이 모였을 때 ✨ 마법을 사용해보세요.`;
+  }
+
+  startBtn.textContent='다시 모험';
+  startBtn.onclick=startGame;
+
+  setTimeout(()=>{
+    overlay.classList.remove('hide');
+  },400);
+}
+
+document
+.querySelectorAll('[data-d]')
+.forEach(b=>{
+  b.onclick=()=>move(b.dataset.d);
+});
+
+addEventListener('keydown',e=>{
+
+  const d={
+    ArrowUp:'U',
+    ArrowDown:'D',
+    ArrowLeft:'L',
+    ArrowRight:'R',
+    w:'U',W:'U',
+    s:'D',S:'D',
+    a:'L',A:'L',
+    d:'R',D:'R'
+  }[e.key];
+
+  if(d){
+    e.preventDefault();
+    move(d);
+  }
+
+  if(e.key===' '){
+    e.preventDefault();
+    spell();
+  }
+});
+
+$('#potionBtn').onclick=heal;
+$('#spellBtn').onclick=spell;
+
+difficultyBtn.onclick=()=>{
+  difficulty=(difficulty+1)%3;
+
+  difficultyBtn.textContent=
+    `난이도 : ${difficultyNames[difficulty]}`;
+};
+
+startBtn.onclick=startGame;
+</script>
+
+</body>
+</html>
