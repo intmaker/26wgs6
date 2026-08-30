@@ -1,10 +1,1077 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>🅿️ 주차 마스터</title><style>
-*{box-sizing:border-box}html,body{height:100%}body{margin:0;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 20% 10%,#075985,#172033 50%,#07111f);color:#fff;font-family:system-ui,"Noto Sans KR",sans-serif;user-select:none}.app{width:min(94vw,700px);height:min(95vh,840px);display:flex;flex-direction:column;gap:11px}.top{display:flex;justify-content:space-between;align-items:end}.tag{font-size:10px;letter-spacing:.2em;color:#7dd3fc;font-weight:900}h1{margin:2px 0;font-size:clamp(26px,5vw,38px)}.stats{display:flex;gap:7px}.stat{min-width:70px;padding:8px;text-align:center;border:1px solid #ffffff24;border-radius:14px;background:#10213dcc}.stat small{display:block;color:#bae6fd;font-size:9px}.stat b{font-size:20px}.game{position:relative;flex:1;min-height:410px;overflow:hidden;border:1px solid #ffffff25;border-radius:25px;background:#263442;box-shadow:0 25px 70px #0009;touch-action:none}canvas{display:block;width:100%;height:100%}.pad{position:absolute;left:14px;bottom:14px;z-index:3;display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(2,44px);gap:4px}.pad button{padding:0;border:1px solid #ffffff42;border-radius:10px;color:#fff;background:#0f2945c9;font-size:19px;touch-action:none}.up{grid-column:2}.left{grid-column:1}.down{grid-column:2}.right{grid-column:3}.overlay{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding:20px;background:#07111fe8}.overlay.hide{display:none}.card{max-width:390px;padding:28px 24px;text-align:center;border:1px solid #ffffff24;border-radius:23px;background:#102a46}.ico{font-size:55px}.card h2{margin:8px;font-size:28px}.card p{color:#dbeafe;font-size:14px;line-height:1.7}.card>button{width:100%;padding:14px;border:0;border-radius:13px;background:linear-gradient(135deg,#7dd3fc,#a7f3d0);color:#082f49;font-weight:900;font-size:15px;cursor:pointer}.tip{text-align:center;color:#bae6fd;font-size:12px}@media(min-width:700px){.pad{opacity:.3}}@media(max-width:520px){.app{width:100%;height:100%;padding:9px}.game{border-radius:20px}}
-</style></head><body><main class="app"><header class="top"><div><div class="tag">PARKING TEST</div><h1>🅿️ 주차 마스터</h1></div><div class="stats"><div class="stat"><small>시간</small><b id="time">0.0</b></div><div class="stat"><small>충돌</small><b id="hits">0</b></div></div></header><section class="game" id="game"><canvas id="canvas"></canvas><div class="pad"><button class="up" data-k="ArrowUp">▲</button><button class="left" data-k="ArrowLeft">◀</button><button class="down" data-k="ArrowDown">▼</button><button class="right" data-k="ArrowRight">▶</button></div><div class="overlay" id="over"><div class="card"><div class="ico" id="ico">🅿️</div><h2 id="title">후진 주차에 도전하세요</h2><p id="desc">위·아래 키로 전진과 후진,<br>좌우 키로 핸들을 조작합니다.<br>벽과 주차된 차를 피해 초록 주차 칸에 멈추세요.</p><button id="start">운전 시작</button></div></div></section><div class="tip">↑↓ 전진·후진 · ←→ 핸들 · 초록 칸 안에서 정지</div></main><script>
-(()=>{const C=document.querySelector('#canvas'),X=C.getContext('2d'),G=document.querySelector('#game'),O=document.querySelector('#over'),TE=document.querySelector('#time'),HE=document.querySelector('#hits');let W,H,D=1,on=false,last=0,elapsed=0,hits=0,car,keys={},walls=[],spot;
-function resize(){const r=G.getBoundingClientRect();D=Math.min(2,devicePixelRatio||1);W=r.width;H=r.height;C.width=W*D;C.height=H*D;X.setTransform(D,0,0,D,0,0);layout();draw()}function layout(){spot={x:W-120,y:32,w:82,h:130};walls=[{x:W*.25,y:H*.17,w:65,h:H*.48},{x:W*.55,y:H*.42,w:70,h:H*.48},{x:W-125,y:H*.62,w:90,h:50}]}
-function start(){car={x:55,y:H-75,a:0,v:0,w:34,h:58};elapsed=0;hits=0;TE.textContent='0.0';HE.textContent=0;on=true;O.classList.add('hide');last=performance.now();requestAnimationFrame(loop)}
-function corners(c,x=c.x,y=c.y,a=c.a){const ca=Math.cos(a),sa=Math.sin(a),pts=[];for(const [dx,dy] of [[-c.w/2,-c.h/2],[c.w/2,-c.h/2],[c.w/2,c.h/2],[-c.w/2,c.h/2]])pts.push({x:x+dx*ca-dy*sa,y:y+dx*sa+dy*ca});return pts}function pointRect(p,r){return p.x>r.x&&p.x<r.x+r.w&&p.y>r.y&&p.y<r.y+r.h}function collides(x,y,a){const pts=corners(car,x,y,a);return pts.some(p=>p.x<5||p.x>W-5||p.y<5||p.y>H-5||walls.some(r=>pointRect(p,r)))}
-function update(dt){elapsed+=dt;TE.textContent=elapsed.toFixed(1);const throttle=(keys.ArrowUp?1:0)-(keys.ArrowDown?1:0);car.v+=throttle*170*dt;car.v*=Math.pow(.2,dt);car.v=Math.max(-95,Math.min(145,car.v));if(Math.abs(car.v)>4){const steer=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0);car.a+=steer*car.v/145*2.1*dt}const nx=car.x+Math.sin(car.a)*car.v*dt,ny=car.y-Math.cos(car.a)*car.v*dt;if(collides(nx,ny,car.a)){car.v*=-.25;hits++;HE.textContent=hits}else{car.x=nx;car.y=ny}const pts=corners(car);if(pts.every(p=>pointRect(p,spot))&&Math.abs(car.v)<10)finish(true)}
-function draw(){X.clearRect(0,0,W,H);X.fillStyle='#334155';X.fillRect(0,0,W,H);X.strokeStyle='#ffffff17';X.lineWidth=2;X.setLineDash([12,14]);for(let y=80;y<H;y+=120){X.beginPath();X.moveTo(0,y);X.lineTo(W,y);X.stroke()}X.setLineDash([]);X.fillStyle='#22c55e42';X.fillRect(spot.x,spot.y,spot.w,spot.h);X.strokeStyle='#86efac';X.lineWidth=4;X.strokeRect(spot.x,spot.y,spot.w,spot.h);X.fillStyle='#fff';X.font='bold 24px sans-serif';X.fillText('P',spot.x+32,spot.y+72);for(const r of walls){X.fillStyle='#111827';X.fillRect(r.x,r.y,r.w,r.h);X.fillStyle='#64748b';X.fillRect(r.x+7,r.y+7,r.w-14,r.h-14)}if(car){X.save();X.translate(car.x,car.y);X.rotate(car.a);X.shadowColor='#000';X.shadowBlur=12;X.fillStyle='#38bdf8';X.beginPath();X.roundRect(-car.w/2,-car.h/2,car.w,car.h,9);X.fill();X.fillStyle='#bae6fd';X.fillRect(-car.w*.32,-car.h*.2,car.w*.64,car.h*.25);X.fillStyle='#fb7185';X.fillRect(-car.w*.32,car.h*.37,7,5);X.fillRect(car.w*.32-7,car.h*.37,7,5);X.restore()}}
-function finish(win){if(!on)return;on=false;document.querySelector('#ico').textContent='🏁';document.querySelector('#title').textContent='주차 성공!';document.querySelector('#desc').innerHTML=`${elapsed.toFixed(1)}초, 충돌 ${hits}회로 주차했습니다.<br>더 깨끗한 주차 기록에 도전해 보세요.`;document.querySelector('#start').textContent='다시 운전';setTimeout(()=>O.classList.remove('hide'),400)}function loop(t){if(!on)return;const dt=Math.min(.03,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}addEventListener('keydown',e=>{if(e.key.startsWith('Arrow')){keys[e.key]=true;e.preventDefault()}});addEventListener('keyup',e=>keys[e.key]=false);document.querySelectorAll('.pad button').forEach(b=>{const k=b.dataset.k;b.onpointerdown=e=>{keys[k]=true;b.setPointerCapture(e.pointerId)};b.onpointerup=b.onpointercancel=()=>keys[k]=false});document.querySelector('#start').onclick=start;addEventListener('resize',resize);resize()})();</script></body></html>
+```html
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🅿️ 주차 마스터 챌린지</title>
+<style>
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 20% 10%,#0c4a6e,#172033 48%,#050b14);
+  color:#fff;
+  font-family:system-ui,"Noto Sans KR",sans-serif;
+  user-select:none
+}
+.app{
+  width:min(96vw,720px);
+  height:min(97vh,860px);
+  display:flex;
+  flex-direction:column;
+  gap:10px
+}
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  gap:10px
+}
+.tag{
+  font-size:10px;
+  letter-spacing:.18em;
+  color:#7dd3fc;
+  font-weight:900
+}
+h1{
+  margin:2px 0;
+  font-size:clamp(25px,5vw,38px)
+}
+.stats{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  justify-content:flex-end
+}
+.stat{
+  min-width:62px;
+  padding:7px 8px;
+  text-align:center;
+  border:1px solid #ffffff24;
+  border-radius:13px;
+  background:#10213ddd
+}
+.stat small{
+  display:block;
+  color:#bae6fd;
+  font-size:9px
+}
+.stat b{
+  font-size:18px
+}
+.game{
+  position:relative;
+  flex:1;
+  min-height:410px;
+  overflow:hidden;
+  border:1px solid #ffffff25;
+  border-radius:25px;
+  background:#263442;
+  box-shadow:0 25px 70px #0009;
+  touch-action:none
+}
+.game.shake{
+  animation:shake .18s linear
+}
+@keyframes shake{
+  0%{transform:translateX(0)}
+  25%{transform:translateX(-5px)}
+  50%{transform:translateX(5px)}
+  75%{transform:translateX(-3px)}
+  100%{transform:translateX(0)}
+}
+canvas{
+  display:block;
+  width:100%;
+  height:100%
+}
+.pad{
+  position:absolute;
+  left:14px;
+  bottom:14px;
+  z-index:3;
+  display:grid;
+  grid-template-columns:repeat(3,52px);
+  grid-template-rows:repeat(2,48px);
+  gap:5px
+}
+.pad button{
+  padding:0;
+  border:1px solid #ffffff42;
+  border-radius:12px;
+  color:#fff;
+  background:#0f2945dd;
+  font-size:20px;
+  font-weight:900;
+  touch-action:none;
+  box-shadow:0 4px 0 #061728;
+  transition:.05s
+}
+.pad button:active{
+  transform:translateY(3px);
+  box-shadow:0 1px 0 #061728;
+  background:#14517d
+}
+.up{grid-column:2}
+.left{grid-column:1}
+.down{grid-column:2}
+.right{grid-column:3}
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:5;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:#07111fe8;
+  backdrop-filter:blur(5px)
+}
+.overlay.hide{display:none}
+.card{
+  width:min(100%,410px);
+  padding:27px 23px;
+  text-align:center;
+  border:1px solid #ffffff24;
+  border-radius:24px;
+  background:linear-gradient(180deg,#123658,#0d2239);
+  box-shadow:0 20px 60px #0009
+}
+.ico{font-size:58px}
+.card h2{
+  margin:8px;
+  font-size:28px
+}
+.card p{
+  color:#dbeafe;
+  font-size:14px;
+  line-height:1.7
+}
+.buttons{
+  display:grid;
+  gap:8px;
+  margin-top:14px
+}
+.buttons button{
+  width:100%;
+  padding:14px;
+  border:0;
+  border-radius:13px;
+  font-weight:900;
+  font-size:15px;
+  cursor:pointer
+}
+.mainBtn{
+  background:linear-gradient(135deg,#7dd3fc,#a7f3d0);
+  color:#082f49
+}
+.subBtn{
+  background:#ffffff16;
+  border:1px solid #ffffff22!important;
+  color:#fff
+}
+.tip{
+  text-align:center;
+  color:#bae6fd;
+  font-size:12px
+}
+.mission{
+  position:absolute;
+  top:12px;
+  left:12px;
+  z-index:2;
+  padding:8px 11px;
+  border-radius:12px;
+  background:#07111fc9;
+  border:1px solid #ffffff25;
+  font-size:12px;
+  color:#dbeafe;
+  pointer-events:none
+}
+.toast{
+  position:absolute;
+  left:50%;
+  top:22%;
+  transform:translate(-50%,-50%);
+  z-index:4;
+  padding:10px 18px;
+  border-radius:100px;
+  background:#0f172add;
+  border:1px solid #ffffff33;
+  font-weight:900;
+  opacity:0;
+  transition:.2s;
+  pointer-events:none
+}
+.toast.show{
+  opacity:1;
+  top:19%
+}
+@media(min-width:700px){
+  .pad{opacity:.7}
+}
+@media(max-width:520px){
+  .app{
+    width:100%;
+    height:100%;
+    padding:8px
+  }
+  .game{border-radius:18px}
+  .stats{gap:4px}
+  .stat{
+    min-width:55px;
+    padding:6px
+  }
+  .stat b{font-size:16px}
+}
+</style>
+</head>
+<body>
+<main class="app">
+
+<header class="top">
+  <div>
+    <div class="tag">PARKING CHALLENGE</div>
+    <h1>🅿️ 주차 마스터</h1>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <small>스테이지</small>
+      <b id="stage">1</b>
+    </div>
+    <div class="stat">
+      <small>남은시간</small>
+      <b id="time">45</b>
+    </div>
+    <div class="stat">
+      <small>충돌</small>
+      <b id="hits">0</b>
+    </div>
+    <div class="stat">
+      <small>점수</small>
+      <b id="score">0</b>
+    </div>
+  </div>
+</header>
+
+<section class="game" id="game">
+<canvas id="canvas"></canvas>
+
+<div class="mission" id="mission">
+⭐ 별을 먹고 초록 주차칸에 주차하세요
+</div>
+
+<div class="toast" id="toast">⭐ +100</div>
+
+<div class="pad">
+  <button class="up" data-k="ArrowUp">▲</button>
+  <button class="left" data-k="ArrowLeft">◀</button>
+  <button class="down" data-k="ArrowDown">▼</button>
+  <button class="right" data-k="ArrowRight">▶</button>
+</div>
+
+<div class="overlay" id="over">
+  <div class="card">
+    <div class="ico" id="ico">🚗</div>
+    <h2 id="title">주차 마스터 챌린지</h2>
+    <p id="desc">
+      방향키로 자동차를 운전하세요.<br>
+      ⭐ 별을 획득하고 장애물을 피한 뒤<br>
+      초록색 주차칸 안에 정확히 멈추면 성공합니다.
+    </p>
+
+    <div class="buttons">
+      <button class="mainBtn" id="start">게임 시작</button>
+      <button class="subBtn" id="levelBtn">난이도 : 보통</button>
+    </div>
+  </div>
+</div>
+
+</section>
+
+<div class="tip">
+↑↓ 전진·후진 · ←→ 핸들 · ⭐ 보너스 · 초록 칸에 정확히 정차
+</div>
+
+</main>
+
+<script>
+(()=>{
+const C=document.querySelector('#canvas');
+const X=C.getContext('2d');
+const G=document.querySelector('#game');
+const O=document.querySelector('#over');
+
+const TE=document.querySelector('#time');
+const HE=document.querySelector('#hits');
+const SE=document.querySelector('#score');
+const ST=document.querySelector('#stage');
+const toast=document.querySelector('#toast');
+
+let W,H,D=1;
+let on=false;
+let last=0;
+let remain=45;
+let hits=0;
+let score=0;
+let stage=1;
+let difficulty=1;
+let car;
+let keys={};
+let walls=[];
+let spot;
+let stars=[];
+let particles=[];
+let movingCars=[];
+
+const difficultyNames=['쉬움','보통','어려움'];
+
+function resize(){
+  const r=G.getBoundingClientRect();
+  D=Math.min(2,devicePixelRatio||1);
+  W=r.width;
+  H=r.height;
+  C.width=W*D;
+  C.height=H*D;
+  X.setTransform(D,0,0,D,0,0);
+  if(!on) layout();
+  draw();
+}
+
+function layout(){
+  spot={
+    x:W-115,
+    y:28,
+    w:78,
+    h:125
+  };
+
+  walls=[
+    {x:W*.23,y:H*.17,w:66,h:H*.44},
+    {x:W*.52,y:H*.46,w:72,h:H*.40}
+  ];
+
+  if(stage>=2){
+    walls.push({
+      x:W-132,
+      y:H*.63,
+      w:95,
+      h:48
+    });
+  }
+
+  if(stage>=3){
+    walls.push({
+      x:W*.05,
+      y:H*.28,
+      w:80,
+      h:44
+    });
+  }
+
+  stars=[
+    {x:W*.20,y:H*.78,taken:false},
+    {x:W*.48,y:H*.25,taken:false},
+    {x:W*.76,y:H*.48,taken:false}
+  ];
+
+  movingCars=[];
+
+  if(stage>=2){
+    movingCars.push({
+      x:W*.15,
+      y:H*.42,
+      w:34,
+      h:60,
+      dir:1,
+      speed:40+stage*6
+    });
+  }
+
+  if(stage>=3){
+    movingCars.push({
+      x:W*.72,
+      y:H*.74,
+      w:34,
+      h:60,
+      dir:-1,
+      speed:48+stage*7
+    });
+  }
+}
+
+function start(){
+  layout();
+
+  car={
+    x:55,
+    y:H-75,
+    a:0,
+    v:0,
+    w:34,
+    h:58
+  };
+
+  remain=Math.max(24,48-stage*3-difficulty*3);
+  hits=0;
+  score=0;
+  particles=[];
+
+  TE.textContent=Math.ceil(remain);
+  HE.textContent=0;
+  SE.textContent=0;
+  ST.textContent=stage;
+
+  on=true;
+  O.classList.add('hide');
+  last=performance.now();
+  requestAnimationFrame(loop);
+}
+
+function corners(c,x=c.x,y=c.y,a=c.a){
+  const ca=Math.cos(a);
+  const sa=Math.sin(a);
+  const pts=[];
+
+  for(const [dx,dy] of [
+    [-c.w/2,-c.h/2],
+    [ c.w/2,-c.h/2],
+    [ c.w/2, c.h/2],
+    [-c.w/2, c.h/2]
+  ]){
+    pts.push({
+      x:x+dx*ca-dy*sa,
+      y:y+dx*sa+dy*ca
+    });
+  }
+  return pts;
+}
+
+function pointRect(p,r){
+  return p.x>r.x &&
+         p.x<r.x+r.w &&
+         p.y>r.y &&
+         p.y<r.y+r.h;
+}
+
+function rectHit(a,b){
+  return !(
+    a.x+a.w/2 < b.x-b.w/2 ||
+    a.x-a.w/2 > b.x+b.w/2 ||
+    a.y+a.h/2 < b.y-b.h/2 ||
+    a.y-a.h/2 > b.y+b.h/2
+  );
+}
+
+function collides(x,y,a){
+  const pts=corners(car,x,y,a);
+
+  if(
+    pts.some(p=>
+      p.x<5 ||
+      p.x>W-5 ||
+      p.y<5 ||
+      p.y>H-5
+    )
+  ) return true;
+
+  if(
+    pts.some(p=>
+      walls.some(r=>pointRect(p,r))
+    )
+  ) return true;
+
+  for(const mc of movingCars){
+    if(rectHit(
+      {x,y,w:car.w,h:car.h},
+      mc
+    )) return true;
+  }
+
+  return false;
+}
+
+function crash(){
+  car.v*=-.32;
+  hits++;
+  score=Math.max(0,score-35);
+
+  HE.textContent=hits;
+  SE.textContent=score;
+
+  G.classList.remove('shake');
+  void G.offsetWidth;
+  G.classList.add('shake');
+
+  showToast('💥 충돌 -35');
+}
+
+function showToast(txt){
+  toast.textContent=txt;
+  toast.classList.remove('show');
+  void toast.offsetWidth;
+  toast.classList.add('show');
+
+  clearTimeout(showToast.timer);
+  showToast.timer=setTimeout(()=>{
+    toast.classList.remove('show');
+  },650);
+}
+
+function starParticles(x,y){
+  for(let i=0;i<12;i++){
+    particles.push({
+      x,y,
+      vx:(Math.random()-.5)*120,
+      vy:(Math.random()-.5)*120,
+      life:1
+    });
+  }
+}
+
+function update(dt){
+  remain-=dt;
+
+  if(remain<=0){
+    remain=0;
+    TE.textContent='0';
+    finish(false,'시간 초과!');
+    return;
+  }
+
+  TE.textContent=Math.ceil(remain);
+
+  const throttle=
+    (keys.ArrowUp?1:0)-
+    (keys.ArrowDown?1:0);
+
+  const accel=175+difficulty*15;
+
+  car.v+=throttle*accel*dt;
+  car.v*=Math.pow(.2,dt);
+
+  const maxForward=150+difficulty*12;
+  const maxReverse=100+difficulty*8;
+
+  car.v=Math.max(
+    -maxReverse,
+    Math.min(maxForward,car.v)
+  );
+
+  if(Math.abs(car.v)>4){
+    const steer=
+      (keys.ArrowRight?1:0)-
+      (keys.ArrowLeft?1:0);
+
+    car.a+=
+      steer*
+      car.v/maxForward*
+      2.15*
+      dt;
+  }
+
+  const nx=
+    car.x+
+    Math.sin(car.a)*
+    car.v*
+    dt;
+
+  const ny=
+    car.y-
+    Math.cos(car.a)*
+    car.v*
+    dt;
+
+  if(collides(nx,ny,car.a)){
+    crash();
+  }else{
+    car.x=nx;
+    car.y=ny;
+  }
+
+  for(const mc of movingCars){
+    mc.y+=mc.dir*mc.speed*dt;
+
+    if(mc.y<70){
+      mc.y=70;
+      mc.dir=1;
+    }
+
+    if(mc.y>H-70){
+      mc.y=H-70;
+      mc.dir=-1;
+    }
+  }
+
+  for(const s of stars){
+    if(s.taken) continue;
+
+    const dist=Math.hypot(
+      car.x-s.x,
+      car.y-s.y
+    );
+
+    if(dist<32){
+      s.taken=true;
+      score+=100;
+      SE.textContent=score;
+      showToast('⭐ 별 획득 +100');
+      starParticles(s.x,s.y);
+    }
+  }
+
+  for(const p of particles){
+    p.x+=p.vx*dt;
+    p.y+=p.vy*dt;
+    p.vy+=90*dt;
+    p.life-=dt*1.8;
+  }
+
+  particles=particles.filter(
+    p=>p.life>0
+  );
+
+  checkParking();
+}
+
+function checkParking(){
+  const pts=corners(car);
+
+  const inside=
+    pts.every(p=>pointRect(p,spot));
+
+  if(!inside) return;
+
+  if(Math.abs(car.v)>9) return;
+
+  let normalized=
+    ((car.a%(Math.PI*2))+
+      Math.PI*2)%
+      (Math.PI*2);
+
+  const angleDiff=Math.min(
+    Math.abs(normalized),
+    Math.abs(Math.PI*2-normalized),
+    Math.abs(normalized-Math.PI)
+  );
+
+  if(angleDiff>.34){
+    showToast('↔ 차를 주차선과 맞추세요');
+    return;
+  }
+
+  finish(true);
+}
+
+function drawRoad(){
+  X.fillStyle='#334155';
+  X.fillRect(0,0,W,H);
+
+  X.fillStyle='#263340';
+
+  for(let x=0;x<W;x+=80){
+    X.fillRect(x,0,1,H);
+  }
+
+  X.strokeStyle='#ffffff18';
+  X.lineWidth=2;
+  X.setLineDash([12,14]);
+
+  for(let y=85;y<H;y+=120){
+    X.beginPath();
+    X.moveTo(0,y);
+    X.lineTo(W,y);
+    X.stroke();
+  }
+
+  X.setLineDash([]);
+}
+
+function drawParking(){
+  X.fillStyle='#22c55e38';
+  X.fillRect(
+    spot.x,
+    spot.y,
+    spot.w,
+    spot.h
+  );
+
+  X.strokeStyle='#86efac';
+  X.lineWidth=4;
+  X.strokeRect(
+    spot.x,
+    spot.y,
+    spot.w,
+    spot.h
+  );
+
+  X.fillStyle='#fff';
+  X.font='bold 24px sans-serif';
+  X.fillText(
+    'P',
+    spot.x+29,
+    spot.y+70
+  );
+
+  X.font='10px sans-serif';
+  X.fillStyle='#bbf7d0';
+  X.fillText(
+    'PARK HERE',
+    spot.x+9,
+    spot.y+103
+  );
+}
+
+function drawObstacle(r){
+  X.fillStyle='#111827';
+  X.fillRect(
+    r.x,
+    r.y,
+    r.w,
+    r.h
+  );
+
+  X.fillStyle='#64748b';
+  X.fillRect(
+    r.x+7,
+    r.y+7,
+    r.w-14,
+    r.h-14
+  );
+
+  X.fillStyle='#94a3b8';
+
+  for(let y=r.y+15;
+      y<r.y+r.h-10;
+      y+=20){
+    X.fillRect(
+      r.x+4,
+      y,
+      4,
+      8
+    );
+    X.fillRect(
+      r.x+r.w-8,
+      y,
+      4,
+      8
+    );
+  }
+}
+
+function drawCar(c,color='#38bdf8'){
+  X.save();
+
+  X.translate(c.x,c.y);
+  X.rotate(c.a||0);
+
+  X.shadowColor='#000';
+  X.shadowBlur=12;
+
+  X.fillStyle=color;
+  X.beginPath();
+
+  if(X.roundRect){
+    X.roundRect(
+      -c.w/2,
+      -c.h/2,
+      c.w,
+      c.h,
+      9
+    );
+  }else{
+    X.rect(
+      -c.w/2,
+      -c.h/2,
+      c.w,
+      c.h
+    );
+  }
+
+  X.fill();
+
+  X.fillStyle='#bae6fd';
+  X.fillRect(
+    -c.w*.32,
+    -c.h*.2,
+    c.w*.64,
+    c.h*.25
+  );
+
+  X.fillStyle='#0f172a';
+  X.fillRect(
+    -c.w*.34,
+    c.h*.05,
+    c.w*.68,
+    c.h*.14
+  );
+
+  X.fillStyle='#fef08a';
+  X.fillRect(
+    -c.w*.31,
+    -c.h*.45,
+    7,
+    5
+  );
+
+  X.fillRect(
+    c.w*.31-7,
+    -c.h*.45,
+    7,
+    5
+  );
+
+  X.fillStyle='#fb7185';
+  X.fillRect(
+    -c.w*.31,
+    c.h*.37,
+    7,
+    5
+  );
+
+  X.fillRect(
+    c.w*.31-7,
+    c.h*.37,
+    7,
+    5
+  );
+
+  X.restore();
+}
+
+function drawStars(){
+  X.font='25px sans-serif';
+
+  for(const s of stars){
+    if(s.taken) continue;
+
+    const pulse=
+      1+
+      Math.sin(
+        performance.now()/180
+      )*.12;
+
+    X.save();
+    X.translate(s.x,s.y);
+    X.scale(pulse,pulse);
+    X.fillText('⭐',-13,10);
+    X.restore();
+  }
+}
+
+function drawMovingCars(){
+  for(const mc of movingCars){
+    drawCar({
+      x:mc.x,
+      y:mc.y,
+      w:mc.w,
+      h:mc.h,
+      a:0
+    },'#f97316');
+  }
+}
+
+function drawParticles(){
+  for(const p of particles){
+    X.globalAlpha=p.life;
+    X.fillStyle='#fde047';
+    X.beginPath();
+    X.arc(
+      p.x,
+      p.y,
+      4,
+      0,
+      Math.PI*2
+    );
+    X.fill();
+  }
+
+  X.globalAlpha=1;
+}
+
+function draw(){
+  X.clearRect(0,0,W,H);
+
+  drawRoad();
+  drawParking();
+
+  for(const r of walls){
+    drawObstacle(r);
+  }
+
+  drawStars();
+  drawMovingCars();
+  drawParticles();
+
+  if(car){
+    drawCar(car);
+  }
+}
+
+function finish(win,reason=''){
+  if(!on) return;
+
+  on=false;
+
+  let resultScore=score;
+
+  if(win){
+    resultScore+=
+      Math.floor(remain*10);
+
+    resultScore+=
+      Math.max(0,300-hits*60);
+
+    score=resultScore;
+    SE.textContent=score;
+
+    let starsWon=1;
+
+    if(hits<=2) starsWon=2;
+    if(hits===0 && remain>10) starsWon=3;
+
+    const starText=
+      '⭐'.repeat(starsWon)+
+      '☆'.repeat(3-starsWon);
+
+    document.querySelector('#ico')
+      .textContent='🏁';
+
+    document.querySelector('#title')
+      .textContent='주차 성공!';
+
+    document.querySelector('#desc')
+      .innerHTML=
+      `${starText}<br><br>`+
+      `점수 <b>${score}</b>점<br>`+
+      `충돌 ${hits}회 · 남은 시간 ${Math.ceil(remain)}초<br><br>`+
+      `다음 스테이지는 더 어려워집니다.`;
+
+    document.querySelector('#start')
+      .textContent='다음 스테이지';
+
+    document.querySelector('#start')
+      .onclick=()=>{
+        stage++;
+        start();
+      };
+
+  }else{
+
+    document.querySelector('#ico')
+      .textContent='⏰';
+
+    document.querySelector('#title')
+      .textContent=reason || '도전 실패';
+
+    document.querySelector('#desc')
+      .innerHTML=
+      `시간 안에 주차하지 못했습니다.<br>`+
+      `현재 점수 ${score}점<br><br>`+
+      `장애물을 피하고 별을 먹은 뒤<br>`+
+      `주차선 안에서 천천히 멈춰보세요.`;
+
+    document.querySelector('#start')
+      .textContent='다시 도전';
+
+    document.querySelector('#start')
+      .onclick=start;
+  }
+
+  setTimeout(()=>{
+    O.classList.remove('hide');
+  },400);
+}
+
+function loop(t){
+  if(!on) return;
+
+  const dt=
+    Math.min(
+      .03,
+      (t-last)/1000
+    );
+
+  last=t;
+
+  update(dt);
+  draw();
+
+  requestAnimationFrame(loop);
+}
+
+addEventListener(
+  'keydown',
+  e=>{
+    if(
+      e.key.startsWith('Arrow')
+    ){
+      keys[e.key]=true;
+      e.preventDefault();
+    }
+  }
+);
+
+addEventListener(
+  'keyup',
+  e=>{
+    keys[e.key]=false;
+  }
+);
+
+document
+.querySelectorAll('.pad button')
+.forEach(b=>{
+  const k=b.dataset.k;
+
+  b.onpointerdown=e=>{
+    keys[k]=true;
+
+    try{
+      b.setPointerCapture(
+        e.pointerId
+      );
+    }catch{}
+  };
+
+  const off=()=>{
+    keys[k]=false;
+  };
+
+  b.onpointerup=off;
+  b.onpointercancel=off;
+  b.onpointerleave=off;
+});
+
+document
+.querySelector('#start')
+.onclick=start;
+
+document
+.querySelector('#levelBtn')
+.onclick=()=>{
+  difficulty=
+    (difficulty+1)%3;
+
+  document
+  .querySelector('#levelBtn')
+  .textContent=
+    `난이도 : ${difficultyNames[difficulty]}`;
+};
+
+addEventListener(
+  'resize',
+  resize
+);
+
+resize();
+})();
+</script>
+</body>
+</html>
+```

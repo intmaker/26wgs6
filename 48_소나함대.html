@@ -1,15 +1,1306 @@
-<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no"><title>📡 소나 함대</title><style>
-:root{--c1:#075985;--c2:#67e8f9}*{box-sizing:border-box}html,body{height:100%}body{margin:0;overflow:hidden;display:grid;place-items:center;color:#f8fafc;font-family:system-ui,"Noto Sans KR",sans-serif;background:radial-gradient(circle at 18% 10%,var(--c1),#11162e 52%,#030712);user-select:none;-webkit-user-select:none}.app{width:min(95vw,720px);height:min(95vh,860px);display:flex;flex-direction:column;gap:11px}.top{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:2px 4px}.brand small{display:block;color:#cbd5e1;font-size:10px;font-weight:900;letter-spacing:.2em}.brand h1{margin:2px 0 0;font-size:clamp(25px,5vw,38px);letter-spacing:-.05em}.hud{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.stat{min-width:67px;padding:7px 10px;text-align:center;border:1px solid #ffffff25;border-radius:14px;background:#0f172ac7}.stat small{display:block;color:#cbd5e1;font-size:9px}.stat b{font-size:19px}.stage{position:relative;flex:1;min-height:400px;overflow:hidden;border:1px solid #ffffff27;border-radius:25px;background:linear-gradient(145deg,#14203b,#090e21);box-shadow:0 25px 70px #0009;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:#050916e9}.overlay.hide{display:none}.card{width:min(100%,410px);padding:28px 24px;text-align:center;border:1px solid #ffffff25;border-radius:23px;background:#111a36ee;box-shadow:0 20px 55px #0008}.card .emoji{font-size:55px}.card h2{margin:8px;font-size:28px}.card p{margin:0 0 19px;color:#cbd5e1;font-size:14px;line-height:1.72;word-break:keep-all}.primary{min-height:48px;width:100%;padding:12px 18px;border:0;border-radius:13px;color:#08111f;background:linear-gradient(135deg,var(--c2),#fef3c7);font:900 15px system-ui;cursor:pointer}.tip{min-height:18px;text-align:center;color:#aebbd0;font-size:12px}.hidden{display:none!important}button{font-family:inherit}.sonar{height:100%;display:grid;place-items:center;align-content:center;gap:11px;padding:14px;background:radial-gradient(circle,#075985,#031a31)}.sonar-tools{display:flex;gap:8px}.mode{min-height:46px;padding:9px 16px;border:1px solid #ffffff2b;border-radius:12px;color:#dbeafe;background:#ffffff0d;font-weight:900;cursor:pointer}.mode.active{background:#0ea5e9;color:#082f49}.sea{width:min(95%,530px);aspect-ratio:1;display:grid;grid-template-columns:repeat(8,1fr);gap:4px;padding:7px;border:2px solid #38bdf8;border-radius:16px;background:#082f49}.scell{position:relative;border:1px solid #38bdf833;border-radius:8px;background:linear-gradient(145deg,#075985,#0c4a6e);color:#fff;font-size:clamp(14px,3vw,23px);font-weight:900;cursor:pointer}.scell.miss::after{content:"•";font-size:30px;color:#bae6fd}.scell.hit{background:#dc2626}.scell.hit::after{content:"💥"}.scell.scan{box-shadow:inset 0 0 0 3px #facc15}.scell.sunk{background:#7f1d1d}.log{min-height:25px;text-align:center;color:#bae6fd;font-weight:800}.pulse{animation:pulse .55s}@keyframes pulse{50%{transform:scale(.88);filter:brightness(1.8)}}
-@media(max-width:520px){.app{width:100%;height:100%;padding:9px}.stage{min-height:0;border-radius:20px}.brand h1{font-size:25px}.stat{min-width:61px;padding:6px 8px}.card{padding:24px 19px}.tip{font-size:11px}}
-</style></head><body><main class="app"><header class="top"><div class="brand"><small>SONAR FLEET</small><h1>📡 소나 함대</h1></div><div class="hud" id="hud"></div></header><section class="stage" id="stage"><div class="sonar"><div class="sonar-tools"><button id="fireMode" class="mode active">🎯 공격</button><button id="sonarMode" class="mode">📡 소나 <b id="sonars">3</b></button></div><div class="sea" id="sea"></div><div class="log" id="log">좌표를 선택해 적 함대를 찾으세요.</div></div><div class="overlay" id="overlay"><div class="card"><div class="emoji" id="resultEmoji">📡</div><h2 id="resultTitle">소나 함대</h2><p id="resultText">제한된 포탄과 소나 단서로 숨은 적 함대를 모두 침몰시키세요.</p><button class="primary" id="startBtn">게임 시작</button></div></div></section><div class="tip">제한된 포탄과 소나 단서로 숨은 적 함대를 모두 침몰시키세요.</div></main><script>
-const $=s=>document.querySelector(s),stage=$('#stage'),overlay=$('#overlay'),startBtn=$('#startBtn');
-const safeGet=(k,d=0)=>{try{return Number(localStorage.getItem(k))||d}catch(e){return d}},safeSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
-function showResult(icon,title,text,button='다시 하기'){ $('#resultEmoji').textContent=icon;$('#resultTitle').textContent=title;$('#resultText').innerHTML=text;startBtn.textContent=button;overlay.classList.remove('hide') }
-const SIZE=8,sea=$('#sea'),log=$('#log'),hud=$('#hud'),sonarsEl=$('#sonars');let grid=[],ships=[],shots=0,sonars=3,mode='fire',playing=false,best=safeGet('sonarBest',0);hud.innerHTML=`<div class="stat"><small>남은 포탄</small><b id="ammo">24</b></div><div class="stat"><small>최소 기록</small><b id="best">${best||'-'}</b></div>`;
-function placeShips(){grid=Array(SIZE*SIZE).fill(null).map(()=>({ship:-1,shot:false,scan:null}));ships=[];for(const len of[3,2,2]){let ok=false;while(!ok){const horizontal=Math.random()<.5,x=Math.floor(Math.random()*(horizontal?SIZE-len+1:SIZE)),y=Math.floor(Math.random()*(horizontal?SIZE:SIZE-len+1)),cells=Array.from({length:len},(_,k)=>(y+(horizontal?0:k))*SIZE+x+(horizontal?k:0));if(cells.every(i=>grid[i].ship<0)){const id=ships.length;cells.forEach(i=>grid[i].ship=id);ships.push({cells,hits:0});ok=true}}}}
-function startGame(){placeShips();shots=0;sonars=3;mode='fire';playing=true;sonarsEl.textContent=3;$('#ammo').textContent=24;log.textContent='공격할 좌표를 선택하세요.';setMode('fire');overlay.classList.add('hide');render()}
-function setMode(m){mode=m;$('#fireMode').classList.toggle('active',m==='fire');$('#sonarMode').classList.toggle('active',m==='sonar')}
-function render(){sea.innerHTML='';grid.forEach((c,i)=>{const b=document.createElement('button');const sunk=c.ship>=0&&ships[c.ship].hits===ships[c.ship].cells.length;b.className='scell'+(c.shot?(c.ship>=0?' hit':' miss'):'')+(c.scan!==null?' scan':'')+(sunk?' sunk':'');b.textContent=c.scan!==null&&!c.shot?c.scan:'';b.onclick=()=>act(i);sea.appendChild(b)})}
-function act(i){if(!playing)return;const c=grid[i];if(mode==='sonar'){if(!sonars)return;sonars--;sonarsEl.textContent=sonars;const x=i%SIZE,y=Math.floor(i/SIZE);c.scan=grid.filter((z,j)=>z.ship>=0&&Math.abs(j%SIZE-x)<=1&&Math.abs(Math.floor(j/SIZE)-y)<=1).length;log.textContent=`소나 반응: 주변 3×3 구역에 함선 칸 ${c.scan}개`;setMode('fire');render();return}if(c.shot)return;c.shot=true;shots++;$('#ammo').textContent=Math.max(0,24-shots);if(c.ship>=0){ships[c.ship].hits++;log.textContent=ships[c.ship].hits===ships[c.ship].cells.length?'🚢 적 함선을 침몰시켰습니다!':'💥 명중! 같은 함선의 나머지 칸을 찾으세요.'}else log.textContent='빗나갔습니다. 소나 단서를 활용하세요.';render();if(ships.every(s=>s.hits===s.cells.length))return win();if(shots>=24)return lose()}
-function win(){playing=false;if(!best||shots<best){best=shots;safeSet('sonarBest',best);$('#best').textContent=best}showResult('🏆','적 함대 전멸!',`${shots}발로 모든 함선을 침몰시켰습니다.<br>소나를 겹치지 않게 사용하면 더 적은 포탄으로 찾을 수 있어요.`)}function lose(){playing=false;grid.forEach(c=>{if(c.ship>=0)c.shot=true});render();showResult('🌊','포탄 소진','숨은 함선 위치를 확인하고 다시 작전을 세워보세요.')}$('#fireMode').onclick=()=>setMode('fire');$('#sonarMode').onclick=()=>sonars&&setMode('sonar');startBtn.onclick=startGame;placeShips();render();
-</script></body></html>
+```html id="c19xva"
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no">
+<title>📡 소나 함대 작전</title>
+
+<style>
+:root{
+  --c1:#075985;
+  --c2:#67e8f9;
+  --good:#86efac;
+  --bad:#fb7185;
+  --gold:#fde047
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+
+body{
+  margin:0;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  color:#f8fafc;
+  font-family:system-ui,"Noto Sans KR",sans-serif;
+  background:
+    radial-gradient(circle at 18% 10%,#075985,#11162e 52%,#030712);
+  user-select:none;
+  -webkit-user-select:none
+}
+
+.app{
+  width:min(96vw,730px);
+  height:min(97vh,870px);
+  display:flex;
+  flex-direction:column;
+  gap:10px
+}
+
+.top{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:10px;
+  padding:2px 4px
+}
+
+.brand small{
+  display:block;
+  color:#bae6fd;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.2em
+}
+
+.brand h1{
+  margin:2px 0 0;
+  font-size:clamp(25px,5vw,38px);
+  letter-spacing:-.05em
+}
+
+.hud{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  justify-content:flex-end
+}
+
+.stat{
+  min-width:60px;
+  padding:7px 8px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:13px;
+  background:#0f172ad9
+}
+
+.stat small{
+  display:block;
+  color:#cbd5e1;
+  font-size:9px
+}
+
+.stat b{
+  font-size:17px
+}
+
+.stage{
+  position:relative;
+  flex:1;
+  min-height:400px;
+  overflow:hidden;
+  border:1px solid #ffffff27;
+  border-radius:25px;
+  background:
+    radial-gradient(circle at 50% 40%,#075985,#031525 62%,#020617);
+  box-shadow:0 25px 70px #0009;
+  touch-action:none
+}
+
+.stage.shake{
+  animation:shake .2s
+}
+
+@keyframes shake{
+  0%{transform:translate(0)}
+  25%{transform:translate(-5px,2px)}
+  50%{transform:translate(5px,-1px)}
+  75%{transform:translate(-3px,1px)}
+  100%{transform:translate(0)}
+}
+
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:20;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:#050916e9;
+  backdrop-filter:blur(5px)
+}
+
+.overlay.hide{display:none}
+
+.card{
+  width:min(100%,420px);
+  padding:28px 24px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:24px;
+  background:linear-gradient(180deg,#111a36,#091426);
+  box-shadow:0 20px 55px #0008
+}
+
+.card .emoji{
+  font-size:58px
+}
+
+.card h2{
+  margin:8px;
+  font-size:28px
+}
+
+.card p{
+  margin:0 0 18px;
+  color:#cbd5e1;
+  font-size:14px;
+  line-height:1.72;
+  word-break:keep-all
+}
+
+.buttons{
+  display:grid;
+  gap:8px
+}
+
+.primary,.secondary{
+  min-height:48px;
+  width:100%;
+  padding:12px 18px;
+  border-radius:13px;
+  font:900 15px system-ui;
+  cursor:pointer
+}
+
+.primary{
+  border:0;
+  color:#08111f;
+  background:linear-gradient(135deg,var(--c2),#fef3c7)
+}
+
+.secondary{
+  color:#fff;
+  border:1px solid #ffffff25;
+  background:#ffffff0e
+}
+
+.tip{
+  min-height:18px;
+  text-align:center;
+  color:#aebbd0;
+  font-size:12px
+}
+
+.sonar{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  padding:12px
+}
+
+.infoBar{
+  width:min(96%,540px);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  color:#dbeafe;
+  font-size:11px
+}
+
+.enemyStatus{
+  display:flex;
+  gap:7px;
+  align-items:center
+}
+
+.enemyShip{
+  opacity:.35;
+  filter:grayscale(1)
+}
+
+.enemyShip.alive{
+  opacity:1;
+  filter:none
+}
+
+.combo{
+  font-weight:900;
+  color:#fde047
+}
+
+.sonar-tools{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:6px
+}
+
+.mode{
+  min-height:43px;
+  padding:8px 13px;
+  border:1px solid #ffffff2b;
+  border-radius:11px;
+  color:#dbeafe;
+  background:#ffffff0d;
+  font-weight:900;
+  cursor:pointer
+}
+
+.mode.active{
+  background:#0ea5e9;
+  color:#082f49
+}
+
+.mode:disabled{
+  opacity:.35;
+  cursor:default
+}
+
+.sea{
+  width:min(94%,530px);
+  aspect-ratio:1;
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  gap:4px;
+  padding:7px;
+  border:2px solid #38bdf8;
+  border-radius:16px;
+  background:#082f49;
+  box-shadow:
+    inset 0 0 25px #020617,
+    0 0 30px #0284c733
+}
+
+.scell{
+  position:relative;
+  border:1px solid #38bdf833;
+  border-radius:8px;
+  background:
+    linear-gradient(145deg,#075985,#0c4a6e);
+  color:#fff;
+  font-size:clamp(13px,3vw,21px);
+  font-weight:900;
+  cursor:pointer;
+  overflow:hidden
+}
+
+.scell:hover{
+  filter:brightness(1.14)
+}
+
+.scell.miss::after{
+  content:"•";
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  font-size:29px;
+  color:#bae6fd
+}
+
+.scell.hit{
+  background:#dc2626
+}
+
+.scell.hit::after{
+  content:"💥";
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center
+}
+
+.scell.scan{
+  box-shadow:
+    inset 0 0 0 3px #facc15,
+    inset 0 0 18px #facc1555
+}
+
+.scell.sunk{
+  background:#7f1d1d
+}
+
+.scell.sunk::after{
+  content:"🔥";
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center
+}
+
+.scell.special{
+  animation:flash .45s
+}
+
+@keyframes flash{
+  50%{
+    filter:brightness(2.5);
+    transform:scale(.88)
+  }
+}
+
+.log{
+  min-height:27px;
+  text-align:center;
+  color:#bae6fd;
+  font-weight:800;
+  font-size:13px
+}
+
+.toast{
+  position:absolute;
+  left:50%;
+  top:24%;
+  z-index:10;
+  transform:translate(-50%,-50%);
+  padding:9px 17px;
+  border:1px solid #ffffff33;
+  border-radius:999px;
+  background:#0f172ae8;
+  font-weight:900;
+  opacity:0;
+  pointer-events:none;
+  transition:.2s;
+  white-space:nowrap
+}
+
+.toast.show{
+  opacity:1;
+  top:20%
+}
+
+@media(max-width:520px){
+  .app{
+    width:100%;
+    height:100%;
+    padding:8px
+  }
+
+  .stage{
+    min-height:0;
+    border-radius:18px
+  }
+
+  .brand h1{
+    font-size:24px
+  }
+
+  .stat{
+    min-width:53px;
+    padding:6px
+  }
+
+  .stat b{
+    font-size:15px
+  }
+
+  .mode{
+    padding:7px 10px;
+    font-size:12px
+  }
+
+  .card{
+    padding:24px 19px
+  }
+
+  .tip{
+    font-size:11px
+  }
+}
+</style>
+</head>
+
+<body>
+
+<main class="app">
+
+<header class="top">
+
+<div class="brand">
+  <small>SONAR FLEET COMMAND</small>
+  <h1>📡 소나 함대</h1>
+</div>
+
+<div class="hud">
+  <div class="stat">
+    <small>스테이지</small>
+    <b id="stageNo">1</b>
+  </div>
+
+  <div class="stat">
+    <small>포탄</small>
+    <b id="ammo">24</b>
+  </div>
+
+  <div class="stat">
+    <small>점수</small>
+    <b id="score">0</b>
+  </div>
+
+  <div class="stat">
+    <small>최고점수</small>
+    <b id="best">0</b>
+  </div>
+</div>
+
+</header>
+
+<section class="stage" id="stage">
+
+<div class="sonar">
+
+<div class="infoBar">
+
+<div class="enemyStatus" id="enemyStatus">
+  적 함대
+</div>
+
+<div class="combo" id="combo">
+  COMBO x0
+</div>
+
+</div>
+
+<div class="sonar-tools">
+
+<button id="fireMode" class="mode active">
+🎯 공격
+</button>
+
+<button id="sonarMode" class="mode">
+📡 소나 <b id="sonars">3</b>
+</button>
+
+<button id="depthMode" class="mode">
+💣 폭뢰 <b id="depths">1</b>
+</button>
+
+</div>
+
+<div class="sea" id="sea"></div>
+
+<div class="log" id="log">
+좌표를 선택해 적 함대를 찾으세요.
+</div>
+
+</div>
+
+<div class="toast" id="toast">
+💥 명중!
+</div>
+
+<div class="overlay" id="overlay">
+
+<div class="card">
+
+<div class="emoji" id="resultEmoji">📡</div>
+
+<h2 id="resultTitle">
+소나 함대 작전
+</h2>
+
+<p id="resultText">
+적 함대가 바다 어딘가에 숨어 있습니다.<br><br>
+🎯 포탄으로 공격하고<br>
+📡 소나로 주변 함선 위치를 탐지하세요.<br>
+💣 폭뢰는 3×3 구역을 한 번에 공격합니다.
+</p>
+
+<div class="buttons">
+
+<button class="primary" id="startBtn">
+작전 시작
+</button>
+
+<button class="secondary" id="levelBtn">
+난이도 : 보통
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<div class="tip">
+🎯 공격 · 📡 3×3 탐지 · 💣 3×3 공격 · 연속 명중 시 콤보 점수
+</div>
+
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+
+const stageEl=$('#stage');
+const overlay=$('#overlay');
+const startBtn=$('#startBtn');
+
+const sea=$('#sea');
+const log=$('#log');
+
+const ammoEl=$('#ammo');
+const scoreEl=$('#score');
+const bestEl=$('#best');
+const stageNoEl=$('#stageNo');
+
+const sonarsEl=$('#sonars');
+const depthsEl=$('#depths');
+
+const enemyStatus=$('#enemyStatus');
+const comboEl=$('#combo');
+const toast=$('#toast');
+
+const SIZE=8;
+
+const safeGet=(k,d=0)=>{
+  try{
+    return Number(localStorage.getItem(k))||d;
+  }catch{
+    return d;
+  }
+};
+
+const safeSet=(k,v)=>{
+  try{
+    localStorage.setItem(k,v);
+  }catch{}
+};
+
+let grid=[];
+let ships=[];
+
+let shots=0;
+let ammo=24;
+let sonars=3;
+let depths=1;
+
+let score=0;
+let combo=0;
+
+let mode='fire';
+let playing=false;
+
+let stageNo=1;
+let difficulty=1;
+
+let best=safeGet('sonarScoreBest',0);
+
+const difficultyNames=[
+  '쉬움',
+  '보통',
+  '어려움'
+];
+
+bestEl.textContent=best;
+
+function showToast(text){
+  toast.textContent=text;
+
+  toast.classList.remove('show');
+  void toast.offsetWidth;
+  toast.classList.add('show');
+
+  clearTimeout(showToast.timer);
+
+  showToast.timer=setTimeout(()=>{
+    toast.classList.remove('show');
+  },700);
+}
+
+function shake(){
+  stageEl.classList.remove('shake');
+  void stageEl.offsetWidth;
+  stageEl.classList.add('shake');
+}
+
+function shipLengths(){
+  if(stageNo<=2){
+    return [3,2,2];
+  }
+
+  if(stageNo<=4){
+    return [4,3,2];
+  }
+
+  return [4,3,3,2];
+}
+
+function placeShips(){
+
+  grid=
+    Array(SIZE*SIZE)
+    .fill(null)
+    .map(()=>({
+      ship:-1,
+      shot:false,
+      scan:null,
+      special:false
+    }));
+
+  ships=[];
+
+  for(const len of shipLengths()){
+
+    let ok=false;
+    let guard=0;
+
+    while(!ok && guard<5000){
+
+      guard++;
+
+      const horizontal=
+        Math.random()<.5;
+
+      const x=
+        Math.floor(
+          Math.random()*
+          (horizontal
+            ?SIZE-len+1
+            :SIZE)
+        );
+
+      const y=
+        Math.floor(
+          Math.random()*
+          (horizontal
+            ?SIZE
+            :SIZE-len+1)
+        );
+
+      const cells=
+        Array.from(
+          {length:len},
+          (_,k)=>
+            (y+(horizontal?0:k))*SIZE+
+            x+
+            (horizontal?k:0)
+        );
+
+      const blocked=cells.some(i=>{
+
+        const cx=i%SIZE;
+        const cy=Math.floor(i/SIZE);
+
+        for(let yy=cy-1;yy<=cy+1;yy++){
+          for(let xx=cx-1;xx<=cx+1;xx++){
+
+            if(
+              xx<0||
+              yy<0||
+              xx>=SIZE||
+              yy>=SIZE
+            ) continue;
+
+            if(grid[yy*SIZE+xx].ship>=0){
+              return true;
+            }
+          }
+        }
+
+        return false;
+      });
+
+      if(!blocked){
+
+        const id=ships.length;
+
+        cells.forEach(i=>{
+          grid[i].ship=id;
+        });
+
+        ships.push({
+          cells,
+          hits:0,
+          len,
+          sunk:false
+        });
+
+        ok=true;
+      }
+    }
+  }
+}
+
+function getAmmo(){
+
+  const base=
+    difficulty===0
+      ?28
+      :difficulty===1
+      ?24
+      :20;
+
+  return Math.max(
+    15,
+    base-Math.floor((stageNo-1)*.8)
+  );
+}
+
+function getSonars(){
+  return difficulty===0?4:
+         difficulty===1?3:2;
+}
+
+function startGame(){
+
+  placeShips();
+
+  ammo=getAmmo();
+  shots=0;
+
+  sonars=getSonars();
+  depths=
+    stageNo>=3
+      ?2
+      :1;
+
+  score=0;
+  combo=0;
+
+  playing=true;
+
+  stageNoEl.textContent=stageNo;
+  ammoEl.textContent=ammo;
+  sonarsEl.textContent=sonars;
+  depthsEl.textContent=depths;
+
+  scoreEl.textContent=0;
+
+  updateCombo();
+  updateShips();
+
+  setMode('fire');
+
+  log.textContent=
+    '🎯 적 함대가 숨어 있습니다. 공격을 시작하세요.';
+
+  overlay.classList.add('hide');
+
+  render();
+}
+
+function setMode(m){
+
+  mode=m;
+
+  $('#fireMode')
+    .classList
+    .toggle('active',m==='fire');
+
+  $('#sonarMode')
+    .classList
+    .toggle('active',m==='sonar');
+
+  $('#depthMode')
+    .classList
+    .toggle('active',m==='depth');
+
+  if(m==='sonar'){
+    log.textContent=
+      '📡 중심 칸을 선택하면 주변 3×3 구역을 탐지합니다.';
+  }
+
+  if(m==='depth'){
+    log.textContent=
+      '💣 중심 칸 주변 3×3 구역에 폭뢰를 투하합니다.';
+  }
+
+  if(m==='fire'){
+    log.textContent=
+      '🎯 공격할 좌표를 선택하세요.';
+  }
+}
+
+function updateCombo(){
+  comboEl.textContent=
+    `COMBO x${combo}`;
+}
+
+function updateShips(){
+
+  enemyStatus.innerHTML=
+    '적 함대 '+
+    ships.map(s=>
+      `<span class="enemyShip ${s.sunk?'':'alive'}">${
+        s.len>=4?'🛳️':
+        s.len===3?'🚢':
+        '⛴️'
+      }</span>`
+    ).join('');
+}
+
+function render(){
+
+  sea.innerHTML='';
+
+  grid.forEach((c,i)=>{
+
+    const b=document.createElement('button');
+
+    const sunk=
+      c.ship>=0 &&
+      ships[c.ship].sunk;
+
+    b.className=
+      'scell'+
+      (
+        c.shot
+          ?c.ship>=0
+            ?' hit'
+            :' miss'
+          :''
+      )+
+      (
+        c.scan!==null
+          ?' scan'
+          :''
+      )+
+      (
+        sunk
+          ?' sunk'
+          :''
+      )+
+      (
+        c.special
+          ?' special'
+          :''
+      );
+
+    if(
+      c.scan!==null &&
+      !c.shot
+    ){
+      b.textContent=c.scan;
+    }
+
+    b.onclick=()=>act(i);
+
+    sea.appendChild(b);
+  });
+}
+
+function sonarScan(i){
+
+  if(sonars<=0){
+    showToast('📡 소나 없음');
+    return;
+  }
+
+  sonars--;
+  sonarsEl.textContent=sonars;
+
+  const x=i%SIZE;
+  const y=Math.floor(i/SIZE);
+
+  let count=0;
+
+  for(let yy=y-1;yy<=y+1;yy++){
+
+    for(let xx=x-1;xx<=x+1;xx++){
+
+      if(
+        xx<0||
+        yy<0||
+        xx>=SIZE||
+        yy>=SIZE
+      ) continue;
+
+      const j=
+        yy*SIZE+xx;
+
+      if(
+        grid[j].ship>=0 &&
+        !grid[j].shot
+      ){
+        count++;
+      }
+    }
+  }
+
+  grid[i].scan=count;
+
+  if(count===0){
+
+    log.textContent=
+      '📡 반응 없음! 주변에는 적 함선이 없습니다.';
+
+    showToast('📡 반응 0');
+
+  }else{
+
+    log.textContent=
+      `📡 소나 반응 ${count}! 주변 3×3에 함선 칸 ${count}개가 있습니다.`;
+
+    showToast(
+      `📡 함선 반응 ${count}`
+    );
+  }
+
+  setMode('fire');
+  render();
+}
+
+function fireCell(i,free=false){
+
+  const c=grid[i];
+
+  if(c.shot){
+    return false;
+  }
+
+  c.shot=true;
+
+  if(!free){
+    ammo--;
+    shots++;
+  }
+
+  if(c.ship>=0){
+
+    const ship=
+      ships[c.ship];
+
+    ship.hits++;
+
+    combo++;
+
+    const gain=
+      100+
+      combo*25;
+
+    score+=gain;
+
+    if(ship.hits>=ship.cells.length){
+
+      ship.sunk=true;
+
+      score+=300;
+
+      showToast(
+        `🚢 침몰! +${gain+300}`
+      );
+
+      log.textContent=
+        '🔥 적 함선 침몰! 다른 함선을 추적하세요.';
+
+      shake();
+
+    }else{
+
+      showToast(
+        `💥 명중 +${gain}`
+      );
+
+      log.textContent=
+        '💥 명중! 주변 칸을 공격해 같은 함선을 추적하세요.';
+    }
+
+  }else{
+
+    combo=0;
+
+    if(!free){
+      score=Math.max(
+        0,
+        score-10
+      );
+    }
+
+    log.textContent=
+      '🌊 빗나갔습니다. 소나를 활용해 범위를 줄여보세요.';
+  }
+
+  scoreEl.textContent=score;
+  ammoEl.textContent=ammo;
+
+  updateCombo();
+  updateShips();
+
+  return true;
+}
+
+function depthCharge(i){
+
+  if(depths<=0){
+    showToast('💣 폭뢰 없음');
+    return;
+  }
+
+  depths--;
+
+  depthsEl.textContent=depths;
+
+  ammo--;
+
+  shots++;
+
+  ammoEl.textContent=ammo;
+
+  const cx=i%SIZE;
+  const cy=Math.floor(i/SIZE);
+
+  let hits=0;
+
+  for(let y=cy-1;y<=cy+1;y++){
+
+    for(let x=cx-1;x<=cx+1;x++){
+
+      if(
+        x<0||
+        y<0||
+        x>=SIZE||
+        y>=SIZE
+      ) continue;
+
+      const j=y*SIZE+x;
+
+      grid[j].special=true;
+
+      if(!grid[j].shot){
+
+        const wasShip=
+          grid[j].ship>=0;
+
+        fireCell(j,true);
+
+        if(wasShip){
+          hits++;
+        }
+      }
+    }
+  }
+
+  showToast(
+    hits
+      ?`💣 폭뢰 명중 ${hits}`
+      :'💣 폭뢰 빗나감'
+  );
+
+  shake();
+
+  setTimeout(()=>{
+
+    grid.forEach(c=>{
+      c.special=false;
+    });
+
+    render();
+
+  },450);
+
+  setMode('fire');
+
+  checkEnd();
+}
+
+function act(i){
+
+  if(!playing)return;
+
+  if(mode==='sonar'){
+    sonarScan(i);
+    return;
+  }
+
+  if(mode==='depth'){
+    depthCharge(i);
+    return;
+  }
+
+  if(ammo<=0)return;
+
+  const changed=
+    fireCell(i,false);
+
+  if(!changed)return;
+
+  render();
+
+  checkEnd();
+}
+
+function checkEnd(){
+
+  if(
+    ships.every(s=>s.sunk)
+  ){
+    win();
+    return;
+  }
+
+  if(ammo<=0){
+    lose();
+  }
+}
+
+function revealShips(){
+
+  grid.forEach(c=>{
+
+    if(c.ship>=0){
+      c.shot=true;
+    }
+
+  });
+
+  ships.forEach(s=>{
+    s.sunk=true;
+  });
+
+  updateShips();
+  render();
+}
+
+function win(){
+
+  playing=false;
+
+  const ammoBonus=
+    ammo*50;
+
+  const sonarBonus=
+    sonars*80;
+
+  const stageBonus=
+    stageNo*150;
+
+  score+=
+    ammoBonus+
+    sonarBonus+
+    stageBonus;
+
+  scoreEl.textContent=score;
+
+  if(score>best){
+
+    best=score;
+
+    safeSet(
+      'sonarScoreBest',
+      best
+    );
+
+    bestEl.textContent=best;
+  }
+
+  let stars=1;
+
+  if(ammo>=4){
+    stars=2;
+  }
+
+  if(
+    ammo>=7 &&
+    sonars>=1
+  ){
+    stars=3;
+  }
+
+  const rating=
+    '⭐'.repeat(stars)+
+    '☆'.repeat(3-stars);
+
+  $('#resultEmoji')
+    .textContent='🏆';
+
+  $('#resultTitle')
+    .textContent='적 함대 전멸!';
+
+  $('#resultText')
+    .innerHTML=
+    `${rating}<br><br>`+
+    `사용 포탄 <b>${shots}</b>발<br>`+
+    `남은 포탄 <b>${ammo}</b>발<br>`+
+    `남은 소나 <b>${sonars}</b>회<br>`+
+    `최종 점수 <b>${score}</b>점<br><br>`+
+    `다음 스테이지에서는 함대가 더 강력해집니다.`;
+
+  startBtn.textContent=
+    '다음 스테이지';
+
+  startBtn.onclick=()=>{
+    stageNo++;
+    startGame();
+  };
+
+  setTimeout(()=>{
+    overlay.classList.remove('hide');
+  },500);
+}
+
+function lose(){
+
+  playing=false;
+
+  revealShips();
+
+  $('#resultEmoji')
+    .textContent='🌊';
+
+  $('#resultTitle')
+    .textContent='포탄 소진';
+
+  $('#resultText')
+    .innerHTML=
+    `적 함대를 모두 찾지 못했습니다.<br><br>`+
+    `📡 소나 숫자가 높게 나온 곳을 중심으로<br>`+
+    `공격하면 함선을 더 빠르게 찾을 수 있습니다.<br><br>`+
+    `폭뢰는 확실한 위치에서 사용하는 것이 좋습니다.`;
+
+  startBtn.textContent=
+    '다시 작전';
+
+  startBtn.onclick=startGame;
+
+  setTimeout(()=>{
+    overlay.classList.remove('hide');
+  },500);
+}
+
+$('#fireMode').onclick=()=>{
+  if(playing){
+    setMode('fire');
+  }
+};
+
+$('#sonarMode').onclick=()=>{
+
+  if(
+    playing &&
+    sonars>0
+  ){
+    setMode('sonar');
+  }
+
+};
+
+$('#depthMode').onclick=()=>{
+
+  if(
+    playing &&
+    depths>0
+  ){
+    setMode('depth');
+  }
+
+};
+
+startBtn.onclick=startGame;
+
+$('#levelBtn').onclick=()=>{
+
+  difficulty=
+    (difficulty+1)%3;
+
+  $('#levelBtn')
+    .textContent=
+    `난이도 : ${difficultyNames[difficulty]}`;
+};
+
+placeShips();
+updateShips();
+render();
+</script>
+
+</body>
+</html>

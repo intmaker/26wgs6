@@ -1,14 +1,919 @@
-<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no"><title>🏭 컨베이어 마스터</title><style>
-:root{--c1:#334155;--c2:#fbbf24}*{box-sizing:border-box}html,body{height:100%}body{margin:0;overflow:hidden;display:grid;place-items:center;color:#f8fafc;font-family:system-ui,"Noto Sans KR",sans-serif;background:radial-gradient(circle at 18% 10%,var(--c1),#11162e 52%,#030712);user-select:none;-webkit-user-select:none}.app{width:min(95vw,720px);height:min(95vh,860px);display:flex;flex-direction:column;gap:11px}.top{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:2px 4px}.brand small{display:block;color:#cbd5e1;font-size:10px;font-weight:900;letter-spacing:.2em}.brand h1{margin:2px 0 0;font-size:clamp(25px,5vw,38px);letter-spacing:-.05em}.hud{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.stat{min-width:67px;padding:7px 10px;text-align:center;border:1px solid #ffffff25;border-radius:14px;background:#0f172ac7}.stat small{display:block;color:#cbd5e1;font-size:9px}.stat b{font-size:19px}.stage{position:relative;flex:1;min-height:400px;overflow:hidden;border:1px solid #ffffff27;border-radius:25px;background:linear-gradient(145deg,#14203b,#090e21);box-shadow:0 25px 70px #0009;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:#050916e9}.overlay.hide{display:none}.card{width:min(100%,410px);padding:28px 24px;text-align:center;border:1px solid #ffffff25;border-radius:23px;background:#111a36ee;box-shadow:0 20px 55px #0008}.card .emoji{font-size:55px}.card h2{margin:8px;font-size:28px}.card p{margin:0 0 19px;color:#cbd5e1;font-size:14px;line-height:1.72;word-break:keep-all}.primary{min-height:48px;width:100%;padding:12px 18px;border:0;border-radius:13px;color:#08111f;background:linear-gradient(135deg,var(--c2),#fef3c7);font:900 15px system-ui;cursor:pointer}.tip{min-height:18px;text-align:center;color:#aebbd0;font-size:12px}.hidden{display:none!important}button{font-family:inherit}.factory{height:100%;position:relative;display:flex;flex-direction:column;padding:16px;background:linear-gradient(#263445,#111827)}.belt{position:relative;flex:1;overflow:hidden;border:5px solid #475569;border-radius:18px;background:repeating-linear-gradient(90deg,#1f2937 0 36px,#374151 36px 72px);box-shadow:inset 0 0 30px #0008}.belt::after{content:"";position:absolute;inset:auto 0 8px;height:10px;background:repeating-linear-gradient(90deg,#94a3b8 0 18px,#334155 18px 36px)}.part{position:absolute;width:62px;height:62px;display:grid;place-items:center;border:3px solid #fff8;border-radius:15px;color:#fff;font-size:38px;font-weight:900;cursor:grab;box-shadow:0 8px 16px #0007;transition:transform .15s}.part.selected{outline:5px solid #fde047;transform:scale(1.12)}.bins{height:100px;display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding-top:10px}.bin{min-height:70px;border:2px solid #ffffff25;border-radius:15px;color:#fff;background:#ffffff0d;font-size:30px;font-weight:900;cursor:pointer}.bin:nth-child(1){color:#67e8f9}.bin:nth-child(2){color:#f9a8d4}.bin:nth-child(3){color:#fde047}.bin small{display:block;font-size:11px;color:#cbd5e1}.factory-msg{text-align:center;min-height:22px;color:#cbd5e1;font-weight:800}
-@media(max-width:520px){.app{width:100%;height:100%;padding:9px}.stage{min-height:0;border-radius:20px}.brand h1{font-size:25px}.stat{min-width:61px;padding:6px 8px}.card{padding:24px 19px}.tip{font-size:11px}}
-</style></head><body><main class="app"><header class="top"><div class="brand"><small>SMART FACTORY</small><h1>🏭 컨베이어 마스터</h1></div><div class="hud" id="hud"></div></header><section class="stage" id="stage"><div class="factory"><div class="belt" id="belt"></div><div class="bins"><button class="bin" data-type="circle">●<small>원형</small></button><button class="bin" data-type="square">■<small>사각</small></button><button class="bin" data-type="triangle">▲<small>삼각</small></button></div><div class="factory-msg" id="message">부품을 선택한 뒤 같은 모양 상자를 누르세요.</div></div><div class="overlay" id="overlay"><div class="card"><div class="emoji" id="resultEmoji">🏭</div><h2 id="resultTitle">컨베이어 마스터</h2><p id="resultText">움직이는 부품을 선택해 모양에 맞는 상자로 빠르게 분류하세요.</p><button class="primary" id="startBtn">게임 시작</button></div></div></section><div class="tip">움직이는 부품을 선택해 모양에 맞는 상자로 빠르게 분류하세요.</div></main><script>
-const $=s=>document.querySelector(s),stage=$('#stage'),overlay=$('#overlay'),startBtn=$('#startBtn');
-const safeGet=(k,d=0)=>{try{return Number(localStorage.getItem(k))||d}catch(e){return d}},safeSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
-function showResult(icon,title,text,button='다시 하기'){ $('#resultEmoji').textContent=icon;$('#resultTitle').textContent=title;$('#resultText').innerHTML=text;startBtn.textContent=button;overlay.classList.remove('hide') }
-const belt=$('#belt'),message=$('#message'),hud=$('#hud');let parts=[],selected=null,running=false,last=0,elapsed=0,nextSpawn=0,score=0,lives=3,combo=0,raf;const types=[['circle','●','#06b6d4'],['square','■','#ec4899'],['triangle','▲','#eab308']];hud.innerHTML='<div class="stat"><small>점수</small><b id="score">0</b></div><div class="stat"><small>콤보</small><b id="combo">0</b></div><div class="stat"><small>목숨</small><b id="lives">3</b></div>';
-function startGame(){parts=[];selected=null;running=true;elapsed=0;nextSpawn=.3;score=0;lives=3;combo=0;belt.innerHTML='';updateHud();overlay.classList.add('hide');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}function updateHud(){$('#score').textContent=score;$('#combo').textContent=combo;$('#lives').textContent=lives}
-function spawnPart(){const [type,symbol,color]=types[Math.floor(Math.random()*types.length)],el=document.createElement('button'),y=25+Math.random()*Math.max(20,belt.clientHeight-115),p={type,symbol,color,x:-70,y,speed:80+elapsed*2.2,el};el.className='part';el.textContent=symbol;el.style.background=color;el.onclick=()=>selectPart(p);belt.appendChild(el);parts.push(p)}function selectPart(p){if(!running)return;if(selected)selected.el.classList.remove('selected');selected=p;p.el.classList.add('selected');message.textContent=`${p.symbol} 부품을 어느 상자에 넣을까요?`}
-function sort(type){if(!running||!selected)return;const p=selected;selected=null;if(p.type===type){combo++;score+=10+Math.min(50,combo*2);message.textContent=`정확한 분류! ${combo} 콤보`;removePart(p)}else{combo=0;lives--;message.textContent='잘못된 상자입니다!';p.el.classList.remove('selected');updateHud();if(lives<=0)endGame()}updateHud()}
-function removePart(p){p.el.remove();parts=parts.filter(x=>x!==p)}function update(dt){elapsed+=dt;if(elapsed>nextSpawn){nextSpawn=elapsed+Math.max(.45,1.25-elapsed*.009);spawnPart()}for(const p of[...parts]){p.x+=p.speed*dt;p.el.style.transform=`translate(${p.x}px,${p.y}px)`;if(p.x>belt.clientWidth){if(selected===p)selected=null;removePart(p);combo=0;lives--;message.textContent='부품이 컨베이어 끝으로 떨어졌어요!';updateHud();if(lives<=0)endGame()}}}
-function loop(t){if(!running)return;const dt=Math.min(.035,(t-last)/1000);last=t;update(dt);raf=requestAnimationFrame(loop)}function endGame(){if(!running)return;running=false;cancelAnimationFrame(raf);showResult(score>=250?'🏆':'🏭','공장 운영 종료',`최종 점수 ${score}점 · 최고 콤보 ${combo}<br>빠르게 선택하되 모양을 확인하고 분류하세요.`)}document.querySelectorAll('.bin').forEach(b=>b.onclick=()=>sort(b.dataset.type));startBtn.onclick=startGame;
-</script></body></html>
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no">
+<title>🏭 컨베이어 마스터 챌린지</title>
+
+<style>
+:root{
+  --c1:#334155;
+  --c2:#fbbf24;
+  --good:#86efac;
+  --bad:#fb7185
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  color:#f8fafc;
+  font-family:system-ui,"Noto Sans KR",sans-serif;
+  background:radial-gradient(circle at 18% 10%,var(--c1),#11162e 52%,#030712);
+  user-select:none;
+  -webkit-user-select:none
+}
+.app{
+  width:min(96vw,730px);
+  height:min(97vh,870px);
+  display:flex;
+  flex-direction:column;
+  gap:10px
+}
+.top{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:10px;
+  padding:2px 4px
+}
+.brand small{
+  display:block;
+  color:#cbd5e1;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.2em
+}
+.brand h1{
+  margin:2px 0 0;
+  font-size:clamp(25px,5vw,38px);
+  letter-spacing:-.05em
+}
+.hud{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  justify-content:flex-end
+}
+.stat{
+  min-width:57px;
+  padding:7px 8px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:13px;
+  background:#0f172ad8
+}
+.stat small{
+  display:block;
+  color:#cbd5e1;
+  font-size:9px
+}
+.stat b{font-size:16px}
+.stage{
+  position:relative;
+  flex:1;
+  min-height:400px;
+  overflow:hidden;
+  border:1px solid #ffffff27;
+  border-radius:25px;
+  background:linear-gradient(145deg,#14203b,#090e21);
+  box-shadow:0 25px 70px #0009;
+  touch-action:none
+}
+.stage.shake{animation:shake .2s}
+@keyframes shake{
+  0%{transform:translate(0)}
+  25%{transform:translate(-5px,2px)}
+  50%{transform:translate(5px,-2px)}
+  75%{transform:translate(-3px,1px)}
+  100%{transform:translate(0)}
+}
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:20;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:#050916e9;
+  backdrop-filter:blur(5px)
+}
+.overlay.hide{display:none}
+.card{
+  width:min(100%,420px);
+  padding:28px 24px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:23px;
+  background:#111a36f2;
+  box-shadow:0 20px 55px #0008
+}
+.card .emoji{font-size:56px}
+.card h2{
+  margin:8px;
+  font-size:28px
+}
+.card p{
+  margin:0 0 18px;
+  color:#cbd5e1;
+  font-size:14px;
+  line-height:1.72;
+  word-break:keep-all
+}
+.buttons{
+  display:grid;
+  gap:8px
+}
+.primary,.secondary{
+  min-height:48px;
+  width:100%;
+  padding:12px 18px;
+  border-radius:13px;
+  font:900 15px system-ui;
+  cursor:pointer
+}
+.primary{
+  border:0;
+  color:#08111f;
+  background:linear-gradient(135deg,var(--c2),#fef3c7)
+}
+.secondary{
+  border:1px solid #ffffff25;
+  color:#fff;
+  background:#ffffff0e
+}
+.tip{
+  min-height:18px;
+  text-align:center;
+  color:#aebbd0;
+  font-size:12px
+}
+.factory{
+  height:100%;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  padding:14px;
+  background:
+    linear-gradient(#263445,#111827)
+}
+.factory::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 70px,
+      #ffffff05 70px 72px
+    )
+}
+.belt{
+  position:relative;
+  flex:1;
+  overflow:hidden;
+  border:5px solid #475569;
+  border-radius:18px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #1f2937 0 36px,
+      #374151 36px 72px
+    );
+  box-shadow:
+    inset 0 0 30px #0008,
+    0 8px 25px #0005
+}
+.belt::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:8px;
+  height:10px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #94a3b8 0 18px,
+      #334155 18px 36px
+    )
+}
+.part{
+  position:absolute;
+  width:62px;
+  height:62px;
+  display:grid;
+  place-items:center;
+  border:3px solid #fff8;
+  border-radius:15px;
+  color:#fff;
+  font-size:38px;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 8px 16px #0007;
+  transition:filter .1s,outline .1s
+}
+.part:hover{filter:brightness(1.15)}
+.part.selected{
+  outline:5px solid #fde047;
+  z-index:5
+}
+.part.gold{
+  animation:goldGlow .7s infinite alternate
+}
+@keyframes goldGlow{
+  from{box-shadow:0 0 10px #fde047}
+  to{box-shadow:0 0 30px #fde047}
+}
+.part.bomb{
+  background:#7f1d1d!important;
+  animation:bombPulse .5s infinite alternate
+}
+@keyframes bombPulse{
+  to{filter:brightness(1.7)}
+}
+.part.bad{
+  border-color:#fb7185
+}
+.bins{
+  height:104px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:7px;
+  padding-top:10px
+}
+.bin{
+  min-height:70px;
+  border:2px solid #ffffff25;
+  border-radius:15px;
+  color:#fff;
+  background:#ffffff0d;
+  font-size:28px;
+  font-weight:900;
+  cursor:pointer;
+  transition:.1s
+}
+.bin:active{
+  transform:scale(.96)
+}
+.bin:nth-child(1){color:#67e8f9}
+.bin:nth-child(2){color:#f9a8d4}
+.bin:nth-child(3){color:#fde047}
+.bin:nth-child(4){color:#fb7185}
+.bin small{
+  display:block;
+  font-size:10px;
+  color:#cbd5e1
+}
+.factory-msg{
+  text-align:center;
+  min-height:23px;
+  color:#cbd5e1;
+  font-weight:800;
+  font-size:13px
+}
+.toast{
+  position:absolute;
+  left:50%;
+  top:24%;
+  z-index:12;
+  transform:translate(-50%,-50%);
+  padding:9px 17px;
+  border:1px solid #ffffff33;
+  border-radius:999px;
+  background:#0f172ae8;
+  font-weight:900;
+  opacity:0;
+  transition:.2s;
+  pointer-events:none;
+  white-space:nowrap
+}
+.toast.show{
+  opacity:1;
+  top:20%
+}
+.progressWrap{
+  width:100%;
+  height:7px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#ffffff15;
+  margin-bottom:9px
+}
+.progress{
+  width:100%;
+  height:100%;
+  background:linear-gradient(90deg,#22c55e,#fde047,#ef4444)
+}
+@media(max-width:520px){
+  .app{
+    width:100%;
+    height:100%;
+    padding:8px
+  }
+  .stage{
+    min-height:0;
+    border-radius:18px
+  }
+  .brand h1{font-size:24px}
+  .stat{
+    min-width:51px;
+    padding:6px 5px
+  }
+  .stat b{font-size:14px}
+  .bins{height:94px}
+  .bin{
+    min-height:62px;
+    font-size:23px
+  }
+  .bin small{font-size:9px}
+  .part{
+    width:56px;
+    height:56px;
+    font-size:33px
+  }
+}
+</style>
+</head>
+
+<body>
+<main class="app">
+
+<header class="top">
+  <div class="brand">
+    <small>SMART FACTORY CHALLENGE</small>
+    <h1>🏭 컨베이어 마스터</h1>
+  </div>
+
+  <div class="hud">
+    <div class="stat">
+      <small>단계</small>
+      <b id="level">1</b>
+    </div>
+    <div class="stat">
+      <small>시간</small>
+      <b id="time">45</b>
+    </div>
+    <div class="stat">
+      <small>점수</small>
+      <b id="score">0</b>
+    </div>
+    <div class="stat">
+      <small>콤보</small>
+      <b id="combo">0</b>
+    </div>
+    <div class="stat">
+      <small>목숨</small>
+      <b id="lives">3</b>
+    </div>
+  </div>
+</header>
+
+<section class="stage" id="stage">
+
+<div class="factory">
+
+  <div class="progressWrap">
+    <div class="progress" id="progress"></div>
+  </div>
+
+  <div class="belt" id="belt"></div>
+
+  <div class="bins">
+    <button class="bin" data-type="circle">●<small>원형</small></button>
+    <button class="bin" data-type="square">■<small>사각</small></button>
+    <button class="bin" data-type="triangle">▲<small>삼각</small></button>
+    <button class="bin" data-type="reject">⚠️<small>불량/폭탄</small></button>
+  </div>
+
+  <div class="factory-msg" id="message">
+    움직이는 부품을 빠르게 분류하세요.
+  </div>
+
+</div>
+
+<div class="toast" id="toast">정확한 분류!</div>
+
+<div class="overlay" id="overlay">
+  <div class="card">
+    <div class="emoji" id="resultEmoji">🏭</div>
+
+    <h2 id="resultTitle">컨베이어 마스터</h2>
+
+    <p id="resultText">
+      움직이는 부품을 선택한 뒤 같은 모양 상자에 넣으세요.<br><br>
+      ✨ 황금 부품은 높은 점수<br>
+      ⚠️ 불량품과 💣 폭탄은 폐기함으로 보내세요.<br>
+      연속 성공하면 콤보 보너스가 커집니다.
+    </p>
+
+    <div class="buttons">
+      <button class="primary" id="startBtn">게임 시작</button>
+      <button class="secondary" id="difficultyBtn">난이도 : 보통</button>
+    </div>
+  </div>
+</div>
+
+</section>
+
+<div class="tip">
+● ■ ▲ 모양별 분류 · ⚠️ 불량/폭탄 폐기 · 연속 성공 시 콤보 보너스
+</div>
+
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+
+const stage=$('#stage');
+const overlay=$('#overlay');
+const startBtn=$('#startBtn');
+const difficultyBtn=$('#difficultyBtn');
+
+const belt=$('#belt');
+const message=$('#message');
+const toast=$('#toast');
+
+const scoreEl=$('#score');
+const comboEl=$('#combo');
+const livesEl=$('#lives');
+const timeEl=$('#time');
+const levelEl=$('#level');
+const progress=$('#progress');
+
+const types=[
+  ['circle','●','#06b6d4'],
+  ['square','■','#ec4899'],
+  ['triangle','▲','#eab308']
+];
+
+let parts=[];
+let selected=null;
+
+let running=false;
+let last=0;
+let elapsed=0;
+let duration=45;
+let nextSpawn=0;
+
+let score=0;
+let lives=3;
+let combo=0;
+let bestCombo=0;
+let level=1;
+let sorted=0;
+
+let difficulty=1;
+let raf;
+
+const difficultyNames=['쉬움','보통','어려움'];
+
+function showToast(text){
+  toast.textContent=text;
+  toast.classList.remove('show');
+  void toast.offsetWidth;
+  toast.classList.add('show');
+
+  clearTimeout(showToast.timer);
+
+  showToast.timer=setTimeout(()=>{
+    toast.classList.remove('show');
+  },650);
+}
+
+function shake(){
+  stage.classList.remove('shake');
+  void stage.offsetWidth;
+  stage.classList.add('shake');
+}
+
+function updateHud(){
+  scoreEl.textContent=score;
+  comboEl.textContent=combo;
+  livesEl.textContent=lives;
+  levelEl.textContent=level;
+}
+
+function startGame(){
+
+  parts=[];
+  selected=null;
+
+  running=true;
+
+  elapsed=0;
+  duration=
+    difficulty===0?55:
+    difficulty===1?45:38;
+
+  nextSpawn=.4;
+
+  score=0;
+  lives=
+    difficulty===0?4:
+    difficulty===1?3:2;
+
+  combo=0;
+  bestCombo=0;
+  level=1;
+  sorted=0;
+
+  belt.innerHTML='';
+
+  timeEl.textContent=Math.ceil(duration);
+  progress.style.width='100%';
+
+  message.textContent=
+    '부품을 선택한 뒤 알맞은 상자를 누르세요.';
+
+  updateHud();
+
+  overlay.classList.add('hide');
+
+  last=performance.now();
+
+  cancelAnimationFrame(raf);
+  raf=requestAnimationFrame(loop);
+}
+
+function spawnPart(){
+
+  const roll=Math.random();
+
+  let type;
+  let symbol;
+  let color;
+  let special='normal';
+
+  if(roll<.08+level*.005){
+    type='reject';
+    symbol='💣';
+    color='#7f1d1d';
+    special='bomb';
+
+  }else if(roll<.18+level*.006){
+    type='reject';
+    symbol='⚠️';
+    color='#475569';
+    special='bad';
+
+  }else{
+    const pick=
+      types[Math.floor(Math.random()*types.length)];
+
+    type=pick[0];
+    symbol=pick[1];
+    color=pick[2];
+
+    if(Math.random()<.09){
+      special='gold';
+      symbol='✨';
+      color='#ca8a04';
+    }
+  }
+
+  const el=document.createElement('button');
+
+  const y=
+    18+
+    Math.random()*
+    Math.max(
+      20,
+      belt.clientHeight-95
+    );
+
+  const speedBase=
+    difficulty===0?65:
+    difficulty===1?82:98;
+
+  const p={
+    type,
+    symbol,
+    color,
+    special,
+    x:-75,
+    y,
+    speed:
+      speedBase+
+      level*8+
+      elapsed*.7+
+      Math.random()*15,
+    el
+  };
+
+  el.className=
+    'part'+
+    (special==='gold'?' gold':'')+
+    (special==='bomb'?' bomb':'')+
+    (special==='bad'?' bad':'');
+
+  el.textContent=symbol;
+  el.style.background=color;
+
+  el.onclick=()=>{
+    selectPart(p);
+  };
+
+  belt.appendChild(el);
+  parts.push(p);
+}
+
+function selectPart(p){
+
+  if(!running)return;
+
+  if(selected){
+    selected.el.classList.remove('selected');
+  }
+
+  selected=p;
+  p.el.classList.add('selected');
+
+  if(p.type==='reject'){
+    message.textContent=
+      `${p.symbol} 위험 부품! 폐기함으로 보내세요.`;
+  }else{
+    message.textContent=
+      `${p.symbol} 부품을 어느 상자에 넣을까요?`;
+  }
+}
+
+function sort(type){
+
+  if(!running || !selected)return;
+
+  const p=selected;
+  selected=null;
+
+  const correct=
+    p.type===type;
+
+  if(correct){
+
+    combo++;
+    bestCombo=Math.max(bestCombo,combo);
+
+    let gain=
+      10+
+      Math.min(60,combo*3);
+
+    if(p.special==='gold'){
+      gain+=100;
+      showToast(`✨ 황금 부품 +${gain}`);
+    }
+    else if(p.special==='bomb'){
+      gain+=45;
+      showToast(`💣 안전 폐기 +${gain}`);
+    }
+    else if(p.special==='bad'){
+      gain+=25;
+      showToast(`⚠️ 불량품 처리 +${gain}`);
+    }
+    else{
+      showToast(`✅ +${gain}`);
+    }
+
+    score+=gain;
+    sorted++;
+
+    message.textContent=
+      `정확한 분류! ${combo} 콤보`;
+
+    removePart(p);
+
+    if(sorted%10===0){
+      level++;
+      showToast(`⚡ LEVEL ${level}`);
+    }
+
+  }else{
+
+    combo=0;
+    lives--;
+
+    p.el.classList.remove('selected');
+
+    if(p.special==='bomb'){
+      lives--;
+      message.textContent=
+        '💥 폭탄을 잘못 분류했습니다! 목숨 추가 감소!';
+    }else{
+      message.textContent=
+        '❌ 잘못된 상자입니다!';
+    }
+
+    showToast('분류 실패!');
+    shake();
+
+    if(lives<=0){
+      endGame(false);
+    }
+  }
+
+  updateHud();
+}
+
+function removePart(p){
+
+  p.el.remove();
+
+  parts=
+    parts.filter(x=>x!==p);
+}
+
+function missedPart(p){
+
+  if(selected===p){
+    selected=null;
+  }
+
+  removePart(p);
+
+  combo=0;
+
+  if(p.special==='bomb'){
+
+    lives-=2;
+
+    message.textContent=
+      '💥 폭탄이 라인 끝까지 도달했습니다!';
+
+    showToast('💥 폭발! -2 목숨');
+
+  }else if(p.special==='gold'){
+
+    lives--;
+
+    message.textContent=
+      '✨ 황금 부품을 놓쳤습니다!';
+
+    showToast('황금 부품 놓침!');
+
+  }else{
+
+    lives--;
+
+    message.textContent=
+      '📦 부품이 컨베이어 끝으로 떨어졌습니다!';
+
+    showToast('부품 놓침!');
+  }
+
+  shake();
+  updateHud();
+
+  if(lives<=0){
+    endGame(false);
+  }
+}
+
+function update(dt){
+
+  elapsed+=dt;
+
+  const remain=
+    Math.max(0,duration-elapsed);
+
+  timeEl.textContent=
+    Math.ceil(remain);
+
+  progress.style.width=
+    `${remain/duration*100}%`;
+
+  if(remain<=0){
+    endGame(true);
+    return;
+  }
+
+  if(elapsed>nextSpawn){
+
+    const interval=
+      Math.max(
+        .35,
+        (
+          difficulty===0?1.25:
+          difficulty===1?1.05:.85
+        )-
+        level*.045
+      );
+
+    nextSpawn=
+      elapsed+interval;
+
+    spawnPart();
+  }
+
+  for(const p of [...parts]){
+
+    p.x+=p.speed*dt;
+
+    p.el.style.left=
+      `${p.x}px`;
+
+    p.el.style.top=
+      `${p.y}px`;
+
+    if(p.x>belt.clientWidth){
+      missedPart(p);
+
+      if(!running)return;
+    }
+  }
+}
+
+function loop(t){
+
+  if(!running)return;
+
+  const dt=
+    Math.min(
+      .035,
+      (t-last)/1000
+    );
+
+  last=t;
+
+  update(dt);
+
+  if(running){
+    raf=requestAnimationFrame(loop);
+  }
+}
+
+function endGame(timeOver=false){
+
+  if(!running)return;
+
+  running=false;
+
+  cancelAnimationFrame(raf);
+
+  let rank='C';
+  let icon='🏭';
+
+  if(score>=1200){
+    rank='S';
+    icon='🏆';
+  }
+  else if(score>=800){
+    rank='A';
+    icon='🥇';
+  }
+  else if(score>=500){
+    rank='B';
+    icon='🥈';
+  }
+
+  $('#resultEmoji').textContent=icon;
+
+  $('#resultTitle').textContent=
+    timeOver
+      ?'근무 시간 종료!'
+      :'공장 가동 중단';
+
+  $('#resultText').innerHTML=
+    `등급 <b style="font-size:24px">${rank}</b><br><br>`+
+    `최종 점수 <b>${score}</b>점<br>`+
+    `분류 성공 <b>${sorted}</b>개<br>`+
+    `최고 콤보 <b>${bestCombo}</b>회<br>`+
+    `도달 레벨 <b>${level}</b><br><br>`+
+    (
+      score>=800
+        ?'놀라운 생산 효율입니다!'
+        :'빠르게 선택하되 모양과 위험 부품을 확인해보세요.'
+    );
+
+  startBtn.textContent='다시 도전';
+  startBtn.onclick=startGame;
+
+  setTimeout(()=>{
+    overlay.classList.remove('hide');
+  },400);
+}
+
+document
+.querySelectorAll('.bin')
+.forEach(b=>{
+  b.onclick=()=>{
+    sort(b.dataset.type);
+  };
+});
+
+difficultyBtn.onclick=()=>{
+
+  difficulty=
+    (difficulty+1)%3;
+
+  difficultyBtn.textContent=
+    `난이도 : ${difficultyNames[difficulty]}`;
+};
+
+startBtn.onclick=startGame;
+</script>
+
+</body>
+</html>

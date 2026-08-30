@@ -1,16 +1,1025 @@
-<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no"><title>🌉 교량 설계자</title><style>
-:root{--c1:#0369a1;--c2:#fbbf24}*{box-sizing:border-box}html,body{height:100%}body{margin:0;overflow:hidden;display:grid;place-items:center;color:#f8fafc;font-family:system-ui,"Noto Sans KR",sans-serif;background:radial-gradient(circle at 18% 10%,var(--c1),#11162e 52%,#030712);user-select:none;-webkit-user-select:none}.app{width:min(95vw,720px);height:min(95vh,860px);display:flex;flex-direction:column;gap:11px}.top{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:2px 4px}.brand small{display:block;color:#cbd5e1;font-size:10px;font-weight:900;letter-spacing:.2em}.brand h1{margin:2px 0 0;font-size:clamp(25px,5vw,38px);letter-spacing:-.05em}.hud{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.stat{min-width:67px;padding:7px 10px;text-align:center;border:1px solid #ffffff25;border-radius:14px;background:#0f172ac7}.stat small{display:block;color:#cbd5e1;font-size:9px}.stat b{font-size:19px}.stage{position:relative;flex:1;min-height:400px;overflow:hidden;border:1px solid #ffffff27;border-radius:25px;background:linear-gradient(145deg,#14203b,#090e21);box-shadow:0 25px 70px #0009;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:#050916e9}.overlay.hide{display:none}.card{width:min(100%,410px);padding:28px 24px;text-align:center;border:1px solid #ffffff25;border-radius:23px;background:#111a36ee;box-shadow:0 20px 55px #0008}.card .emoji{font-size:55px}.card h2{margin:8px;font-size:28px}.card p{margin:0 0 19px;color:#cbd5e1;font-size:14px;line-height:1.72;word-break:keep-all}.primary{min-height:48px;width:100%;padding:12px 18px;border:0;border-radius:13px;color:#08111f;background:linear-gradient(135deg,var(--c2),#fef3c7);font:900 15px system-ui;cursor:pointer}.tip{min-height:18px;text-align:center;color:#aebbd0;font-size:12px}.hidden{display:none!important}button{font-family:inherit}#bridgeCanvas{display:block;width:100%;height:100%;background:linear-gradient(#7dd3fc 0 62%,#0ea5e9 62% 100%)}.bridge-bar{position:absolute;left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:7px;padding:8px;border:1px solid #ffffff35;border-radius:13px;background:#172033d9}.bridge-bar button{min-height:45px;padding:8px 12px;border:0;border-radius:10px;background:#fbbf24;color:#422006;font-weight:900}.bridge-bar button:nth-child(2){background:#ffffff18;color:#fff}.bridge-bar span{font-size:12px;color:#e0f2fe}@media(max-width:520px){.bridge-bar{flex-wrap:wrap}.bridge-bar span{width:100%;text-align:center}}
-@media(max-width:520px){.app{width:100%;height:100%;padding:9px}.stage{min-height:0;border-radius:20px}.brand h1{font-size:25px}.stat{min-width:61px;padding:6px 8px}.card{padding:24px 19px}.tip{font-size:11px}}
-</style></head><body><main class="app"><header class="top"><div class="brand"><small>BRIDGE LAB</small><h1>🌉 교량 설계자</h1></div><div class="hud" id="hud"></div></header><section class="stage" id="stage"><canvas id="bridgeCanvas"></canvas><div class="bridge-bar"><button id="testBtn">🚚 통과 시험</button><button id="clearBtn">↺ 철거</button><span id="bridgeMsg">두 지점을 차례로 눌러 보를 설치하세요.</span></div><div class="overlay" id="overlay"><div class="card"><div class="emoji" id="resultEmoji">🌉</div><h2 id="resultTitle">교량 설계자</h2><p id="resultText">제한된 보를 연결해 하중을 버티는 길을 만들고 트럭 통과 시험에 성공하세요.</p><button class="primary" id="startBtn">게임 시작</button></div></div></section><div class="tip">제한된 보를 연결해 하중을 버티는 길을 만들고 트럭 통과 시험에 성공하세요.</div></main><script>
-const $=s=>document.querySelector(s),stage=$('#stage'),overlay=$('#overlay'),startBtn=$('#startBtn');
-const safeGet=(k,d=0)=>{try{return Number(localStorage.getItem(k))||d}catch(e){return d}},safeSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
-function showResult(icon,title,text,button='다시 하기'){ $('#resultEmoji').textContent=icon;$('#resultTitle').textContent=title;$('#resultText').innerHTML=text;startBtn.textContent=button;overlay.classList.remove('hide') }
-const C=$('#bridgeCanvas'),X=C.getContext('2d'),msg=$('#bridgeMsg'),hud=$('#hud');let W,H,D=1,nodes=[],beams=[],selected=-1,budget=9,testing=false,truck=null,raf,last=0,best=safeGet('bridgeBest',0);hud.innerHTML=`<div class="stat"><small>남은 보</small><b id="budget">9</b></div><div class="stat"><small>최소 기록</small><b id="best">${best||'-'}</b></div>`;
-function resize(){const r=stage.getBoundingClientRect();D=Math.min(2,devicePixelRatio||1);W=r.width;H=r.height;C.width=W*D;C.height=H*D;X.setTransform(D,0,0,D,0,0);makeNodes();draw()}function makeNodes(){nodes=[[.08,.56],[.2,.43],[.2,.68],[.36,.35],[.36,.62],[.52,.45],[.52,.7],[.68,.34],[.68,.61],[.83,.46],[.92,.56]].map(([x,y])=>({x:x*W,y:y*H}));beams=[];selected=-1;budget=9;$('#budget').textContent=9}
-function startGame(){testing=false;truck=null;makeNodes();overlay.classList.add('hide');msg.textContent='두 지점을 연결하세요. 너무 긴 보는 트럭 무게를 버티지 못합니다.';draw()}
-function clickNode(x,y){if(testing)return;let i=-1,d=28;nodes.forEach((n,k)=>{const q=Math.hypot(n.x-x,n.y-y);if(q<d){d=q;i=k}});if(i<0)return;if(selected<0){selected=i;msg.textContent='연결할 두 번째 지점을 선택하세요.'}else if(i===selected){selected=-1}else{const exists=beams.some(b=>b.a===Math.min(i,selected)&&b.b===Math.max(i,selected));if(!exists&&budget>0){beams.push({a:Math.min(i,selected),b:Math.max(i,selected)});budget--;$('#budget').textContent=budget}selected=-1}draw()}
-function route(){const q=[[0,[0]]],seen=new Set([0]);while(q.length){const[i,path]=q.shift();if(i===nodes.length-1)return path;for(const b of beams){const n=b.a===i?b.b:b.b===i?b.a:-1;if(n>=0&&!seen.has(n)){seen.add(n);q.push([n,[...path,n]])}}}return null}
-function test(){if(testing)return;const path=route();if(!path){msg.textContent='양쪽 절벽이 연결되지 않았습니다.';return}const weak=path.some((n,i)=>i&&Math.hypot(nodes[n].x-nodes[path[i-1]].x,nodes[n].y-nodes[path[i-1]].y)>W*.245);if(weak){msg.textContent='붉게 표시된 긴 보가 하중을 버티지 못합니다!';draw(true);return}testing=true;truck={path,segment:0,t:0};last=performance.now();raf=requestAnimationFrame(loop)}
-function update(dt){if(!truck)return;truck.t+=dt*.7;if(truck.t>=1){truck.t=0;truck.segment++;if(truck.segment>=truck.path.length-1){testing=false;const used=beams.length;if(!best||used<best){best=used;safeSet('bridgeBest',best);$('#best').textContent=best}return showResult('🌉','교량 통과 성공!',`${used}개의 보로 안전한 경로를 만들었습니다.<br>더 적은 보를 사용해 기록을 줄여보세요.`)}}}
-function draw(showWeak=false){X.clearRect(0,0,W,H);let sky=X.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#7dd3fc');sky.addColorStop(.62,'#bae6fd');sky.addColorStop(.63,'#0284c7');sky.addColorStop(1,'#075985');X.fillStyle=sky;X.fillRect(0,0,W,H);X.fillStyle='#713f12';X.fillRect(0,H*.54,W*.11,H);X.fillRect(W*.89,H*.54,W*.11,H);for(const b of beams){const a=nodes[b.a],n=nodes[b.b],len=Math.hypot(a.x-n.x,a.y-n.y);X.strokeStyle=showWeak&&len>W*.245?'#ef4444':'#d97706';X.lineWidth=9;X.beginPath();X.moveTo(a.x,a.y);X.lineTo(n.x,n.y);X.stroke();X.strokeStyle='#fbbf24';X.lineWidth=2;X.stroke()}nodes.forEach((n,i)=>{X.fillStyle=i===selected?'#fde047':'#e2e8f0';X.strokeStyle='#334155';X.lineWidth=3;X.beginPath();X.arc(n.x,n.y,12,0,7);X.fill();X.stroke()});if(truck){const a=nodes[truck.path[truck.segment]],b=nodes[truck.path[truck.segment+1]],x=a.x+(b.x-a.x)*truck.t,y=a.y+(b.y-a.y)*truck.t;X.font='34px sans-serif';X.fillText('🚚',x-17,y-11)}}function loop(t){if(!testing)return;const dt=Math.min(.04,(t-last)/1000);last=t;update(dt);draw();raf=requestAnimationFrame(loop)}C.onclick=e=>{const r=C.getBoundingClientRect();clickNode(e.clientX-r.left,e.clientY-r.top)};$('#testBtn').onclick=test;$('#clearBtn').onclick=()=>{if(!testing){beams=[];budget=9;selected=-1;$('#budget').textContent=9;draw()}};startBtn.onclick=startGame;addEventListener('resize',resize);resize();
-</script></body></html>
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no">
+<title>🌉 교량 설계자 챌린지</title>
+<style>
+:root{
+  --c1:#0369a1;
+  --c2:#fbbf24;
+  --good:#86efac;
+  --bad:#fb7185
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  color:#f8fafc;
+  font-family:system-ui,"Noto Sans KR",sans-serif;
+  background:radial-gradient(circle at 18% 10%,var(--c1),#11162e 52%,#030712);
+  user-select:none;
+  -webkit-user-select:none
+}
+.app{
+  width:min(96vw,730px);
+  height:min(97vh,870px);
+  display:flex;
+  flex-direction:column;
+  gap:10px
+}
+.top{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:10px;
+  padding:2px 4px
+}
+.brand small{
+  display:block;
+  color:#cbd5e1;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.2em
+}
+.brand h1{
+  margin:2px 0 0;
+  font-size:clamp(25px,5vw,38px);
+  letter-spacing:-.05em
+}
+.hud{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  justify-content:flex-end
+}
+.stat{
+  min-width:58px;
+  padding:7px 8px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:13px;
+  background:#0f172ad8
+}
+.stat small{
+  display:block;
+  color:#cbd5e1;
+  font-size:9px
+}
+.stat b{font-size:16px}
+.stage{
+  position:relative;
+  flex:1;
+  min-height:400px;
+  overflow:hidden;
+  border:1px solid #ffffff27;
+  border-radius:25px;
+  background:linear-gradient(145deg,#14203b,#090e21);
+  box-shadow:0 25px 70px #0009;
+  touch-action:none
+}
+.stage.shake{animation:shake .22s}
+@keyframes shake{
+  0%{transform:translate(0)}
+  25%{transform:translate(-6px,2px)}
+  50%{transform:translate(5px,-2px)}
+  75%{transform:translate(-3px,1px)}
+  100%{transform:translate(0)}
+}
+#bridgeCanvas{
+  display:block;
+  width:100%;
+  height:100%;
+  background:linear-gradient(#7dd3fc 0 62%,#0ea5e9 62% 100%)
+}
+.bridge-bar{
+  position:absolute;
+  left:10px;
+  right:10px;
+  bottom:10px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:8px;
+  border:1px solid #ffffff35;
+  border-radius:13px;
+  background:#172033e6;
+  backdrop-filter:blur(4px)
+}
+.bridge-bar button{
+  min-height:44px;
+  padding:8px 11px;
+  border:0;
+  border-radius:10px;
+  font-weight:900;
+  cursor:pointer
+}
+#testBtn{
+  background:#fbbf24;
+  color:#422006
+}
+#clearBtn{
+  background:#ffffff18;
+  color:#fff
+}
+#undoBtn{
+  background:#38bdf8;
+  color:#082f49
+}
+.bridge-bar span{
+  flex:1;
+  font-size:12px;
+  color:#e0f2fe
+}
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:20;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:#050916e9;
+  backdrop-filter:blur(5px)
+}
+.overlay.hide{display:none}
+.card{
+  width:min(100%,420px);
+  padding:28px 24px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:23px;
+  background:#111a36f2;
+  box-shadow:0 20px 55px #0008
+}
+.card .emoji{font-size:56px}
+.card h2{
+  margin:8px;
+  font-size:28px
+}
+.card p{
+  margin:0 0 18px;
+  color:#cbd5e1;
+  font-size:14px;
+  line-height:1.72;
+  word-break:keep-all
+}
+.buttons{
+  display:grid;
+  gap:8px
+}
+.primary,.secondary{
+  min-height:48px;
+  width:100%;
+  padding:12px 18px;
+  border-radius:13px;
+  font:900 15px system-ui;
+  cursor:pointer
+}
+.primary{
+  border:0;
+  color:#08111f;
+  background:linear-gradient(135deg,var(--c2),#fef3c7)
+}
+.secondary{
+  border:1px solid #ffffff25;
+  color:#fff;
+  background:#ffffff0e
+}
+.tip{
+  min-height:18px;
+  text-align:center;
+  color:#aebbd0;
+  font-size:12px
+}
+.toast{
+  position:absolute;
+  left:50%;
+  top:23%;
+  z-index:12;
+  transform:translate(-50%,-50%);
+  padding:9px 17px;
+  border:1px solid #ffffff33;
+  border-radius:999px;
+  background:#0f172ae8;
+  font-weight:900;
+  opacity:0;
+  transition:.2s;
+  pointer-events:none;
+  white-space:nowrap
+}
+.toast.show{
+  opacity:1;
+  top:19%
+}
+@media(max-width:520px){
+  .app{width:100%;height:100%;padding:8px}
+  .stage{min-height:0;border-radius:18px}
+  .brand h1{font-size:24px}
+  .stat{min-width:51px;padding:6px 5px}
+  .stat b{font-size:14px}
+  .bridge-bar{flex-wrap:wrap}
+  .bridge-bar span{
+    width:100%;
+    flex:none;
+    text-align:center
+  }
+  .bridge-bar button{
+    flex:1;
+    font-size:12px
+  }
+}
+</style>
+</head>
+<body>
+
+<main class="app">
+
+<header class="top">
+  <div class="brand">
+    <small>BRIDGE LAB CHALLENGE</small>
+    <h1>🌉 교량 설계자</h1>
+  </div>
+
+  <div class="hud">
+    <div class="stat">
+      <small>단계</small>
+      <b id="level">1</b>
+    </div>
+    <div class="stat">
+      <small>남은 보</small>
+      <b id="budget">10</b>
+    </div>
+    <div class="stat">
+      <small>차량</small>
+      <b id="vehicle">🚚</b>
+    </div>
+    <div class="stat">
+      <small>최소기록</small>
+      <b id="best">-</b>
+    </div>
+  </div>
+</header>
+
+<section class="stage" id="stage">
+
+<canvas id="bridgeCanvas"></canvas>
+
+<div class="toast" id="toast">튼튼한 연결!</div>
+
+<div class="bridge-bar">
+  <button id="testBtn">🚚 통과 시험</button>
+  <button id="undoBtn">↶ 되돌리기</button>
+  <button id="clearBtn">↺ 철거</button>
+  <span id="bridgeMsg">두 지점을 차례로 눌러 보를 설치하세요.</span>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="card">
+    <div class="emoji" id="resultEmoji">🌉</div>
+    <h2 id="resultTitle">교량 설계자</h2>
+    <p id="resultText">
+      제한된 보를 이용해 강을 건너는 다리를 만드세요.<br><br>
+      너무 긴 보는 약하고, 삼각형 구조는 더 안정적입니다.<br>
+      차량이 끝까지 통과하면 성공입니다.
+    </p>
+
+    <div class="buttons">
+      <button class="primary" id="startBtn">설계 시작</button>
+      <button class="secondary" id="difficultyBtn">난이도 : 보통</button>
+    </div>
+  </div>
+</div>
+
+</section>
+
+<div class="tip">
+두 지점을 연결 · 긴 보는 약함 · 삼각형 구조가 안정적 · 차량 통과 시험
+</div>
+
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+
+const stage=$('#stage');
+const overlay=$('#overlay');
+const startBtn=$('#startBtn');
+const difficultyBtn=$('#difficultyBtn');
+const C=$('#bridgeCanvas');
+const X=C.getContext('2d');
+
+const msg=$('#bridgeMsg');
+const toast=$('#toast');
+
+const budgetEl=$('#budget');
+const bestEl=$('#best');
+const levelEl=$('#level');
+const vehicleEl=$('#vehicle');
+
+const safeGet=(k,d=0)=>{
+  try{return Number(localStorage.getItem(k))||d}
+  catch{return d}
+};
+
+const safeSet=(k,v)=>{
+  try{localStorage.setItem(k,v)}
+  catch{}
+};
+
+let W,H,D=1;
+let nodes=[];
+let beams=[];
+let selected=-1;
+
+let budget=10;
+let testing=false;
+let truck=null;
+let raf;
+let last=0;
+
+let level=1;
+let difficulty=1;
+let best=safeGet('bridgeChallengeBest',0);
+
+const difficultyNames=['쉬움','보통','어려움'];
+
+function showToast(text){
+  toast.textContent=text;
+  toast.classList.remove('show');
+  void toast.offsetWidth;
+  toast.classList.add('show');
+
+  clearTimeout(showToast.timer);
+  showToast.timer=setTimeout(()=>{
+    toast.classList.remove('show');
+  },700);
+}
+
+function shake(){
+  stage.classList.remove('shake');
+  void stage.offsetWidth;
+  stage.classList.add('shake');
+}
+
+function resize(){
+  const r=stage.getBoundingClientRect();
+
+  D=Math.min(2,devicePixelRatio||1);
+  W=r.width;
+  H=r.height;
+
+  C.width=W*D;
+  C.height=H*D;
+
+  X.setTransform(D,0,0,D,0,0);
+
+  makeNodes();
+  draw();
+}
+
+function nodeLayout(){
+  if(level===1){
+    return [
+      [.08,.56],[.20,.43],[.20,.68],
+      [.36,.35],[.36,.62],
+      [.52,.45],[.52,.70],
+      [.68,.34],[.68,.61],
+      [.83,.46],[.92,.56]
+    ];
+  }
+
+  if(level===2){
+    return [
+      [.08,.56],[.18,.40],[.18,.70],
+      [.31,.30],[.31,.58],[.31,.76],
+      [.46,.43],[.46,.67],
+      [.60,.30],[.60,.57],[.60,.75],
+      [.74,.42],[.74,.68],
+      [.86,.50],[.92,.56]
+    ];
+  }
+
+  return [
+    [.08,.56],[.17,.38],[.17,.70],
+    [.28,.28],[.28,.52],[.28,.78],
+    [.41,.38],[.41,.65],
+    [.54,.27],[.54,.53],[.54,.78],
+    [.67,.38],[.67,.66],
+    [.80,.31],[.80,.58],
+    [.92,.56]
+  ];
+}
+
+function maxBeams(){
+  const base=
+    difficulty===0?13:
+    difficulty===1?11:9;
+
+  return Math.max(
+    7,
+    base-Math.floor((level-1)*.5)
+  );
+}
+
+function vehicleInfo(){
+  if(level<=2){
+    return {emoji:'🚚',weight:1};
+  }
+  if(level<=4){
+    return {emoji:'🚌',weight:1.18};
+  }
+  return {emoji:'🚛',weight:1.35};
+}
+
+function makeNodes(){
+  nodes=nodeLayout().map(([x,y])=>({
+    x:x*W,
+    y:y*H
+  }));
+
+  beams=[];
+  selected=-1;
+  budget=maxBeams();
+
+  budgetEl.textContent=budget;
+  levelEl.textContent=level;
+  vehicleEl.textContent=vehicleInfo().emoji;
+  bestEl.textContent=best||'-';
+}
+
+function startGame(){
+  testing=false;
+  truck=null;
+
+  makeNodes();
+
+  overlay.classList.add('hide');
+
+  msg.textContent=
+    '두 지점을 연결하세요. 너무 긴 보는 쉽게 붕괴합니다.';
+
+  draw();
+}
+
+function clickNode(x,y){
+  if(testing)return;
+
+  let i=-1;
+  let d=30;
+
+  nodes.forEach((n,k)=>{
+    const q=Math.hypot(n.x-x,n.y-y);
+
+    if(q<d){
+      d=q;
+      i=k;
+    }
+  });
+
+  if(i<0)return;
+
+  if(selected<0){
+    selected=i;
+    msg.textContent='연결할 두 번째 지점을 선택하세요.';
+  }else if(i===selected){
+    selected=-1;
+    msg.textContent='선택이 취소되었습니다.';
+  }else{
+    const a=Math.min(i,selected);
+    const b=Math.max(i,selected);
+
+    const exists=
+      beams.some(v=>v.a===a&&v.b===b);
+
+    if(exists){
+      showToast('이미 설치된 보입니다.');
+      selected=-1;
+      draw();
+      return;
+    }
+
+    if(budget<=0){
+      showToast('남은 보가 없습니다!');
+      selected=-1;
+      draw();
+      return;
+    }
+
+    const len=
+      Math.hypot(
+        nodes[a].x-nodes[b].x,
+        nodes[a].y-nodes[b].y
+      );
+
+    beams.push({
+      a,b,
+      health:1,
+      broken:false,
+      len
+    });
+
+    budget--;
+    budgetEl.textContent=budget;
+
+    if(len<W*.19){
+      showToast('🔩 튼튼한 짧은 보');
+    }else if(len<W*.255){
+      showToast('⚠️ 보통 강도');
+    }else{
+      showToast('🔴 너무 긴 보!');
+    }
+
+    selected=-1;
+  }
+
+  draw();
+}
+
+function route(){
+  const q=[[0,[0]]];
+  const seen=new Set([0]);
+
+  while(q.length){
+    const [i,path]=q.shift();
+
+    if(i===nodes.length-1){
+      return path;
+    }
+
+    for(const b of beams){
+      if(b.broken)continue;
+
+      const n=
+        b.a===i?b.b:
+        b.b===i?b.a:-1;
+
+      if(n>=0&&!seen.has(n)){
+        seen.add(n);
+        q.push([n,[...path,n]]);
+      }
+    }
+  }
+
+  return null;
+}
+
+function pathBeams(path){
+  const arr=[];
+
+  for(let i=1;i<path.length;i++){
+    const a=Math.min(path[i-1],path[i]);
+    const b=Math.max(path[i-1],path[i]);
+
+    const beam=
+      beams.find(v=>v.a===a&&v.b===b);
+
+    if(beam)arr.push(beam);
+  }
+
+  return arr;
+}
+
+function supportCount(beam){
+  let count=0;
+
+  for(const n of [beam.a,beam.b]){
+    const linked=
+      beams.filter(
+        b=>!b.broken&&(b.a===n||b.b===n)
+      ).length;
+
+    if(linked>=3)count++;
+  }
+
+  return count;
+}
+
+function beamStrength(beam){
+  let strength=1;
+
+  const ratio=beam.len/W;
+
+  if(ratio<.18){
+    strength=1.45;
+  }else if(ratio<.23){
+    strength=1.12;
+  }else if(ratio<.27){
+    strength=.88;
+  }else{
+    strength=.58;
+  }
+
+  strength+=supportCount(beam)*.17;
+
+  return strength;
+}
+
+function test(){
+  if(testing)return;
+
+  const path=route();
+
+  if(!path){
+    msg.textContent='❌ 양쪽 절벽이 연결되지 않았습니다.';
+    showToast('경로 없음');
+    return;
+  }
+
+  testing=true;
+
+  truck={
+    path,
+    segment:0,
+    t:0,
+    failed:false
+  };
+
+  msg.textContent='🚚 하중 시험 중...';
+
+  last=performance.now();
+
+  cancelAnimationFrame(raf);
+  raf=requestAnimationFrame(loop);
+}
+
+function failBeam(beam){
+  beam.broken=true;
+
+  testing=false;
+  truck.failed=true;
+
+  shake();
+
+  msg.textContent='💥 교량이 하중을 버티지 못하고 붕괴했습니다!';
+
+  draw();
+
+  setTimeout(()=>{
+    $('#resultEmoji').textContent='💥';
+    $('#resultTitle').textContent='교량 붕괴';
+
+    $('#resultText').innerHTML=
+      `차량 하중을 버티지 못했습니다.<br><br>`+
+      `긴 보를 짧게 나누고,<br>`+
+      `여러 보가 만나는 <b>삼각형 구조</b>를 만들어보세요.`;
+
+    startBtn.textContent='다시 설계';
+    startBtn.onclick=startGame;
+
+    overlay.classList.remove('hide');
+  },500);
+}
+
+function update(dt){
+  if(!truck)return;
+
+  truck.t+=dt*.62;
+
+  const a=
+    nodes[truck.path[truck.segment]];
+
+  const b=
+    nodes[truck.path[truck.segment+1]];
+
+  const aa=Math.min(
+    truck.path[truck.segment],
+    truck.path[truck.segment+1]
+  );
+
+  const bb=Math.max(
+    truck.path[truck.segment],
+    truck.path[truck.segment+1]
+  );
+
+  const beam=
+    beams.find(v=>v.a===aa&&v.b===bb);
+
+  if(beam){
+    const vehicle=vehicleInfo();
+
+    const force=
+      vehicle.weight*
+      (
+        difficulty===0?.82:
+        difficulty===1?1:1.13
+      );
+
+    const strength=
+      beamStrength(beam);
+
+    beam.health-=dt*
+      Math.max(
+        0,
+        force-strength+.25
+      )*.8;
+
+    if(beam.health<=0){
+      failBeam(beam);
+      return;
+    }
+  }
+
+  if(truck.t>=1){
+    truck.t=0;
+    truck.segment++;
+
+    if(
+      truck.segment>=
+      truck.path.length-1
+    ){
+      success();
+    }
+  }
+}
+
+function success(){
+  testing=false;
+
+  const used=beams.length;
+
+  if(!best||used<best){
+    best=used;
+    safeSet('bridgeChallengeBest',best);
+    bestEl.textContent=best;
+  }
+
+  let stars=1;
+
+  if(used<=maxBeams()-2){
+    stars=2;
+  }
+
+  if(used<=maxBeams()-4){
+    stars=3;
+  }
+
+  const rating=
+    '⭐'.repeat(stars)+
+    '☆'.repeat(3-stars);
+
+  $('#resultEmoji').textContent='🌉';
+  $('#resultTitle').textContent='교량 통과 성공!';
+
+  $('#resultText').innerHTML=
+    `${rating}<br><br>`+
+    `${vehicleInfo().emoji} 차량이 안전하게 통과했습니다.<br>`+
+    `사용한 보 <b>${used}</b>개<br>`+
+    `남은 보 <b>${budget}</b>개<br>`+
+    `최소 기록 <b>${best}</b>개<br><br>`+
+    `다음 단계에서는 더 무거운 차량이 등장합니다.`;
+
+  startBtn.textContent='다음 단계';
+
+  startBtn.onclick=()=>{
+    level++;
+    startGame();
+  };
+
+  setTimeout(()=>{
+    overlay.classList.remove('hide');
+  },450);
+}
+
+function undo(){
+  if(testing||beams.length===0)return;
+
+  beams.pop();
+  budget++;
+  budgetEl.textContent=budget;
+  selected=-1;
+
+  msg.textContent='마지막 보를 제거했습니다.';
+  draw();
+}
+
+function clearAll(){
+  if(testing)return;
+
+  beams=[];
+  selected=-1;
+  budget=maxBeams();
+
+  budgetEl.textContent=budget;
+
+  msg.textContent='모든 보를 철거했습니다.';
+  draw();
+}
+
+function drawBackground(){
+  const sky=X.createLinearGradient(0,0,0,H);
+
+  sky.addColorStop(0,'#7dd3fc');
+  sky.addColorStop(.62,'#bae6fd');
+  sky.addColorStop(.63,'#0284c7');
+  sky.addColorStop(1,'#075985');
+
+  X.fillStyle=sky;
+  X.fillRect(0,0,W,H);
+
+  X.fillStyle='#fff8';
+
+  for(let i=0;i<7;i++){
+    const x=(i*137)%W;
+    const y=35+(i*53)%(H*.28);
+
+    X.beginPath();
+    X.arc(x,y,18,0,Math.PI*2);
+    X.arc(x+18,y+3,15,0,Math.PI*2);
+    X.arc(x-15,y+4,13,0,Math.PI*2);
+    X.fill();
+  }
+
+  X.fillStyle='#713f12';
+
+  X.fillRect(
+    0,
+    H*.54,
+    W*.11,
+    H
+  );
+
+  X.fillRect(
+    W*.89,
+    H*.54,
+    W*.11,
+    H
+  );
+
+  X.fillStyle='#854d0e';
+
+  X.beginPath();
+  X.moveTo(0,H*.54);
+  X.lineTo(W*.11,H*.54);
+  X.lineTo(W*.08,H*.62);
+  X.lineTo(0,H*.66);
+  X.fill();
+
+  X.beginPath();
+  X.moveTo(W,H*.54);
+  X.lineTo(W*.89,H*.54);
+  X.lineTo(W*.92,H*.63);
+  X.lineTo(W,H*.67);
+  X.fill();
+}
+
+function drawBeam(b){
+  const a=nodes[b.a];
+  const n=nodes[b.b];
+
+  if(b.broken){
+    X.strokeStyle='#7f1d1d';
+  }else{
+    const strength=beamStrength(b);
+
+    X.strokeStyle=
+      strength>=1.2?'#16a34a':
+      strength>=.9?'#d97706':
+      '#dc2626';
+  }
+
+  X.lineWidth=9;
+  X.beginPath();
+  X.moveTo(a.x,a.y);
+  X.lineTo(n.x,n.y);
+  X.stroke();
+
+  X.strokeStyle='#fde68a';
+  X.lineWidth=2;
+  X.beginPath();
+  X.moveTo(a.x,a.y);
+  X.lineTo(n.x,n.y);
+  X.stroke();
+
+  if(testing&&!b.broken){
+    const hp=Math.max(0,b.health);
+
+    if(hp<.7){
+      X.strokeStyle='#ef4444';
+      X.lineWidth=3;
+      X.setLineDash([5,5]);
+      X.beginPath();
+      X.moveTo(a.x,a.y);
+      X.lineTo(n.x,n.y);
+      X.stroke();
+      X.setLineDash([]);
+    }
+  }
+}
+
+function drawNodes(){
+  nodes.forEach((n,i)=>{
+    X.fillStyle=
+      i===selected
+        ?'#fde047'
+        :'#e2e8f0';
+
+    X.strokeStyle='#334155';
+    X.lineWidth=3;
+
+    X.beginPath();
+    X.arc(n.x,n.y,12,0,Math.PI*2);
+    X.fill();
+    X.stroke();
+
+    if(i===0||i===nodes.length-1){
+      X.fillStyle='#0f172a';
+      X.font='bold 10px sans-serif';
+      X.textAlign='center';
+      X.fillText(
+        i===0?'START':'GOAL',
+        n.x,
+        n.y-18
+      );
+    }
+  });
+}
+
+function drawTruck(){
+  if(!truck||truck.failed)return;
+
+  const a=
+    nodes[truck.path[truck.segment]];
+
+  const b=
+    nodes[truck.path[truck.segment+1]];
+
+  const x=
+    a.x+(b.x-a.x)*truck.t;
+
+  const y=
+    a.y+(b.y-a.y)*truck.t;
+
+  X.font='34px sans-serif';
+  X.textAlign='center';
+
+  X.fillText(
+    vehicleInfo().emoji,
+    x,
+    y-11
+  );
+}
+
+function draw(){
+  X.clearRect(0,0,W,H);
+
+  drawBackground();
+
+  for(const b of beams){
+    drawBeam(b);
+  }
+
+  drawNodes();
+  drawTruck();
+}
+
+function loop(t){
+  if(!testing)return;
+
+  const dt=Math.min(
+    .04,
+    (t-last)/1000
+  );
+
+  last=t;
+
+  update(dt);
+  draw();
+
+  if(testing){
+    raf=requestAnimationFrame(loop);
+  }
+}
+
+C.addEventListener('pointerdown',e=>{
+  const r=C.getBoundingClientRect();
+
+  clickNode(
+    e.clientX-r.left,
+    e.clientY-r.top
+  );
+});
+
+$('#testBtn').onclick=test;
+$('#undoBtn').onclick=undo;
+$('#clearBtn').onclick=clearAll;
+
+difficultyBtn.onclick=()=>{
+  difficulty=(difficulty+1)%3;
+
+  difficultyBtn.textContent=
+    `난이도 : ${difficultyNames[difficulty]}`;
+};
+
+startBtn.onclick=startGame;
+
+addEventListener('resize',resize);
+
+resize();
+</script>
+</body>
+</html>
+

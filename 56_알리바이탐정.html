@@ -1,13 +1,920 @@
-<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no"><title>🕵️ 알리바이 탐정</title><style>
-:root{--c1:#44403c;--c2:#fbbf24}*{box-sizing:border-box}html,body{height:100%}body{margin:0;overflow:hidden;display:grid;place-items:center;color:#f8fafc;font-family:system-ui,"Noto Sans KR",sans-serif;background:radial-gradient(circle at 18% 10%,var(--c1),#11162e 52%,#030712);user-select:none;-webkit-user-select:none}.app{width:min(95vw,720px);height:min(95vh,860px);display:flex;flex-direction:column;gap:11px}.top{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:2px 4px}.brand small{display:block;color:#cbd5e1;font-size:10px;font-weight:900;letter-spacing:.2em}.brand h1{margin:2px 0 0;font-size:clamp(25px,5vw,38px);letter-spacing:-.05em}.hud{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.stat{min-width:67px;padding:7px 10px;text-align:center;border:1px solid #ffffff25;border-radius:14px;background:#0f172ac7}.stat small{display:block;color:#cbd5e1;font-size:9px}.stat b{font-size:19px}.stage{position:relative;flex:1;min-height:400px;overflow:hidden;border:1px solid #ffffff27;border-radius:25px;background:linear-gradient(145deg,#14203b,#090e21);box-shadow:0 25px 70px #0009;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:#050916e9}.overlay.hide{display:none}.card{width:min(100%,410px);padding:28px 24px;text-align:center;border:1px solid #ffffff25;border-radius:23px;background:#111a36ee;box-shadow:0 20px 55px #0008}.card .emoji{font-size:55px}.card h2{margin:8px;font-size:28px}.card p{margin:0 0 19px;color:#cbd5e1;font-size:14px;line-height:1.72;word-break:keep-all}.primary{min-height:48px;width:100%;padding:12px 18px;border:0;border-radius:13px;color:#08111f;background:linear-gradient(135deg,var(--c2),#fef3c7);font:900 15px system-ui;cursor:pointer}.tip{min-height:18px;text-align:center;color:#aebbd0;font-size:12px}.hidden{display:none!important}button{font-family:inherit}.detective{height:100%;display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px;background:linear-gradient(145deg,#292524,#0c0a09)}.case{font:900 20px Georgia,serif;color:#fde68a}.clues{width:min(100%,570px);min-height:105px;display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid #ffffff20;border-radius:13px;background:#fef3c712;color:#fef3c7}.clue{padding:5px 8px;border-left:4px solid #fbbf24;background:#0003}.suspects{width:min(100%,570px);display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.suspect{min-height:118px;padding:9px 5px;border:1px solid #ffffff20;border-radius:13px;color:#fff;background:#ffffff0b;cursor:pointer}.suspect:hover{background:#ffffff18}.suspect .face{font-size:34px}.suspect b,.suspect small{display:block}.suspect small{color:#d6d3d1;font-size:10px;line-height:1.4}.suspect.out{opacity:.32;text-decoration:line-through}.reveal{min-height:46px;padding:9px 17px;border:0;border-radius:11px;background:#fbbf24;color:#422006;font-weight:900}#detectiveMsg{color:#fde68a;font-weight:800;text-align:center}@media(max-width:430px){.suspects{grid-template-columns:repeat(2,1fr)}.suspect{min-height:97px}}
-@media(max-width:520px){.app{width:100%;height:100%;padding:9px}.stage{min-height:0;border-radius:20px}.brand h1{font-size:25px}.stat{min-width:61px;padding:6px 8px}.card{padding:24px 19px}.tip{font-size:11px}}
-</style></head><body><main class="app"><header class="top"><div class="brand"><small>CASE FILE</small><h1>🕵️ 알리바이 탐정</h1></div><div class="hud" id="hud"></div></header><section class="stage" id="stage"><div class="detective"><div class="case" id="caseTitle">사건 파일</div><div class="clues" id="clues"></div><div class="suspects" id="suspects"></div><button class="reveal" id="revealBtn">🔎 다음 단서 확인</button><div id="detectiveMsg">단서를 읽고 범인을 선택하세요.</div></div><div class="overlay" id="overlay"><div class="card"><div class="emoji" id="resultEmoji">🕵️</div><h2 id="resultTitle">알리바이 탐정</h2><p id="resultText">용의자의 옷·장소·소지품과 단서를 비교해 최소한의 정보로 범인을 추리하세요.</p><button class="primary" id="startBtn">게임 시작</button></div></div></section><div class="tip">용의자의 옷·장소·소지품과 단서를 비교해 최소한의 정보로 범인을 추리하세요.</div></main><script>
-const $=s=>document.querySelector(s),stage=$('#stage'),overlay=$('#overlay'),startBtn=$('#startBtn');
-const safeGet=(k,d=0)=>{try{return Number(localStorage.getItem(k))||d}catch(e){return d}},safeSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
-function showResult(icon,title,text,button='다시 하기'){ $('#resultEmoji').textContent=icon;$('#resultTitle').textContent=title;$('#resultText').innerHTML=text;startBtn.textContent=button;overlay.classList.remove('hide') }
-const faces=['🧔','👩‍🔬','👨‍🍳','👩‍🎨','👨‍🚀','🧙'],names=['민준','서연','도윤','지아','현우','하린'],colors=['빨간','파란','초록'],places=['도서관','정원','주방'],items=['열쇠','우산','손전등'],cluesEl=$('#clues'),suspectsEl=$('#suspects'),msg=$('#detectiveMsg'),hud=$('#hud');let people=[],culprit,shown=1,score=0,streak=0,playing=false;hud.innerHTML='<div class="stat"><small>점수</small><b id="score">0</b></div><div class="stat"><small>연속 해결</small><b id="streak">0</b></div>';
-function makeCase(){const combos=[];for(let c=0;c<3;c++)for(let p=0;p<3;p++)for(let i=0;i<3;i++)combos.push([c,p,i]);combos.sort(()=>Math.random()-.5);people=names.map((n,k)=>({name:n,face:faces[k],color:colors[combos[k][0]],place:places[combos[k][1]],item:items[combos[k][2]]}));culprit=Math.floor(Math.random()*people.length);shown=1;playing=true;overlay.classList.add('hide');render();msg.textContent='단서와 일치하는 용의자를 선택하세요.'}
-function clueTexts(){const c=people[culprit],wrongColor=colors.find(x=>x!==c.color),wrongPlace=places.find(x=>x!==c.place);return[`범인은 ${c.color} 옷을 입고 있었습니다.`,`범인은 사건 당시 ${c.place}에 있었습니다.`,`범인은 ${c.item}을 가지고 있었습니다.`,`범인은 ${wrongColor} 옷도 아니고 ${wrongPlace}에도 없었습니다.`]}
-function render(){cluesEl.innerHTML=clueTexts().slice(0,shown).map((t,i)=>`<div class="clue">단서 ${i+1}. ${t}</div>`).join('');suspectsEl.innerHTML='';people.forEach((p,i)=>{const b=document.createElement('button');b.className='suspect';b.innerHTML=`<span class="face">${p.face}</span><b>${p.name}</b><small>${p.color} 옷 · ${p.place}<br>${p.item} 소지</small>`;b.onclick=()=>accuse(i);suspectsEl.appendChild(b)});$('#revealBtn').disabled=shown>=4}
-function accuse(i){if(!playing)return;if(i===culprit){playing=false;streak++;score+=Math.max(20,100-shown*15)+streak*5;$('#score').textContent=score;$('#streak').textContent=streak;showResult('🕵️','사건 해결!',`${shown}개의 단서만으로 ${people[i].name}이 범인임을 밝혔습니다.<br>적은 단서로 해결할수록 높은 점수를 얻습니다.`,'다음 사건')}else{streak=0;$('#streak').textContent=0;suspectsEl.children[i].classList.add('out');msg.textContent=`${people[i].name}은(는) 범인이 아닙니다. 단서를 다시 비교하세요.`}}$('#revealBtn').onclick=()=>{if(playing&&shown<4){shown++;render()}};startBtn.onclick=makeCase;
-</script></body></html>
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no">
+<title>🕵️ 알리바이 탐정 챌린지</title>
+
+<style>
+:root{
+  --c1:#44403c;
+  --c2:#fbbf24;
+  --good:#86efac;
+  --bad:#fb7185
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  color:#f8fafc;
+  font-family:system-ui,"Noto Sans KR",sans-serif;
+  background:radial-gradient(circle at 18% 10%,var(--c1),#11162e 52%,#030712);
+  user-select:none;
+  -webkit-user-select:none
+}
+.app{
+  width:min(96vw,730px);
+  height:min(97vh,870px);
+  display:flex;
+  flex-direction:column;
+  gap:10px
+}
+.top{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:10px;
+  padding:2px 4px
+}
+.brand small{
+  display:block;
+  color:#cbd5e1;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.2em
+}
+.brand h1{
+  margin:2px 0 0;
+  font-size:clamp(25px,5vw,38px);
+  letter-spacing:-.05em
+}
+.hud{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  justify-content:flex-end
+}
+.stat{
+  min-width:58px;
+  padding:7px 8px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:13px;
+  background:#0f172ad8
+}
+.stat small{
+  display:block;
+  color:#cbd5e1;
+  font-size:9px
+}
+.stat b{font-size:16px}
+.stage{
+  position:relative;
+  flex:1;
+  min-height:400px;
+  overflow:hidden;
+  border:1px solid #ffffff27;
+  border-radius:25px;
+  background:linear-gradient(145deg,#292524,#0c0a09);
+  box-shadow:0 25px 70px #0009;
+  touch-action:none
+}
+.detective{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:9px;
+  padding:13px
+}
+.case{
+  font:900 20px Georgia,serif;
+  color:#fde68a;
+  text-align:center
+}
+.caseSub{
+  color:#d6d3d1;
+  font-size:11px;
+  text-align:center
+}
+.timerWrap{
+  width:min(100%,570px);
+  height:7px;
+  border-radius:999px;
+  overflow:hidden;
+  background:#ffffff17
+}
+.timer{
+  height:100%;
+  width:100%;
+  background:linear-gradient(90deg,#22c55e,#fde047,#ef4444)
+}
+.clues{
+  width:min(100%,570px);
+  min-height:100px;
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  padding:9px;
+  overflow:auto;
+  border:1px solid #ffffff20;
+  border-radius:13px;
+  background:#fef3c712;
+  color:#fef3c7
+}
+.clue{
+  padding:6px 8px;
+  border-left:4px solid #fbbf24;
+  background:#0003;
+  font-size:12px;
+  line-height:1.45
+}
+.clue.false{
+  border-left-color:#fb7185
+}
+.suspects{
+  width:min(100%,570px);
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px
+}
+.suspect{
+  min-height:116px;
+  padding:8px 5px;
+  border:1px solid #ffffff20;
+  border-radius:13px;
+  color:#fff;
+  background:#ffffff0b;
+  cursor:pointer;
+  transition:.1s
+}
+.suspect:hover{background:#ffffff18}
+.suspect:active{transform:scale(.97)}
+.suspect .face{font-size:33px}
+.suspect b,.suspect small{display:block}
+.suspect small{
+  color:#d6d3d1;
+  font-size:10px;
+  line-height:1.4
+}
+.suspect.out{
+  opacity:.28;
+  text-decoration:line-through;
+  filter:grayscale(1)
+}
+.suspect.questioned{
+  outline:3px solid #38bdf8
+}
+.tools{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:6px
+}
+.tools button{
+  min-height:42px;
+  padding:8px 12px;
+  border:1px solid #ffffff22;
+  border-radius:10px;
+  color:#fff;
+  background:#ffffff0d;
+  font-weight:900;
+  cursor:pointer
+}
+.tools button.primaryTool{
+  background:#fbbf24;
+  color:#422006;
+  border:0
+}
+.tools button:disabled{
+  opacity:.35;
+  cursor:default
+}
+#detectiveMsg{
+  min-height:22px;
+  color:#fde68a;
+  font-weight:800;
+  text-align:center;
+  font-size:12px
+}
+.toast{
+  position:absolute;
+  left:50%;
+  top:22%;
+  z-index:10;
+  transform:translate(-50%,-50%);
+  padding:9px 16px;
+  border:1px solid #ffffff33;
+  border-radius:999px;
+  background:#0f172ae8;
+  font-weight:900;
+  opacity:0;
+  pointer-events:none;
+  transition:.2s;
+  white-space:nowrap
+}
+.toast.show{
+  opacity:1;
+  top:18%
+}
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:20;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:#050916e9;
+  backdrop-filter:blur(5px)
+}
+.overlay.hide{display:none}
+.card{
+  width:min(100%,420px);
+  padding:28px 24px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:23px;
+  background:#111a36f2;
+  box-shadow:0 20px 55px #0008
+}
+.card .emoji{font-size:56px}
+.card h2{
+  margin:8px;
+  font-size:28px
+}
+.card p{
+  margin:0 0 18px;
+  color:#cbd5e1;
+  font-size:14px;
+  line-height:1.72;
+  word-break:keep-all
+}
+.buttons{
+  display:grid;
+  gap:8px
+}
+.primary,.secondary{
+  min-height:48px;
+  width:100%;
+  padding:12px 18px;
+  border-radius:13px;
+  font:900 15px system-ui;
+  cursor:pointer
+}
+.primary{
+  border:0;
+  color:#08111f;
+  background:linear-gradient(135deg,var(--c2),#fef3c7)
+}
+.secondary{
+  border:1px solid #ffffff25;
+  color:#fff;
+  background:#ffffff0e
+}
+.tip{
+  min-height:18px;
+  text-align:center;
+  color:#aebbd0;
+  font-size:12px
+}
+@media(max-width:430px){
+  .suspects{grid-template-columns:repeat(2,1fr)}
+  .suspect{min-height:96px}
+}
+@media(max-width:520px){
+  .app{width:100%;height:100%;padding:8px}
+  .stage{min-height:0;border-radius:18px}
+  .brand h1{font-size:24px}
+  .stat{min-width:51px;padding:6px 5px}
+  .stat b{font-size:14px}
+  .card{padding:24px 19px}
+}
+</style>
+</head>
+
+<body>
+<main class="app">
+
+<header class="top">
+  <div class="brand">
+    <small>CASE FILE CHALLENGE</small>
+    <h1>🕵️ 알리바이 탐정</h1>
+  </div>
+
+  <div class="hud">
+    <div class="stat">
+      <small>사건</small>
+      <b id="caseNo">1</b>
+    </div>
+    <div class="stat">
+      <small>시간</small>
+      <b id="time">60</b>
+    </div>
+    <div class="stat">
+      <small>점수</small>
+      <b id="score">0</b>
+    </div>
+    <div class="stat">
+      <small>연속</small>
+      <b id="streak">0</b>
+    </div>
+  </div>
+</header>
+
+<section class="stage" id="stage">
+
+<div class="detective">
+
+  <div class="case" id="caseTitle">사건 파일</div>
+  <div class="caseSub" id="caseSub">용의자들의 진술을 비교하세요.</div>
+
+  <div class="timerWrap">
+    <div class="timer" id="timerBar"></div>
+  </div>
+
+  <div class="clues" id="clues"></div>
+
+  <div class="suspects" id="suspects"></div>
+
+  <div class="tools">
+    <button class="primaryTool" id="revealBtn">🔎 다음 단서</button>
+    <button id="hintBtn">💡 힌트 -20</button>
+    <button id="interrogateBtn">💬 심문</button>
+  </div>
+
+  <div id="detectiveMsg">단서를 읽고 범인을 선택하세요.</div>
+
+</div>
+
+<div class="toast" id="toast">단서 추가!</div>
+
+<div class="overlay" id="overlay">
+  <div class="card">
+    <div class="emoji" id="resultEmoji">🕵️</div>
+    <h2 id="resultTitle">알리바이 탐정</h2>
+
+    <p id="resultText">
+      사건 단서와 용의자 정보를 비교해 범인을 찾아내세요.<br><br>
+      🔎 단서를 많이 볼수록 점수는 줄어듭니다.<br>
+      💬 심문으로 추가 정보를 얻을 수 있습니다.<br>
+      어려운 사건에는 <b>거짓 단서</b>도 섞일 수 있습니다.
+    </p>
+
+    <div class="buttons">
+      <button class="primary" id="startBtn">수사 시작</button>
+      <button class="secondary" id="difficultyBtn">난이도 : 보통</button>
+    </div>
+  </div>
+</div>
+
+</section>
+
+<div class="tip">
+단서 비교 · 최소 단서로 추리 · 심문 활용 · 거짓 단서에 주의
+</div>
+
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+
+const overlay=$('#overlay');
+const startBtn=$('#startBtn');
+const difficultyBtn=$('#difficultyBtn');
+
+const cluesEl=$('#clues');
+const suspectsEl=$('#suspects');
+const msg=$('#detectiveMsg');
+const toast=$('#toast');
+
+const caseNoEl=$('#caseNo');
+const timeEl=$('#time');
+const scoreEl=$('#score');
+const streakEl=$('#streak');
+const timerBar=$('#timerBar');
+
+const faces=['🧔','👩‍🔬','👨‍🍳','👩‍🎨','👨‍🚀','🧙'];
+const names=['민준','서연','도윤','지아','현우','하린'];
+
+const colors=['빨간','파란','초록','검은'];
+const places=['도서관','정원','주방','옥상'];
+const items=['열쇠','우산','손전등','노트'];
+
+const caseTypes=[
+  ['💎','사라진 보석 사건'],
+  ['🖼️','미술관 그림 도난 사건'],
+  ['🔑','교장실 열쇠 분실 사건'],
+  ['📱','사라진 휴대폰 사건'],
+  ['📦','창고 물품 도난 사건']
+];
+
+let people=[];
+let culprit=0;
+let clues=[];
+
+let shown=1;
+let playing=false;
+
+let score=0;
+let streak=0;
+let caseNo=1;
+
+let difficulty=1;
+let duration=60;
+let remain=60;
+let last=0;
+let raf;
+
+let questioned=new Set();
+let eliminated=new Set();
+
+const difficultyNames=['쉬움','보통','어려움'];
+
+function showToast(text){
+  toast.textContent=text;
+  toast.classList.remove('show');
+  void toast.offsetWidth;
+  toast.classList.add('show');
+
+  clearTimeout(showToast.timer);
+  showToast.timer=setTimeout(()=>{
+    toast.classList.remove('show');
+  },650);
+}
+
+function randomDifferent(arr,value){
+  const choices=arr.filter(x=>x!==value);
+  return choices[Math.floor(Math.random()*choices.length)];
+}
+
+function makePeople(){
+  const combos=[];
+
+  for(const color of colors){
+    for(const place of places){
+      for(const item of items){
+        combos.push({color,place,item});
+      }
+    }
+  }
+
+  combos.sort(()=>Math.random()-.5);
+
+  people=names.map((name,i)=>({
+    name,
+    face:faces[i],
+    color:combos[i].color,
+    place:combos[i].place,
+    item:combos[i].item
+  }));
+}
+
+function buildClues(){
+  const c=people[culprit];
+
+  const trueClues=[
+    {
+      text:`범인은 ${c.color} 옷을 입고 있었습니다.`,
+      truth:true,
+      key:'color'
+    },
+    {
+      text:`범인은 사건 당시 ${c.place}에 있었습니다.`,
+      truth:true,
+      key:'place'
+    },
+    {
+      text:`범인은 ${c.item}을 가지고 있었습니다.`,
+      truth:true,
+      key:'item'
+    }
+  ];
+
+  const negative=[
+    {
+      text:`범인은 ${randomDifferent(colors,c.color)} 옷을 입은 사람이 아닙니다.`,
+      truth:true
+    },
+    {
+      text:`범인은 사건 당시 ${randomDifferent(places,c.place)}에 있지 않았습니다.`,
+      truth:true
+    }
+  ];
+
+  clues=[
+    trueClues[0],
+    negative[0],
+    trueClues[1],
+    negative[1],
+    trueClues[2]
+  ];
+
+  if(difficulty===2){
+    const fakeType=Math.floor(Math.random()*3);
+
+    let fake;
+
+    if(fakeType===0){
+      fake={
+        text:`한 목격자는 범인이 ${randomDifferent(colors,c.color)} 옷이었다고 주장했습니다.`,
+        truth:false
+      };
+    }
+
+    if(fakeType===1){
+      fake={
+        text:`익명의 제보자는 범인이 ${randomDifferent(places,c.place)}에 있었다고 말했습니다.`,
+        truth:false
+      };
+    }
+
+    if(fakeType===2){
+      fake={
+        text:`누군가는 범인이 ${randomDifferent(items,c.item)}을 들고 있었다고 진술했습니다.`,
+        truth:false
+      };
+    }
+
+    clues.splice(
+      2,
+      0,
+      fake
+    );
+  }
+}
+
+function startCase(){
+  makePeople();
+
+  culprit=Math.floor(Math.random()*people.length);
+
+  buildClues();
+
+  shown=1;
+  questioned.clear();
+  eliminated.clear();
+
+  duration=
+    difficulty===0?75:
+    difficulty===1?60:48;
+
+  remain=duration;
+  playing=true;
+
+  const [icon,title]=
+    caseTypes[(caseNo-1)%caseTypes.length];
+
+  $('#caseTitle').textContent=
+    `${icon} ${title}`;
+
+  $('#caseSub').textContent=
+    difficulty===2
+      ?'주의: 진술 중 하나는 거짓일 수 있습니다.'
+      :'용의자의 정보와 단서를 비교하세요.';
+
+  caseNoEl.textContent=caseNo;
+
+  msg.textContent=
+    '단서를 비교해 범인을 선택하세요.';
+
+  overlay.classList.add('hide');
+
+  render();
+
+  last=performance.now();
+  cancelAnimationFrame(raf);
+  raf=requestAnimationFrame(loop);
+}
+
+function render(){
+  cluesEl.innerHTML='';
+
+  clues
+    .slice(0,shown)
+    .forEach((clue,i)=>{
+      const div=document.createElement('div');
+
+      div.className=
+        'clue'+
+        (
+          difficulty===2 &&
+          !clue.truth &&
+          shown===clues.length
+            ?' false'
+            :''
+        );
+
+      div.textContent=
+        `단서 ${i+1}. ${clue.text}`;
+
+      cluesEl.appendChild(div);
+    });
+
+  suspectsEl.innerHTML='';
+
+  people.forEach((p,i)=>{
+    const b=document.createElement('button');
+
+    b.className='suspect';
+
+    if(eliminated.has(i)){
+      b.classList.add('out');
+    }
+
+    if(questioned.has(i)){
+      b.classList.add('questioned');
+    }
+
+    b.innerHTML=
+      `<span class="face">${p.face}</span>`+
+      `<b>${p.name}</b>`+
+      `<small>${p.color} 옷 · ${p.place}<br>${p.item} 소지</small>`;
+
+    b.onclick=()=>{
+      if(!eliminated.has(i)){
+        accuse(i);
+      }
+    };
+
+    suspectsEl.appendChild(b);
+  });
+
+  $('#revealBtn').disabled=
+    shown>=clues.length;
+}
+
+function accuse(i){
+  if(!playing)return;
+
+  if(i===culprit){
+
+    playing=false;
+    cancelAnimationFrame(raf);
+
+    streak++;
+
+    const clueBonus=
+      Math.max(
+        20,
+        130-shown*18
+      );
+
+    const timeBonus=
+      Math.round(remain*2);
+
+    const streakBonus=
+      streak*12;
+
+    const gain=
+      clueBonus+
+      timeBonus+
+      streakBonus;
+
+    score+=gain;
+
+    scoreEl.textContent=score;
+    streakEl.textContent=streak;
+
+    let stars=1;
+
+    if(shown<=3){
+      stars=2;
+    }
+
+    if(
+      shown<=2 &&
+      remain>duration*.4
+    ){
+      stars=3;
+    }
+
+    const rating=
+      '⭐'.repeat(stars)+
+      '☆'.repeat(3-stars);
+
+    $('#resultEmoji').textContent='🕵️';
+    $('#resultTitle').textContent='사건 해결!';
+
+    $('#resultText').innerHTML=
+      `${rating}<br><br>`+
+      `범인은 <b>${people[i].name}</b>이었습니다.<br>`+
+      `확인한 단서 <b>${shown}</b>개<br>`+
+      `남은 시간 <b>${Math.ceil(remain)}</b>초<br>`+
+      `획득 점수 <b>+${gain}</b><br><br>`+
+      `적은 단서로 빠르게 해결할수록 높은 점수를 얻습니다.`;
+
+    startBtn.textContent='다음 사건';
+
+    startBtn.onclick=()=>{
+      caseNo++;
+      startCase();
+    };
+
+    setTimeout(()=>{
+      overlay.classList.remove('hide');
+    },400);
+
+  }else{
+
+    eliminated.add(i);
+
+    streak=0;
+    streakEl.textContent=0;
+
+    score=Math.max(0,score-25);
+    scoreEl.textContent=score;
+
+    msg.textContent=
+      `${people[i].name}은(는) 범인이 아닙니다. -25점`;
+
+    showToast('❌ 잘못된 지목 -25');
+
+    render();
+  }
+}
+
+function revealClue(){
+  if(!playing)return;
+
+  if(shown>=clues.length)return;
+
+  shown++;
+
+  score=Math.max(0,score-5);
+  scoreEl.textContent=score;
+
+  showToast('🔎 새로운 단서');
+
+  render();
+}
+
+function useHint(){
+  if(!playing)return;
+
+  score=Math.max(0,score-20);
+  scoreEl.textContent=score;
+
+  const possible=
+    people
+      .map((_,i)=>i)
+      .filter(i=>
+        i!==culprit &&
+        !eliminated.has(i)
+      );
+
+  if(possible.length===0){
+    msg.textContent='더 이상 제외할 용의자가 없습니다.';
+    return;
+  }
+
+  const target=
+    possible[Math.floor(Math.random()*possible.length)];
+
+  eliminated.add(target);
+
+  msg.textContent=
+    `💡 조사 결과 ${people[target].name}은(는) 용의선상에서 제외되었습니다.`;
+
+  showToast('💡 용의자 1명 제외');
+
+  render();
+}
+
+function interrogate(){
+  if(!playing)return;
+
+  const candidates=
+    people
+      .map((_,i)=>i)
+      .filter(i=>
+        !eliminated.has(i) &&
+        !questioned.has(i)
+      );
+
+  if(candidates.length===0){
+    msg.textContent='모든 용의자를 이미 심문했습니다.';
+    return;
+  }
+
+  let target;
+
+  if(candidates.includes(culprit) && Math.random()<.35){
+    target=culprit;
+  }else{
+    target=
+      candidates[
+        Math.floor(Math.random()*candidates.length)
+      ];
+  }
+
+  questioned.add(target);
+
+  const p=people[target];
+
+  let statement;
+
+  if(target===culprit){
+    const choices=[
+      `"저는 ${p.place}에 있었지만 자세한 건 기억나지 않습니다."`,
+      `"${p.item}? 제가 가지고 있었던 건 맞습니다."`,
+      `"제 옷 색깔이 중요한가요?"`
+    ];
+
+    statement=
+      choices[Math.floor(Math.random()*choices.length)];
+  }else{
+    const choices=[
+      `"저는 ${p.place}에 있었습니다. 확인해 보세요."`,
+      `"제가 가진 건 ${p.item}뿐이었습니다."`,
+      `"제 옷은 ${p.color}색이었습니다."`
+    ];
+
+    statement=
+      choices[Math.floor(Math.random()*choices.length)];
+  }
+
+  score=Math.max(0,score-8);
+  scoreEl.textContent=score;
+
+  msg.textContent=
+    `💬 ${p.name}: ${statement}`;
+
+  showToast('💬 심문 -8점');
+
+  render();
+}
+
+function timeOut(){
+  if(!playing)return;
+
+  playing=false;
+  streak=0;
+
+  streakEl.textContent=0;
+
+  $('#resultEmoji').textContent='⏰';
+  $('#resultTitle').textContent='수사 시간 종료';
+
+  $('#resultText').innerHTML=
+    `범인은 <b>${people[culprit].name}</b>이었습니다.<br><br>`+
+    `${people[culprit].color} 옷 · ${people[culprit].place}<br>`+
+    `${people[culprit].item} 소지<br><br>`+
+    `단서의 공통점을 하나씩 비교해보세요.`;
+
+  startBtn.textContent='다시 수사';
+  startBtn.onclick=startCase;
+
+  overlay.classList.remove('hide');
+}
+
+function loop(t){
+  if(!playing)return;
+
+  const dt=
+    Math.min(
+      .05,
+      (t-last)/1000
+    );
+
+  last=t;
+
+  remain-=dt;
+
+  if(remain<=0){
+    remain=0;
+    timeEl.textContent=0;
+    timerBar.style.width='0%';
+    timeOut();
+    return;
+  }
+
+  timeEl.textContent=
+    Math.ceil(remain);
+
+  timerBar.style.width=
+    `${remain/duration*100}%`;
+
+  raf=requestAnimationFrame(loop);
+}
+
+$('#revealBtn').onclick=revealClue;
+$('#hintBtn').onclick=useHint;
+$('#interrogateBtn').onclick=interrogate;
+
+difficultyBtn.onclick=()=>{
+  difficulty=
+    (difficulty+1)%3;
+
+  difficultyBtn.textContent=
+    `난이도 : ${difficultyNames[difficulty]}`;
+};
+
+startBtn.onclick=startCase;
+</script>
+
+</body>
+</html>

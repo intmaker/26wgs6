@@ -1,16 +1,1335 @@
-<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no"><title>🛡️ 나노 타워 디펜스</title><style>
-:root{--c1:#0e7490;--c2:#67e8f9}*{box-sizing:border-box}html,body{height:100%}body{margin:0;overflow:hidden;display:grid;place-items:center;color:#f8fafc;font-family:system-ui,"Noto Sans KR",sans-serif;background:radial-gradient(circle at 18% 10%,var(--c1),#11162e 52%,#030712);user-select:none;-webkit-user-select:none}.app{width:min(95vw,720px);height:min(95vh,860px);display:flex;flex-direction:column;gap:11px}.top{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:2px 4px}.brand small{display:block;color:#cbd5e1;font-size:10px;font-weight:900;letter-spacing:.2em}.brand h1{margin:2px 0 0;font-size:clamp(25px,5vw,38px);letter-spacing:-.05em}.hud{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.stat{min-width:67px;padding:7px 10px;text-align:center;border:1px solid #ffffff25;border-radius:14px;background:#0f172ac7}.stat small{display:block;color:#cbd5e1;font-size:9px}.stat b{font-size:19px}.stage{position:relative;flex:1;min-height:400px;overflow:hidden;border:1px solid #ffffff27;border-radius:25px;background:linear-gradient(145deg,#14203b,#090e21);box-shadow:0 25px 70px #0009;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:#050916e9}.overlay.hide{display:none}.card{width:min(100%,410px);padding:28px 24px;text-align:center;border:1px solid #ffffff25;border-radius:23px;background:#111a36ee;box-shadow:0 20px 55px #0008}.card .emoji{font-size:55px}.card h2{margin:8px;font-size:28px}.card p{margin:0 0 19px;color:#cbd5e1;font-size:14px;line-height:1.72;word-break:keep-all}.primary{min-height:48px;width:100%;padding:12px 18px;border:0;border-radius:13px;color:#08111f;background:linear-gradient(135deg,var(--c2),#fef3c7);font:900 15px system-ui;cursor:pointer}.tip{min-height:18px;text-align:center;color:#aebbd0;font-size:12px}.hidden{display:none!important}button{font-family:inherit}#canvas{display:block;width:100%;height:100%;background:#061b25}.td-panel{position:absolute;left:12px;right:12px;bottom:12px;display:flex;align-items:center;gap:10px;padding:9px;border:1px solid #ffffff24;border-radius:13px;background:#071827d9}.td-panel button{min-height:46px;border:0;border-radius:10px;padding:10px 15px;background:#22d3ee;color:#083344;font-weight:900}.td-panel span{font-size:12px;color:#cffafe}.stage{touch-action:manipulation}
-@media(max-width:520px){.app{width:100%;height:100%;padding:9px}.stage{min-height:0;border-radius:20px}.brand h1{font-size:25px}.stat{min-width:61px;padding:6px 8px}.card{padding:24px 19px}.tip{font-size:11px}}
-</style></head><body><main class="app"><header class="top"><div class="brand"><small>NANO DEFENSE</small><h1>🛡️ 나노 타워 디펜스</h1></div><div class="hud" id="hud"></div></header><section class="stage" id="stage"><canvas id="canvas"></canvas><div class="td-panel"><button id="waveBtn">▶ 웨이브 시작</button><span id="tdMsg">빈 원을 눌러 포탑을 설치하세요.</span></div><div class="overlay" id="overlay"><div class="card"><div class="emoji" id="resultEmoji">🛡️</div><h2 id="resultTitle">나노 타워 디펜스</h2><p id="resultText">경로 주변에 포탑을 설치하고 업그레이드해 여섯 차례 적의 공격을 막으세요.</p><button class="primary" id="startBtn">게임 시작</button></div></div></section><div class="tip">경로 주변에 포탑을 설치하고 업그레이드해 여섯 차례 적의 공격을 막으세요.</div></main><script>
-const $=s=>document.querySelector(s),stage=$('#stage'),overlay=$('#overlay'),startBtn=$('#startBtn');
-const safeGet=(k,d=0)=>{try{return Number(localStorage.getItem(k))||d}catch(e){return d}},safeSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
-function showResult(icon,title,text,button='다시 하기'){ $('#resultEmoji').textContent=icon;$('#resultTitle').textContent=title;$('#resultText').innerHTML=text;startBtn.textContent=button;overlay.classList.remove('hide') }
-const C=$('#canvas'),X=C.getContext('2d'),waveBtn=$('#waveBtn'),tdMsg=$('#tdMsg'),hud=$('#hud');let W,H,D=1,running=false,waveActive=false,last=0,wave=0,money=120,hp=10,enemies=[],towers=[],bullets=[],spawnLeft=0,spawnTimer=0,raf;hud.innerHTML='<div class="stat"><small>에너지</small><b id="money">120</b></div><div class="stat"><small>기지</small><b id="hp">10</b></div><div class="stat"><small>웨이브</small><b id="wave">0</b></div>';const slots=[[.2,.23],[.42,.25],[.67,.23],[.78,.48],[.57,.62],[.33,.62],[.18,.78],[.7,.82]];
-function resize(){const r=stage.getBoundingClientRect();D=Math.min(2,devicePixelRatio||1);W=r.width;H=r.height;C.width=W*D;C.height=H*D;X.setTransform(D,0,0,D,0,0);draw()}const path=()=>[[0,H*.42],[W*.28,H*.42],[W*.28,H*.72],[W*.73,H*.72],[W*.73,H*.38],[W,H*.38]];
-function startGame(){running=true;waveActive=false;wave=0;money=120;hp=10;enemies=[];towers=[];bullets=[];updateHud();overlay.classList.add('hide');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}function updateHud(){$('#money').textContent=money;$('#hp').textContent=hp;$('#wave').textContent=wave}
-function startWave(){if(!running||waveActive)return;wave++;waveActive=true;spawnLeft=6+wave*2;spawnTimer=0;waveBtn.disabled=true;tdMsg.textContent=`웨이브 ${wave}: 적 ${spawnLeft}기 접근 중`;updateHud()}
-function spawnEnemy(){enemies.push({x:0,y:H*.42,path:1,hp:25+wave*10,max:25+wave*10,speed:42+wave*3,r:13})}
-function update(dt){if(waveActive&&spawnLeft>0){spawnTimer-=dt;if(spawnTimer<=0){spawnTimer=Math.max(.32,.8-wave*.03);spawnLeft--;spawnEnemy()}}const pts=path();for(const e of enemies){const t=pts[e.path],dx=t[0]-e.x,dy=t[1]-e.y,dist=Math.hypot(dx,dy);if(dist<3){e.path++;if(e.path>=pts.length){e.dead=true;hp--;updateHud();if(hp<=0)return end(false)}}else{e.x+=dx/dist*e.speed*dt;e.y+=dy/dist*e.speed*dt}}for(const t of towers){t.cool-=dt;const target=enemies.filter(e=>!e.dead&&Math.hypot(e.x-t.x,e.y-t.y)<125).sort((a,b)=>b.path-a.path)[0];if(target&&t.cool<=0){t.cool=.55;bullets.push({x:t.x,y:t.y,target,speed:360})}}for(const b of bullets){if(b.target.dead){b.dead=true;continue}const dx=b.target.x-b.x,dy=b.target.y-b.y,dist=Math.hypot(dx,dy);if(dist<10){b.dead=true;b.target.hp-=14;if(b.target.hp<=0){b.target.dead=true;money+=12;updateHud()}}else{b.x+=dx/dist*b.speed*dt;b.y+=dy/dist*b.speed*dt}}enemies=enemies.filter(e=>!e.dead);bullets=bullets.filter(b=>!b.dead);if(waveActive&&spawnLeft===0&&!enemies.length){waveActive=false;waveBtn.disabled=false;money+=35;updateHud();tdMsg.textContent=wave>=6?'모든 웨이브 방어 성공!':'다음 웨이브 전 포탑을 보강하세요.';if(wave>=6)end(true)}}
-function place(x,y){if(!running)return;let bestI=-1,bestD=40;slots.forEach((s,i)=>{const d=Math.hypot(x-s[0]*W,y-s[1]*H);if(d<bestD){bestD=d;bestI=i}});if(bestI<0)return;const existing=towers.find(t=>t.slot===bestI);if(existing){if(money>=35){money-=35;existing.level++;existing.cool=Math.max(.2,existing.cool-.06);tdMsg.textContent=`포탑 ${existing.level}레벨 업그레이드`}else tdMsg.textContent='업그레이드 에너지가 부족합니다.'}else if(money>=45){money-=45;const s=slots[bestI];towers.push({slot:bestI,x:s[0]*W,y:s[1]*H,cool:0,level:1});tdMsg.textContent='나노 포탑을 설치했습니다.'}else tdMsg.textContent='설치 에너지가 부족합니다.';updateHud()}
-function draw(){X.clearRect(0,0,W,H);X.fillStyle='#061b25';X.fillRect(0,0,W,H);const pts=path();X.strokeStyle='#334155';X.lineWidth=32;X.lineCap='round';X.lineJoin='round';X.beginPath();X.moveTo(...pts[0]);pts.slice(1).forEach(p=>X.lineTo(...p));X.stroke();X.strokeStyle='#64748b';X.lineWidth=3;X.setLineDash([10,12]);X.stroke();X.setLineDash([]);slots.forEach((s,i)=>{X.strokeStyle=towers.some(t=>t.slot===i)?'#22d3ee':'#ffffff55';X.lineWidth=3;X.beginPath();X.arc(s[0]*W,s[1]*H,22,0,7);X.stroke()});for(const t of towers){X.fillStyle='#22d3ee';X.shadowColor='#22d3ee';X.shadowBlur=12;X.beginPath();X.arc(t.x,t.y,15+t.level,0,7);X.fill();X.shadowBlur=0;X.fillStyle='#083344';X.fillText(t.level,t.x-3,t.y+4)}for(const e of enemies){X.fillStyle='#fb7185';X.beginPath();X.arc(e.x,e.y,e.r,0,7);X.fill();X.fillStyle='#111827';X.fillRect(e.x-16,e.y-21,32,4);X.fillStyle='#4ade80';X.fillRect(e.x-16,e.y-21,32*e.hp/e.max,4)}for(const b of bullets){X.fillStyle='#fde047';X.beginPath();X.arc(b.x,b.y,4,0,7);X.fill()}X.font='25px sans-serif';X.fillText('🏠',W-35,H*.38+9)}function loop(t){if(!running)return;const dt=Math.min(.035,(t-last)/1000);last=t;update(dt);draw();raf=requestAnimationFrame(loop)}function end(win){running=false;waveActive=false;cancelAnimationFrame(raf);showResult(win?'🏆':'💥',win?'기지 방어 성공!':'기지가 파괴됐어요',win?'6개의 웨이브를 모두 막았습니다. 설치 위치와 업그레이드 타이밍이 훌륭해요.':`웨이브 ${wave}에서 방어선이 무너졌습니다. 길이 꺾이는 곳에 포탑을 집중해 보세요.`)}C.onclick=e=>{const r=C.getBoundingClientRect();place(e.clientX-r.left,e.clientY-r.top)};waveBtn.onclick=startWave;startBtn.onclick=startGame;addEventListener('resize',resize);resize();
-</script></body></html>
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no">
+<title>🛡️ 나노 타워 디펜스</title>
+
+<style>
+:root{
+  --c1:#0e7490;
+  --c2:#67e8f9
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+
+body{
+  margin:0;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  color:#f8fafc;
+  font-family:system-ui,"Noto Sans KR",sans-serif;
+  background:
+    radial-gradient(circle at 18% 10%,var(--c1),#11162e 52%,#030712);
+  user-select:none;
+  -webkit-user-select:none
+}
+
+.app{
+  width:min(95vw,720px);
+  height:min(95vh,860px);
+  display:flex;
+  flex-direction:column;
+  gap:11px
+}
+
+.top{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:10px;
+  padding:2px 4px
+}
+
+.brand small{
+  display:block;
+  color:#cbd5e1;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.2em
+}
+
+.brand h1{
+  margin:2px 0 0;
+  font-size:clamp(25px,5vw,38px);
+  letter-spacing:-.05em
+}
+
+.hud{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  justify-content:flex-end
+}
+
+.stat{
+  min-width:67px;
+  padding:7px 10px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:14px;
+  background:#0f172ac7
+}
+
+.stat small{
+  display:block;
+  color:#cbd5e1;
+  font-size:9px
+}
+
+.stat b{
+  font-size:19px
+}
+
+.stage{
+  position:relative;
+  flex:1;
+  min-height:400px;
+  overflow:hidden;
+  border:1px solid #ffffff27;
+  border-radius:25px;
+  background:linear-gradient(145deg,#14203b,#090e21);
+  box-shadow:0 25px 70px #0009;
+  touch-action:manipulation
+}
+
+.stage.shake{
+  animation:shake .22s
+}
+
+@keyframes shake{
+  25%{transform:translateX(-5px)}
+  50%{transform:translateX(5px)}
+  75%{transform:translateX(-3px)}
+}
+
+#canvas{
+  display:block;
+  width:100%;
+  height:100%;
+  background:#061b25
+}
+
+.timer-wrap{
+  position:absolute;
+  top:10px;
+  left:12px;
+  right:12px;
+  z-index:4;
+  height:8px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#ffffff18
+}
+
+.timer-bar{
+  width:100%;
+  height:100%;
+  background:linear-gradient(90deg,#22c55e,#facc15,#ef4444)
+}
+
+.td-panel{
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:9px;
+  border:1px solid #ffffff24;
+  border-radius:13px;
+  background:#071827e8
+}
+
+.td-panel span{
+  flex:1;
+  font-size:12px;
+  color:#cffafe
+}
+
+.td-panel button{
+  min-height:45px;
+  padding:9px 12px;
+  border:0;
+  border-radius:10px;
+  color:#083344;
+  background:#22d3ee;
+  font-weight:900;
+  cursor:pointer
+}
+
+.toast{
+  position:absolute;
+  left:50%;
+  top:22%;
+  z-index:12;
+  transform:translate(-50%,-50%);
+  padding:9px 16px;
+  border:1px solid #ffffff33;
+  border-radius:999px;
+  background:#0f172ae8;
+  font-weight:900;
+  opacity:0;
+  transition:.2s;
+  pointer-events:none;
+  white-space:nowrap
+}
+
+.toast.show{
+  opacity:1;
+  top:18%
+}
+
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:20;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:#050916e9
+}
+
+.overlay.hide{
+  display:none
+}
+
+.card{
+  width:min(100%,410px);
+  padding:28px 24px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:23px;
+  background:#111a36ee;
+  box-shadow:0 20px 55px #0008
+}
+
+.card .emoji{
+  font-size:55px
+}
+
+.card h2{
+  margin:8px;
+  font-size:28px
+}
+
+.card p{
+  margin:0 0 19px;
+  color:#cbd5e1;
+  font-size:14px;
+  line-height:1.72;
+  word-break:keep-all
+}
+
+.primary{
+  min-height:48px;
+  width:100%;
+  padding:12px 18px;
+  border:0;
+  border-radius:13px;
+  color:#08111f;
+  background:
+    linear-gradient(135deg,var(--c2),#fef3c7);
+  font:900 15px system-ui;
+  cursor:pointer
+}
+
+.tip{
+  min-height:18px;
+  text-align:center;
+  color:#aebbd0;
+  font-size:12px
+}
+
+button{
+  font-family:inherit
+}
+
+@media(max-width:520px){
+
+  .app{
+    width:100%;
+    height:100%;
+    padding:9px
+  }
+
+  .stage{
+    min-height:0;
+    border-radius:20px
+  }
+
+  .brand h1{
+    font-size:25px
+  }
+
+  .stat{
+    min-width:58px;
+    padding:6px 7px
+  }
+
+  .card{
+    padding:24px 19px
+  }
+
+  .tip{
+    font-size:11px
+  }
+
+  .td-panel{
+    flex-wrap:wrap
+  }
+
+  .td-panel span{
+    width:100%;
+    flex:none;
+    text-align:center
+  }
+}
+</style>
+</head>
+
+<body>
+
+<main class="app">
+
+<header class="top">
+
+<div class="brand">
+  <small>NANO DEFENSE</small>
+  <h1>🛡️ 나노 타워 디펜스</h1>
+</div>
+
+<div class="hud">
+
+  <div class="stat">
+    <small>시간</small>
+    <b id="time">60</b>
+  </div>
+
+  <div class="stat">
+    <small>에너지</small>
+    <b id="money">120</b>
+  </div>
+
+  <div class="stat">
+    <small>점수</small>
+    <b id="score">500</b>
+  </div>
+
+  <div class="stat">
+    <small>처치</small>
+    <b id="kills">0</b>
+  </div>
+
+</div>
+
+</header>
+
+<section class="stage" id="stage">
+
+<div class="timer-wrap">
+  <div class="timer-bar" id="timerBar"></div>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<div class="toast" id="toast">
+  적 처치 +20
+</div>
+
+<div class="td-panel">
+
+  <button id="boostBtn">
+    ⚡ 긴급충전
+  </button>
+
+  <span id="tdMsg">
+    빈 원을 눌러 포탑을 설치하세요.
+  </span>
+
+</div>
+
+<div class="overlay" id="overlay">
+
+<div class="card">
+
+  <div class="emoji" id="resultEmoji">
+    🛡️
+  </div>
+
+  <h2 id="resultTitle">
+    나노 타워 디펜스
+  </h2>
+
+  <p id="resultText">
+    60초 동안 계속 몰려오는 적을 막으세요.<br><br>
+    빈 원을 누르면 포탑 설치,<br>
+    설치된 포탑을 다시 누르면 업그레이드합니다.<br><br>
+    적 처치 시 점수가 올라가고<br>
+    적이 기지에 도착하면 점수가 크게 감소합니다.<br>
+    <b>점수가 0이 되면 즉시 게임 오버!</b>
+  </p>
+
+  <button class="primary" id="startBtn">
+    60초 방어 시작
+  </button>
+
+</div>
+
+</div>
+
+</section>
+
+<div class="tip">
+60초 연속 방어 · 적 처치 +20 · 기지 침투 -80 · 점수 0이면 종료
+</div>
+
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+
+const stage=$('#stage');
+const overlay=$('#overlay');
+const startBtn=$('#startBtn');
+
+const C=$('#canvas');
+const X=C.getContext('2d');
+
+const tdMsg=$('#tdMsg');
+
+const moneyEl=$('#money');
+const scoreEl=$('#score');
+const timeEl=$('#time');
+const killsEl=$('#kills');
+const timerBar=$('#timerBar');
+
+let W=1;
+let H=1;
+let D=1;
+
+let running=false;
+let last=0;
+let startTime=0;
+let raf=0;
+
+let duration=60;
+let remaining=60;
+
+let money=120;
+let score=500;
+let kills=0;
+
+let enemies=[];
+let towers=[];
+let bullets=[];
+
+let spawnTimer=0;
+
+const slots=[
+  [.20,.23],
+  [.42,.25],
+  [.67,.23],
+  [.78,.48],
+  [.57,.62],
+  [.33,.62],
+  [.18,.78],
+  [.70,.82]
+];
+
+function resize(){
+
+  const r=stage.getBoundingClientRect();
+
+  D=Math.min(
+    2,
+    devicePixelRatio||1
+  );
+
+  W=r.width;
+  H=r.height;
+
+  C.width=W*D;
+  C.height=H*D;
+
+  X.setTransform(
+    D,0,0,D,0,0
+  );
+
+  updateTowerPositions();
+
+  draw();
+}
+
+function path(){
+  return[
+    [0,H*.42],
+    [W*.28,H*.42],
+    [W*.28,H*.72],
+    [W*.73,H*.72],
+    [W*.73,H*.38],
+    [W,H*.38]
+  ];
+}
+
+function updateTowerPositions(){
+
+  for(const t of towers){
+
+    const s=slots[t.slot];
+
+    t.x=s[0]*W;
+    t.y=s[1]*H;
+  }
+}
+
+function showToast(text){
+
+  const toast=$('#toast');
+
+  toast.textContent=text;
+
+  toast.classList.remove('show');
+  void toast.offsetWidth;
+  toast.classList.add('show');
+
+  clearTimeout(showToast.timer);
+
+  showToast.timer=setTimeout(()=>{
+    toast.classList.remove('show');
+  },600);
+}
+
+function shake(){
+
+  stage.classList.remove('shake');
+  void stage.offsetWidth;
+  stage.classList.add('shake');
+}
+
+function startGame(){
+
+  running=true;
+
+  duration=60;
+  remaining=60;
+
+  money=120;
+  score=500;
+  kills=0;
+
+  enemies=[];
+  towers=[];
+  bullets=[];
+
+  spawnTimer=.5;
+
+  startTime=
+    performance.now();
+
+  updateHud();
+
+  tdMsg.textContent=
+    '방어 시작! 포탑을 설치하세요.';
+
+  overlay.classList.add('hide');
+
+  last=
+    performance.now();
+
+  cancelAnimationFrame(raf);
+
+  raf=
+    requestAnimationFrame(loop);
+}
+
+function updateHud(){
+
+  moneyEl.textContent=
+    Math.round(money);
+
+  scoreEl.textContent=
+    Math.max(0,Math.round(score));
+
+  killsEl.textContent=
+    kills;
+
+  timeEl.textContent=
+    Math.ceil(remaining);
+
+  timerBar.style.width=
+    `${Math.max(0,remaining/duration*100)}%`;
+}
+
+function spawnEnemy(){
+
+  const elapsed=
+    duration-remaining;
+
+  const difficulty=
+    1+elapsed/25;
+
+  const maxHp=
+    24+
+    elapsed*1.4;
+
+  const roll=Math.random();
+
+  let enemy;
+
+  if(
+    elapsed>30 &&
+    roll<.15
+  ){
+
+    /*
+      빠른 적
+    */
+
+    enemy={
+      x:0,
+      y:H*.42,
+      path:1,
+      hp:maxHp*.75,
+      max:maxHp*.75,
+      speed:68+difficulty*5,
+      r:10,
+      type:'fast',
+      dead:false
+    };
+
+  }else if(
+    elapsed>40 &&
+    roll>.82
+  ){
+
+    /*
+      중장갑 적
+    */
+
+    enemy={
+      x:0,
+      y:H*.42,
+      path:1,
+      hp:maxHp*2,
+      max:maxHp*2,
+      speed:35+difficulty*2,
+      r:17,
+      type:'tank',
+      dead:false
+    };
+
+  }else{
+
+    enemy={
+      x:0,
+      y:H*.42,
+      path:1,
+      hp:maxHp,
+      max:maxHp,
+      speed:43+difficulty*3,
+      r:13,
+      type:'normal',
+      dead:false
+    };
+  }
+
+  enemies.push(enemy);
+}
+
+function update(dt,now){
+
+  const elapsed=
+    (now-startTime)/1000;
+
+  remaining=
+    Math.max(
+      0,
+      duration-elapsed
+    );
+
+  if(remaining<=0){
+
+    endGame('time');
+    return;
+  }
+
+  /*
+    적 자동 생성
+  */
+
+  spawnTimer-=dt;
+
+  if(spawnTimer<=0){
+
+    spawnEnemy();
+
+    const elapsed=
+      duration-remaining;
+
+    spawnTimer=
+      Math.max(
+        .25,
+        .85-elapsed*.008
+      );
+  }
+
+  const pts=path();
+
+  /*
+    적 이동
+  */
+
+  for(const e of enemies){
+
+    if(e.dead)continue;
+
+    const target=
+      pts[e.path];
+
+    if(!target)continue;
+
+    const dx=
+      target[0]-e.x;
+
+    const dy=
+      target[1]-e.y;
+
+    const dist=
+      Math.hypot(dx,dy);
+
+    if(dist<3){
+
+      e.path++;
+
+      if(e.path>=pts.length){
+
+        e.dead=true;
+
+        score=
+          Math.max(
+            0,
+            score-80
+          );
+
+        showToast('🏠 기지 침투 -80');
+
+        tdMsg.textContent=
+          '적이 기지에 침투했습니다!';
+
+        shake();
+
+        updateHud();
+
+        if(score<=0){
+
+          endGame('score');
+          return;
+        }
+      }
+
+    }else{
+
+      e.x+=
+        dx/dist*
+        e.speed*
+        dt;
+
+      e.y+=
+        dy/dist*
+        e.speed*
+        dt;
+    }
+  }
+
+  /*
+    포탑 공격
+  */
+
+  for(const t of towers){
+
+    t.cool-=dt;
+
+    const range=
+      120+
+      t.level*10;
+
+    const target=
+      enemies
+      .filter(e=>
+        !e.dead &&
+        Math.hypot(
+          e.x-t.x,
+          e.y-t.y
+        )<range
+      )
+      .sort((a,b)=>
+        b.path-a.path
+      )[0];
+
+    if(
+      target &&
+      t.cool<=0
+    ){
+
+      const fireRate=
+        Math.max(
+          .18,
+          .62-t.level*.08
+        );
+
+      t.cool=fireRate;
+
+      bullets.push({
+        x:t.x,
+        y:t.y,
+        target,
+        speed:370,
+        damage:
+          12+
+          t.level*6,
+        dead:false
+      });
+    }
+  }
+
+  /*
+    탄환 이동
+  */
+
+  for(const b of bullets){
+
+    if(
+      b.dead ||
+      !b.target ||
+      b.target.dead
+    ){
+      b.dead=true;
+      continue;
+    }
+
+    const dx=
+      b.target.x-b.x;
+
+    const dy=
+      b.target.y-b.y;
+
+    const dist=
+      Math.hypot(dx,dy);
+
+    if(dist<10){
+
+      b.dead=true;
+
+      b.target.hp-=
+        b.damage;
+
+      if(b.target.hp<=0){
+
+        b.target.dead=true;
+
+        kills++;
+
+        let reward=20;
+
+        if(b.target.type==='tank'){
+          reward=35;
+        }
+
+        if(b.target.type==='fast'){
+          reward=25;
+        }
+
+        score+=reward;
+        money+=10;
+
+        showToast(
+          `💥 처치 +${reward}`
+        );
+
+        updateHud();
+      }
+
+    }else{
+
+      b.x+=
+        dx/dist*
+        b.speed*
+        dt;
+
+      b.y+=
+        dy/dist*
+        b.speed*
+        dt;
+    }
+  }
+
+  enemies=
+    enemies.filter(e=>!e.dead);
+
+  bullets=
+    bullets.filter(b=>!b.dead);
+
+  /*
+    자동 에너지 충전
+  */
+
+  money+=dt*2;
+
+  updateHud();
+}
+
+function place(x,y){
+
+  if(!running)return;
+
+  let bestI=-1;
+  let bestD=40;
+
+  slots.forEach((s,i)=>{
+
+    const sx=s[0]*W;
+    const sy=s[1]*H;
+
+    const d=
+      Math.hypot(
+        x-sx,
+        y-sy
+      );
+
+    if(d<bestD){
+      bestD=d;
+      bestI=i;
+    }
+  });
+
+  if(bestI<0)return;
+
+  const existing=
+    towers.find(
+      t=>t.slot===bestI
+    );
+
+  /*
+    업그레이드
+  */
+
+  if(existing){
+
+    const upgradeCost=
+      30+
+      existing.level*15;
+
+    if(existing.level>=5){
+
+      tdMsg.textContent=
+        '포탑은 이미 최고 레벨입니다.';
+
+      showToast('MAX LEVEL');
+
+      return;
+    }
+
+    if(money>=upgradeCost){
+
+      money-=upgradeCost;
+
+      existing.level++;
+
+      tdMsg.textContent=
+        `포탑 LEVEL ${existing.level} 업그레이드!`;
+
+      showToast(
+        `⬆️ LEVEL ${existing.level}`
+      );
+
+    }else{
+
+      tdMsg.textContent=
+        `업그레이드 에너지 ${upgradeCost} 필요`;
+    }
+
+  }else{
+
+    /*
+      신규 설치
+    */
+
+    if(money>=45){
+
+      money-=45;
+
+      const s=
+        slots[bestI];
+
+      towers.push({
+        slot:bestI,
+        x:s[0]*W,
+        y:s[1]*H,
+        cool:0,
+        level:1
+      });
+
+      tdMsg.textContent=
+        '나노 포탑을 설치했습니다.';
+
+      showToast('🛡️ 포탑 설치');
+
+    }else{
+
+      tdMsg.textContent=
+        '설치 에너지가 부족합니다.';
+    }
+  }
+
+  updateHud();
+}
+
+function boost(){
+
+  if(!running)return;
+
+  /*
+    점수를 일부 사용해 에너지 획득
+  */
+
+  if(score<=100){
+
+    tdMsg.textContent=
+      '점수가 너무 낮아 긴급충전을 사용할 수 없습니다.';
+
+    return;
+  }
+
+  score-=50;
+  money+=60;
+
+  showToast(
+    '⚡ 에너지 +60 / 점수 -50'
+  );
+
+  tdMsg.textContent=
+    '점수를 사용해 긴급 에너지를 충전했습니다.';
+
+  updateHud();
+
+  if(score<=0){
+    endGame('score');
+  }
+}
+
+function draw(){
+
+  X.clearRect(
+    0,0,W,H
+  );
+
+  /*
+    배경
+  */
+
+  X.fillStyle='#061b25';
+  X.fillRect(0,0,W,H);
+
+  /*
+    경로
+  */
+
+  const pts=path();
+
+  X.strokeStyle='#334155';
+  X.lineWidth=32;
+  X.lineCap='round';
+  X.lineJoin='round';
+
+  X.beginPath();
+  X.moveTo(...pts[0]);
+
+  pts
+    .slice(1)
+    .forEach(p=>
+      X.lineTo(...p)
+    );
+
+  X.stroke();
+
+  X.strokeStyle='#64748b';
+  X.lineWidth=3;
+  X.setLineDash([10,12]);
+
+  X.stroke();
+
+  X.setLineDash([]);
+
+  /*
+    설치 슬롯
+  */
+
+  slots.forEach((s,i)=>{
+
+    const used=
+      towers.some(
+        t=>t.slot===i
+      );
+
+    X.strokeStyle=
+      used
+        ?'#22d3ee'
+        :'#ffffff55';
+
+    X.lineWidth=3;
+
+    X.beginPath();
+
+    X.arc(
+      s[0]*W,
+      s[1]*H,
+      22,
+      0,
+      Math.PI*2
+    );
+
+    X.stroke();
+  });
+
+  /*
+    포탑
+  */
+
+  for(const t of towers){
+
+    X.fillStyle='#22d3ee';
+
+    X.shadowColor='#22d3ee';
+    X.shadowBlur=12;
+
+    X.beginPath();
+
+    X.arc(
+      t.x,
+      t.y,
+      14+t.level,
+      0,
+      Math.PI*2
+    );
+
+    X.fill();
+
+    X.shadowBlur=0;
+
+    X.fillStyle='#083344';
+
+    X.font='bold 11px sans-serif';
+    X.textAlign='center';
+
+    X.fillText(
+      t.level,
+      t.x,
+      t.y+4
+    );
+  }
+
+  /*
+    적
+  */
+
+  for(const e of enemies){
+
+    if(e.type==='tank'){
+      X.fillStyle='#a855f7';
+    }
+    else if(e.type==='fast'){
+      X.fillStyle='#facc15';
+    }
+    else{
+      X.fillStyle='#fb7185';
+    }
+
+    X.beginPath();
+
+    X.arc(
+      e.x,
+      e.y,
+      e.r,
+      0,
+      Math.PI*2
+    );
+
+    X.fill();
+
+    /*
+      체력바
+    */
+
+    X.fillStyle='#111827';
+
+    X.fillRect(
+      e.x-16,
+      e.y-e.r-10,
+      32,
+      4
+    );
+
+    X.fillStyle='#4ade80';
+
+    X.fillRect(
+      e.x-16,
+      e.y-e.r-10,
+      32*
+      Math.max(0,e.hp/e.max),
+      4
+    );
+  }
+
+  /*
+    총알
+  */
+
+  for(const b of bullets){
+
+    X.fillStyle='#fde047';
+
+    X.shadowColor='#fde047';
+    X.shadowBlur=8;
+
+    X.beginPath();
+
+    X.arc(
+      b.x,
+      b.y,
+      4,
+      0,
+      Math.PI*2
+    );
+
+    X.fill();
+
+    X.shadowBlur=0;
+  }
+
+  /*
+    기지
+  */
+
+  X.font='28px sans-serif';
+  X.textAlign='center';
+
+  X.fillText(
+    '🏠',
+    W-27,
+    H*.38+10
+  );
+}
+
+function loop(t){
+
+  if(!running)return;
+
+  const dt=
+    Math.min(
+      .035,
+      (t-last)/1000
+    );
+
+  last=t;
+
+  update(dt,t);
+
+  draw();
+
+  if(running){
+    raf=
+      requestAnimationFrame(loop);
+  }
+}
+
+function endGame(reason){
+
+  if(!running)return;
+
+  running=false;
+
+  cancelAnimationFrame(raf);
+
+  const success=
+    reason==='time';
+
+  let rank='C';
+
+  if(kills>=20){
+    rank='B';
+  }
+
+  if(kills>=30){
+    rank='A';
+  }
+
+  if(kills>=40){
+    rank='S';
+  }
+
+  $('#resultEmoji').textContent=
+    success
+      ?'🏆'
+      :'💥';
+
+  $('#resultTitle').textContent=
+    success
+      ?'60초 방어 성공!'
+      :'방어선 붕괴!';
+
+  $('#resultText').innerHTML=
+    `<b style="font-size:29px;color:#fde047">RANK ${rank}</b><br><br>`+
+    (
+      success
+        ?'60초 동안 기지를 지켜냈습니다!'
+        :'점수가 0이 되어 방어 작전이 종료되었습니다.'
+    )+
+    `<br><br>`+
+    `적 처치 <b>${kills}</b>기<br>`+
+    `최종 점수 <b>${Math.max(0,Math.round(score))}</b>점<br>`+
+    `남은 에너지 <b>${Math.round(money)}</b><br>`+
+    `설치 포탑 <b>${towers.length}</b>개`;
+
+  startBtn.textContent=
+    '60초 다시 방어';
+
+  startBtn.onclick=startGame;
+
+  overlay.classList.remove('hide');
+}
+
+C.addEventListener(
+  'pointerdown',
+  e=>{
+
+    const r=
+      C.getBoundingClientRect();
+
+    place(
+      e.clientX-r.left,
+      e.clientY-r.top
+    );
+  }
+);
+
+$('#boostBtn').onclick=
+  boost;
+
+startBtn.onclick=
+  startGame;
+
+addEventListener(
+  'resize',
+  resize
+);
+
+resize();
+</script>
+
+</body>
+</html>
