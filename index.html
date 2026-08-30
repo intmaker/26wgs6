@@ -313,6 +313,8 @@ main {
 .genre-skill { --genre-color:#f59e0b; }
 .genre-casual { --genre-color:#13a88b; }
 .genre-coding { --genre-color:#7c3aed; }
+.genre-math { --genre-color:#f97316; }
+.genre-english { --genre-color:#2563eb; }
 .back-to-genres { min-height:44px; display:flex; align-items:center; justify-content:center; width:max-content; margin:24px 0 0 auto; padding:10px 15px; border-radius:12px; color:#6548df; background:white; box-shadow:0 5px 16px rgba(39,44,80,.08); font-size:13px; font-weight:800; text-decoration:none; }
 
 
@@ -655,6 +657,18 @@ main {
 .game65 .game-icon { background: linear-gradient(135deg, #4776e6, #8e54e9); }
 .game66 .game-icon { background: linear-gradient(135deg, #00c6ff, #7f00ff); }
 .game67 .game-icon { background: linear-gradient(135deg, #45f3ff, #735cff, #ff5ca8); }
+.game68 .game-icon { background: linear-gradient(135deg, #38bdf8, #facc15, #fb7185); }
+.game69 .game-icon { background: linear-gradient(135deg, #312e81, #38bdf8, #fbbf24); }
+.game70 .game-icon { background: linear-gradient(135deg, #f9a8d4, #fbbf24); }
+.game71 .game-icon { background: linear-gradient(135deg, #65a30d, #fde047); }
+.game72 .game-icon { background: linear-gradient(135deg, #60a5fa, #facc15); }
+.game73 .game-icon { background: linear-gradient(135deg, #fb923c, #f43f5e); }
+.game74 .game-icon { background: linear-gradient(135deg, #38bdf8, #facc15, #f472b6); }
+.game75 .game-icon { background: linear-gradient(135deg, #a78bfa, #f9a8d4); }
+.game76 .game-icon { background: linear-gradient(135deg, #60a5fa, #facc15); }
+.game77 .game-icon { background: linear-gradient(135deg, #fde047, #4ade80); }
+.game78 .game-icon { background: linear-gradient(135deg, #8b5cf6, #38bdf8); }
+.game79 .game-icon { background: linear-gradient(135deg, #60a5fa, #86efac); }
 
 /* ========================================
    게임 정보
@@ -1067,6 +1081,8 @@ footer strong {
     <nav class="genre-nav" id="genres" aria-label="게임 장르 바로가기">
         <a href="#strategy">♟ 전략 · 보드</a>
         <a href="#coding">💻 코딩 · 로봇</a>
+        <a href="#math">🧮 수학 놀이터</a>
+        <a href="#english">🔤 영어 놀이터</a>
         <a href="#puzzle">🧩 퍼즐</a>
         <a href="#skill">🎯 반응</a>
         <a href="#casual">🎨 창의</a>
@@ -1090,7 +1106,7 @@ footer strong {
         </h2>
 
         <span class="game-count" id="gameCount">
-            67 GAMES
+            79 GAMES
         </span>
 
     </div>
@@ -1971,6 +1987,18 @@ footer strong {
         <article class="game-card game65" data-link="65_버그헌터연구소.html"><div class="game-icon"><div class="icon">🐞</div></div><div class="game-info"><h3 class="game-title">🐞 버그 헌터 연구소</h3><p class="game-description">실행 결과를 관찰해 잘못된 명령을 고치세요!</p><button class="play-button">▶ PLAY</button></div></article>
         <article class="game-card game66" data-link="66_별빛로봇공방.html"><div class="game-icon"><div class="icon">🤖</div></div><div class="game-info"><h3 class="game-title">🤖 별빛 로봇 공방</h3><p class="game-description">회전과 이동 코드를 조립해 별을 모두 모으세요!</p><button class="play-button">▶ PLAY</button></div></article>
         <article class="game-card game67" data-link="67_네온궤도비트.html"><div class="game-icon"><div class="icon">✨</div></div><div class="game-info"><h3 class="game-title">✨ 네온 궤도 비트</h3><p class="game-description">회전하는 두 구체를 박자에 맞춰 네온 길로 보내세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game68" data-link="math/01_숫자풍선.html"><div class="game-icon"><div class="icon">🔢</div></div><div class="game-info"><h3 class="game-title">🔢 숫자 풍선 터뜨리기</h3><p class="game-description">움직이는 풍선에서 같은 숫자를 찾아 톡 터뜨려요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game69" data-link="math/02_더하기로켓.html"><div class="game-icon"><div class="icon">🚀</div></div><div class="game-info"><h3 class="game-title">➕ 더하기 로켓</h3><p class="game-description">더하기 문제를 풀어 로켓을 별나라로 보내요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game70" data-link="math/03_몬스터빼기.html"><div class="game-icon"><div class="icon">👾</div></div><div class="game-info"><h3 class="game-title">➖ 몬스터 빼기</h3><p class="game-description">몬스터가 먹고 남긴 간식의 수를 계산해요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game71" data-link="math/04_곱셈두더지.html"><div class="game-icon"><div class="icon">🐹</div></div><div class="game-info"><h3 class="game-title">✖️ 곱셈 두더지</h3><p class="game-description">곱셈 정답을 든 귀여운 두더지를 찾아요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game72" data-link="math/05_숫자기차.html"><div class="game-icon"><div class="icon">🚂</div></div><div class="game-info"><h3 class="game-title">🚂 숫자 기차</h3><p class="game-description">숫자 순서를 살펴보고 빈 기차 칸을 채워요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game73" data-link="math/06_수학과일가게.html"><div class="game-icon"><div class="icon">🍎</div></div><div class="game-info"><h3 class="game-title">🍎 수학 과일가게</h3><p class="game-description">과일을 사고팔며 더하기와 빼기를 연습해요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game74" data-link="eng/01_alphabet_balloon.html"><div class="game-icon"><div class="icon">🎈</div></div><div class="game-info"><h3 class="game-title">🎈 알파벳 풍선</h3><p class="game-description">알파벳 풍선을 찾아 터뜨려요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game75" data-link="eng/02_upper_lower_match.html"><div class="game-icon"><div class="icon">🔠</div></div><div class="game-info"><h3 class="game-title">🔠 대소문자 짝맞추기</h3><p class="game-description">대문자와 소문자의 짝을 찾아요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game76" data-link="eng/03_alphabet_train.html"><div class="game-icon"><div class="icon">🚂</div></div><div class="game-info"><h3 class="game-title">🚂 알파벳 기차</h3><p class="game-description">빠진 알파벳을 찾아 기차를 출발시켜요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game77" data-link="eng/04_phonics_first_sound.html"><div class="game-icon"><div class="icon">🐝</div></div><div class="game-info"><h3 class="game-title">🐝 파닉스 첫소리</h3><p class="game-description">단어의 첫소리를 찾아봐요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game78" data-link="eng/05_phonics_sound_match.html"><div class="game-icon"><div class="icon">🎯</div></div><div class="game-info"><h3 class="game-title">🎯 같은 소리 찾기</h3><p class="game-description">같은 첫소리의 단어를 찾아요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game79" data-link="eng/06_word_house.html"><div class="game-icon"><div class="icon">🏠</div></div><div class="game-info"><h3 class="game-title">🏠 영어 단어 집</h3><p class="game-description">영어 단어에 맞는 그림을 찾아요!</p><button class="play-button">▶ PLAY</button></div></article>
 
 
     </div>
@@ -1984,6 +2012,16 @@ footer strong {
         <section class="genre-section genre-coding" id="coding">
             <div class="genre-heading"><div><h2>💻 코딩 · 로봇</h2><p>명령하고, 생각하고, 직접 실행하며 배우는 코딩 게임</p></div><span class="genre-total">0개 게임</span></div>
             <div class="game-grid" data-genre-grid="coding"></div>
+            <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
+        </section>
+        <section class="genre-section genre-math" id="math">
+            <div class="genre-heading"><div><h2>🧮 수학 놀이터</h2><p>숫자를 찾고 계산하며 신나게 배우는 수학 게임</p></div><span class="genre-total">0개 게임</span></div>
+            <div class="game-grid" data-genre-grid="math"></div>
+            <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
+        </section>
+        <section class="genre-section genre-english" id="english">
+            <div class="genre-heading"><div><h2>🔤 영어 놀이터</h2><p>알파벳과 쉬운 단어를 놀이로 익히는 영어 게임</p></div><span class="genre-total">0개 게임</span></div>
+            <div class="game-grid" data-genre-grid="english"></div>
             <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
         </section>
         <section class="genre-section genre-puzzle" id="puzzle">
@@ -2095,7 +2133,9 @@ const genreGames = {
     strategy: [0,16,22,47,48,51,54,58,60],
     skill:    [1,4,6,13,15,17,21,23,25,26,29,31,32,38,67],
     casual:   [5,8,11,14,19,30,44,46,49,57,59],
-    coding:   [53,62,63,64,65,66]
+    coding:   [53,62,63,64,65,66],
+    math:     [68,69,70,71,72,73],
+    english:  [74,75,76,77,78,79]
 };
 
 const sourceCards = Array.from(document.querySelectorAll("#gameSource .game-card"));
