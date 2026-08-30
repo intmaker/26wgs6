@@ -1,9 +1,2055 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>🏹 바람의 궁수</title><style>
-*{box-sizing:border-box}html,body{height:100%}body{margin:0;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 20% 10%,#b45309,#3f2714 48%,#16110a);color:#fff;font-family:system-ui,"Noto Sans KR",sans-serif;user-select:none}.app{width:min(94vw,700px);height:min(95vh,840px);display:flex;flex-direction:column;gap:11px}.top{display:flex;justify-content:space-between;align-items:end}.tag{font-size:10px;letter-spacing:.2em;color:#fde68a;font-weight:900}h1{margin:2px 0;font-size:clamp(26px,5vw,38px)}.stats{display:flex;gap:7px}.stat{min-width:70px;padding:8px;text-align:center;border:1px solid #ffffff24;border-radius:14px;background:#3f2714cc}.stat small{display:block;color:#fde68a;font-size:9px}.stat b{font-size:20px}.game{position:relative;flex:1;min-height:400px;overflow:hidden;border:1px solid #ffffff28;border-radius:25px;background:#bae6fd;box-shadow:0 25px 70px #0009;touch-action:none}canvas{display:block;width:100%;height:100%}.overlay{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding:20px;background:#22180de8}.overlay.hide{display:none}.card{max-width:390px;padding:28px 24px;text-align:center;border:1px solid #ffffff24;border-radius:23px;background:#4b2c17}.ico{font-size:55px}.card h2{margin:8px;font-size:28px}.card p{color:#fef3c7;font-size:14px;line-height:1.7}.card>button{width:100%;padding:14px;border:0;border-radius:13px;background:linear-gradient(135deg,#fde68a,#fb923c);color:#431e0a;font-weight:900;font-size:15px;cursor:pointer}.tip{text-align:center;color:#fde68a;font-size:12px}@media(max-width:520px){.app{width:100%;height:100%;padding:9px}.game{border-radius:20px}}
-</style></head><body><main class="app"><header class="top"><div><div class="tag">WIND ARCHER</div><h1>🏹 바람의 궁수</h1></div><div class="stats"><div class="stat"><small>점수</small><b id="score">0</b></div><div class="stat"><small>남은 화살</small><b id="shots">10</b></div><div class="stat"><small>바람</small><b id="wind">0</b></div></div></header><section class="game" id="game"><canvas id="canvas"></canvas><div class="overlay" id="over"><div class="card"><div class="ico" id="ico">🏹</div><h2 id="title">바람을 읽고 과녁을 맞히세요</h2><p id="desc">마우스나 손가락으로 조준하고 놓으면 발사합니다.<br>화살은 오른쪽으로 날아가는 동안<br>화면 위의 바람 수치만큼 위아래로 휘어집니다.</p><button id="start">화살 10발 시작</button></div></div></section><div class="tip">드래그로 조준 · 손을 놓아 발사 · 바람 방향 계산</div></main><script>
-(()=>{const C=document.querySelector('#canvas'),X=C.getContext('2d'),G=document.querySelector('#game'),O=document.querySelector('#over'),SE=document.querySelector('#score'),SHE=document.querySelector('#shots'),WE=document.querySelector('#wind');let W,H,D=1,on=false,last=0,score=0,shots=10,wind=0,aimY=0,targetY=0,arrow=null,drag=false,marks=[];
-function resize(){const r=G.getBoundingClientRect();D=Math.min(2,devicePixelRatio||1);W=r.width;H=r.height;C.width=W*D;C.height=H*D;X.setTransform(D,0,0,D,0,0);aimY=H/2;targetY=H/2;draw()}function newRound(){wind=Math.round((Math.random()-.5)*12);WE.textContent=(wind>0?'↓':'↑')+Math.abs(wind);targetY=100+Math.random()*(H-200);aimY=H/2}
-function start(){score=0;shots=10;marks=[];arrow=null;SE.textContent=0;SHE.textContent=10;on=true;O.classList.add('hide');newRound();last=performance.now();requestAnimationFrame(loop)}function fire(){if(!on||arrow)return;arrow={x:75,y:aimY,vx:570,vy:0,r:0};shots--;SHE.textContent=shots}
-function update(dt){if(arrow){arrow.vy+=wind*5*dt;arrow.x+=arrow.vx*dt;arrow.y+=arrow.vy*dt;arrow.r=Math.atan2(arrow.vy,arrow.vx);if(arrow.x>=W-100){const dist=Math.abs(arrow.y-targetY),pts=dist<12?10:dist<27?7:dist<48?4:dist<70?1:0;score+=pts;SE.textContent=score;marks.push({y:arrow.y,pts});arrow=null;if(shots<=0)setTimeout(finish,350);else newRound()}}}
-function draw(){X.clearRect(0,0,W,H);let g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,'#7dd3fc');g.addColorStop(.7,'#d9f99d');g.addColorStop(.71,'#4d7c0f');g.addColorStop(1,'#365314');X.fillStyle=g;X.fillRect(0,0,W,H);X.fillStyle='#ffffff70';for(let i=0;i<5;i++){X.beginPath();X.ellipse((i*173)%W,60+i*41,50,16,0,0,7);X.fill()}const tx=W-100;for(const [r,c] of [[70,'#fff'],[55,'#ef4444'],[40,'#fff'],[25,'#ef4444'],[11,'#facc15']]){X.fillStyle=c;X.beginPath();X.arc(tx,targetY,r,0,7);X.fill()}X.fillStyle='#5b3418';X.fillRect(tx-5,targetY+70,10,H);marks.forEach(m=>{X.fillStyle='#111827';X.fillRect(tx-8,m.y-2,38,4)});X.font='50px sans-serif';X.fillText('🏹',25,aimY+18);X.strokeStyle='#11182799';X.setLineDash([6,7]);X.beginPath();X.moveTo(70,aimY);X.lineTo(W-120,aimY);X.stroke();X.setLineDash([]);if(arrow){X.save();X.translate(arrow.x,arrow.y);X.rotate(arrow.r);X.strokeStyle='#422006';X.lineWidth=4;X.beginPath();X.moveTo(-22,0);X.lineTo(22,0);X.stroke();X.fillStyle='#e5e7eb';X.beginPath();X.moveTo(22,0);X.lineTo(12,-6);X.lineTo(12,6);X.fill();X.restore()}}
-function finish(){if(!on)return;on=false;document.querySelector('#ico').textContent=score>=70?'🏆':'🏹';document.querySelector('#title').textContent=`10발 합계 ${score}점!`;document.querySelector('#desc').innerHTML='바람 화살표가 아래면 과녁보다 위를,<br>위라면 과녁보다 아래를 조준해 보세요.';document.querySelector('#start').textContent='다시 쏘기';O.classList.remove('hide')}function loop(t){if(!on)return;const dt=Math.min(.032,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}function pos(e){const r=C.getBoundingClientRect();return Math.max(60,Math.min(H-60,e.clientY-r.top))}C.onpointerdown=e=>{if(on&&!arrow){drag=true;aimY=pos(e);C.setPointerCapture(e.pointerId)}};C.onpointermove=e=>{if(drag)aimY=pos(e)};C.onpointerup=e=>{if(drag){drag=false;aimY=pos(e);fire()}};document.querySelector('#start').onclick=start;addEventListener('resize',resize);resize()})();</script></body></html>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🏹 바람의 궁수 챌린지</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+html,body{
+  height:100%;
+}
+
+body{
+  margin:0;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 20% 10%,#d97706,#573519 43%,#16110a 78%);
+  color:#fff;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+button{
+  font:inherit;
+  touch-action:manipulation;
+}
+
+.app{
+  width:min(96vw,760px);
+  height:min(96vh,880px);
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+  padding:4px;
+}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  gap:10px;
+}
+
+.tag{
+  font-size:10px;
+  letter-spacing:.18em;
+  color:#fde68a;
+  font-weight:900;
+}
+
+h1{
+  margin:2px 0;
+  font-size:clamp(27px,5vw,40px);
+}
+
+.stats{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.stat{
+  min-width:65px;
+  padding:7px 8px;
+  text-align:center;
+  border:1px solid #ffffff24;
+  border-radius:13px;
+  background:#3f2714cc;
+  backdrop-filter:blur(5px);
+}
+
+.stat small{
+  display:block;
+  color:#fde68a;
+  font-size:8px;
+}
+
+.stat b{
+  font-size:18px;
+}
+
+.game{
+  position:relative;
+  flex:1;
+  min-height:410px;
+  overflow:hidden;
+  border:1px solid #ffffff28;
+  border-radius:25px;
+  background:#bae6fd;
+  box-shadow:0 25px 70px #0009;
+  touch-action:none;
+}
+
+canvas{
+  display:block;
+  width:100%;
+  height:100%;
+}
+
+.status{
+  position:absolute;
+  z-index:3;
+  left:50%;
+  top:15px;
+  transform:translateX(-50%);
+  display:flex;
+  gap:6px;
+  max-width:94%;
+  flex-wrap:wrap;
+  justify-content:center;
+  pointer-events:none;
+}
+
+.pill{
+  padding:7px 11px;
+  border-radius:999px;
+  background:#26180bd9;
+  border:1px solid #ffffff25;
+  font-size:11px;
+  font-weight:900;
+  white-space:nowrap;
+  box-shadow:0 5px 16px #0004;
+}
+
+.pill.wind.strong{
+  color:#fde047;
+  animation:pulse .45s ease infinite alternate;
+}
+
+@keyframes pulse{
+  to{transform:scale(1.07)}
+}
+
+.message{
+  position:absolute;
+  z-index:4;
+  left:50%;
+  top:65px;
+  transform:translateX(-50%);
+  min-width:180px;
+  max-width:90%;
+  padding:8px 14px;
+  border-radius:999px;
+  background:#1f150bd9;
+  text-align:center;
+  font-weight:1000;
+  font-size:13px;
+  opacity:0;
+  transition:.2s;
+  pointer-events:none;
+}
+
+.message.show{
+  opacity:1;
+}
+
+.combo{
+  position:absolute;
+  z-index:4;
+  left:50%;
+  top:105px;
+  transform:translateX(-50%);
+  color:#fde047;
+  font-weight:1000;
+  font-size:clamp(18px,4vw,27px);
+  text-shadow:0 3px 7px #000;
+  pointer-events:none;
+}
+
+.power-wrap{
+  position:absolute;
+  z-index:4;
+  left:17px;
+  bottom:15px;
+  width:min(230px,48%);
+  pointer-events:none;
+}
+
+.power-label{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:4px;
+  color:#fff;
+  font-size:10px;
+  font-weight:900;
+  text-shadow:0 2px 4px #000;
+}
+
+.power-track{
+  height:10px;
+  overflow:hidden;
+  border-radius:99px;
+  background:#0008;
+}
+
+.power-fill{
+  height:100%;
+  width:0%;
+  border-radius:99px;
+  background:linear-gradient(90deg,#22c55e,#fde047,#ef4444);
+  transition:width .06s linear;
+}
+
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:10;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  background:#22180dec;
+  backdrop-filter:blur(6px);
+}
+
+.overlay.hide{
+  display:none;
+}
+
+.card{
+  width:min(100%,420px);
+  padding:25px 22px;
+  text-align:center;
+  border:1px solid #ffffff24;
+  border-radius:23px;
+  background:linear-gradient(145deg,#4b2c17,#3b2415);
+  box-shadow:0 20px 60px #0009;
+}
+
+.ico{
+  font-size:58px;
+}
+
+.card h2{
+  margin:7px;
+  font-size:28px;
+}
+
+.card p{
+  color:#fef3c7;
+  font-size:14px;
+  line-height:1.7;
+}
+
+.mode-row{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+  margin:14px 0;
+}
+
+.mode{
+  min-height:46px;
+  border:1px solid #ffffff25;
+  border-radius:11px;
+  background:#ffffff10;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.mode.active{
+  background:#fde68a;
+  color:#431e0a;
+}
+
+.start{
+  width:100%;
+  min-height:50px;
+  padding:13px;
+  border:0;
+  border-radius:13px;
+  background:linear-gradient(135deg,#fde68a,#fb923c);
+  color:#431e0a;
+  font-weight:1000;
+  font-size:15px;
+  cursor:pointer;
+}
+
+.records{
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  flex-wrap:wrap;
+  color:#fde68a;
+  font-size:11px;
+}
+
+.records b{
+  color:#fff;
+}
+
+.tip{
+  text-align:center;
+  color:#fde68a;
+  font-size:12px;
+}
+
+.controls{
+  display:flex;
+  justify-content:center;
+}
+
+.controls button{
+  min-height:42px;
+  padding:7px 14px;
+  border:1px solid #ffffff24;
+  border-radius:11px;
+  background:#3f2714;
+  color:white;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.particle{
+  position:absolute;
+  z-index:8;
+  font-size:23px;
+  pointer-events:none;
+  animation:fly 1s ease forwards;
+}
+
+@keyframes fly{
+  to{
+    transform:translate(var(--x),var(--y)) rotate(420deg);
+    opacity:0;
+  }
+}
+
+@media(max-width:560px){
+  .app{
+    width:100%;
+    height:100%;
+    padding:7px;
+  }
+
+  .game{
+    border-radius:18px;
+  }
+
+  .stat{
+    min-width:57px;
+    padding:5px;
+  }
+
+  .stat b{
+    font-size:16px;
+  }
+
+  .mode-row{
+    grid-template-columns:1fr;
+  }
+
+  .status{
+    top:9px;
+  }
+
+  .message{
+    top:53px;
+    font-size:11px;
+  }
+
+  .combo{
+    top:91px;
+  }
+
+  .tip{
+    font-size:10px;
+  }
+}
+
+@media(max-height:680px){
+  .tip,
+  .records{
+    display:none;
+  }
+
+  .game{
+    min-height:330px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<main class="app">
+
+<header class="top">
+  <div>
+    <div class="tag">WIND ARCHER CHALLENGE</div>
+    <h1>🏹 바람의 궁수</h1>
+  </div>
+
+  <div class="stats">
+
+    <div class="stat">
+      <small>점수</small>
+      <b id="score">0</b>
+    </div>
+
+    <div class="stat">
+      <small>콤보</small>
+      <b id="comboScore">0</b>
+    </div>
+
+    <div class="stat">
+      <small>남은 화살</small>
+      <b id="shots">10</b>
+    </div>
+
+    <div class="stat">
+      <small>최고</small>
+      <b id="best">0</b>
+    </div>
+
+  </div>
+</header>
+
+<section class="game" id="game">
+
+  <canvas id="canvas"></canvas>
+
+  <div class="status">
+    <div class="pill wind" id="windBox">
+      바람 <span id="wind">0</span>
+    </div>
+
+    <div class="pill">
+      과녁 <span id="targetType">일반</span>
+    </div>
+  </div>
+
+  <div class="message" id="message">
+    PERFECT!
+  </div>
+
+  <div class="combo" id="combo"></div>
+
+  <div class="power-wrap">
+    <div class="power-label">
+      <span>활 장력</span>
+      <span id="powerText">0%</span>
+    </div>
+    <div class="power-track">
+      <div class="power-fill" id="powerFill"></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="over">
+
+    <div class="card">
+
+      <div class="ico" id="ico">🏹</div>
+
+      <h2 id="title">
+        바람을 읽고 과녁을 맞히세요!
+      </h2>
+
+      <p id="desc">
+        손가락이나 마우스로 위·아래를 조준하세요.<br>
+        누르고 있으면 활의 힘이 차오르고, 손을 놓으면 발사합니다.<br>
+        바람의 방향과 과녁 움직임까지 계산해 불스아이에 도전하세요!
+      </p>
+
+      <div class="mode-row">
+
+        <button class="mode" data-mode="easy">
+          🙂 쉬움
+        </button>
+
+        <button class="mode active" data-mode="normal">
+          🔥 보통
+        </button>
+
+        <button class="mode" data-mode="hard">
+          ⚡ 어려움
+        </button>
+
+      </div>
+
+      <button class="start" id="start">
+        🏹 화살 10발 시작
+      </button>
+
+    </div>
+
+  </div>
+
+</section>
+
+<div class="records">
+  <span>🏆 최고점수 <b id="bestScore">0</b></span>
+  <span>🎯 최고콤보 <b id="bestCombo">0</b></span>
+  <span>⭐ 불스아이 <b id="bestBull">0</b></span>
+</div>
+
+<div class="controls">
+  <button id="soundBtn">🔊 소리 ON</button>
+</div>
+
+<div class="tip">
+  위·아래로 조준 · 누르고 장력 충전 · 손을 놓아 발사 · 바람과 움직이는 과녁을 계산하세요
+</div>
+
+</main>
+
+<script>
+(() => {
+
+const C = document.querySelector('#canvas');
+const X = C.getContext('2d');
+const G = document.querySelector('#game');
+const O = document.querySelector('#over');
+
+const scoreEl = document.querySelector('#score');
+const shotsEl = document.querySelector('#shots');
+const windEl = document.querySelector('#wind');
+const windBox = document.querySelector('#windBox');
+const comboScoreEl = document.querySelector('#comboScore');
+const comboEl = document.querySelector('#combo');
+const messageEl = document.querySelector('#message');
+const powerFill = document.querySelector('#powerFill');
+const powerText = document.querySelector('#powerText');
+const targetTypeEl = document.querySelector('#targetType');
+
+let W = 0;
+let H = 0;
+let D = 1;
+
+let running = false;
+let last = 0;
+
+let score = 0;
+let shots = 10;
+
+let wind = 0;
+let gust = 0;
+
+let aimY = 0;
+let targetY = 0;
+let targetBaseY = 0;
+let targetPhase = 0;
+let targetSpeed = 0;
+let targetMoveRange = 0;
+
+let arrow = null;
+
+let dragging = false;
+let charging = false;
+let chargeStarted = 0;
+let power = .7;
+
+let marks = [];
+
+let combo = 0;
+let maxCombo = 0;
+let bullseyes = 0;
+
+let difficulty = 'normal';
+
+let goldenTarget = false;
+
+let soundOn = true;
+let audioCtx = null;
+
+
+/* -----------------------------------------
+   난이도 설정
+----------------------------------------- */
+
+const settings = {
+
+  easy:{
+    wind:5,
+    movingChance:.18,
+    targetSpeed:.7,
+    targetRange:25,
+    arrowSpeed:570,
+    shots:10
+  },
+
+  normal:{
+    wind:9,
+    movingChance:.48,
+    targetSpeed:1,
+    targetRange:48,
+    arrowSpeed:590,
+    shots:10
+  },
+
+  hard:{
+    wind:14,
+    movingChance:.75,
+    targetSpeed:1.45,
+    targetRange:70,
+    arrowSpeed:620,
+    shots:10
+  }
+
+};
+
+
+/* -----------------------------------------
+   효과음
+----------------------------------------- */
+
+function tone(freq,duration=.1,type='sine'){
+
+  if(!soundOn) return;
+
+  try{
+
+    if(!audioCtx){
+
+      audioCtx = new (
+        window.AudioContext ||
+        window.webkitAudioContext
+      )();
+    }
+
+    if(audioCtx.state === 'suspended'){
+      audioCtx.resume();
+    }
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = type;
+    osc.frequency.value = freq;
+
+    gain.gain.setValueAtTime(
+      .06,
+      audioCtx.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      .001,
+      audioCtx.currentTime + duration
+    );
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+
+  }catch(e){}
+}
+
+
+/* -----------------------------------------
+   기록 저장
+----------------------------------------- */
+
+function readRecord(key){
+
+  try{
+    return Number(localStorage.getItem(key) || 0);
+  }catch(e){
+    return 0;
+  }
+}
+
+function saveRecords(){
+
+  try{
+
+    if(score > readRecord('windArcherBest')){
+      localStorage.setItem('windArcherBest',score);
+    }
+
+    if(maxCombo > readRecord('windArcherCombo')){
+      localStorage.setItem('windArcherCombo',maxCombo);
+    }
+
+    if(bullseyes > readRecord('windArcherBull')){
+      localStorage.setItem('windArcherBull',bullseyes);
+    }
+
+  }catch(e){}
+
+  loadRecords();
+}
+
+function loadRecords(){
+
+  const best = readRecord('windArcherBest');
+
+  document.querySelector('#best').textContent = best;
+  document.querySelector('#bestScore').textContent = best;
+  document.querySelector('#bestCombo').textContent =
+    readRecord('windArcherCombo');
+
+  document.querySelector('#bestBull').textContent =
+    readRecord('windArcherBull');
+}
+
+
+/* -----------------------------------------
+   화면 크기 조절
+----------------------------------------- */
+
+function resize(){
+
+  const r = G.getBoundingClientRect();
+
+  D = Math.min(
+    2,
+    window.devicePixelRatio || 1
+  );
+
+  W = r.width;
+  H = r.height;
+
+  C.width = Math.round(W * D);
+  C.height = Math.round(H * D);
+
+  X.setTransform(
+    D,0,0,D,0,0
+  );
+
+  if(!aimY){
+    aimY = H / 2;
+  }
+
+  if(!targetY){
+    targetY = H / 2;
+  }
+
+  draw();
+}
+
+
+/* -----------------------------------------
+   새로운 라운드
+----------------------------------------- */
+
+function newRound(){
+
+  const cfg = settings[difficulty];
+
+  wind =
+    Math.round(
+      (Math.random() * 2 - 1) *
+      cfg.wind
+    );
+
+  /*
+    간헐적인 돌풍.
+    어려울수록 좀 더 크게 느껴짐.
+  */
+  gust =
+    difficulty === 'hard'
+      ? (Math.random()-.5)*3
+      :
+    difficulty === 'normal'
+      ? (Math.random()-.5)*1.6
+      : 0;
+
+
+  updateWindDisplay();
+
+
+  targetBaseY =
+    120 +
+    Math.random() *
+    Math.max(
+      100,
+      H - 240
+    );
+
+
+  const moving =
+    Math.random() <
+    cfg.movingChance;
+
+  targetMoveRange =
+    moving
+      ? cfg.targetRange
+      : 0;
+
+  targetSpeed =
+    moving
+      ? cfg.targetSpeed +
+        Math.random()*.5
+      : 0;
+
+
+  targetPhase =
+    Math.random() *
+    Math.PI * 2;
+
+
+  /*
+    가끔 황금 과녁.
+    점수 2배.
+  */
+  goldenTarget =
+    Math.random() < .17;
+
+  targetTypeEl.textContent =
+    goldenTarget
+      ? '⭐ 황금'
+      :
+    moving
+      ? '↕ 움직임'
+      : '일반';
+
+
+  aimY =
+    H / 2;
+
+
+  arrow = null;
+
+
+  power = .7;
+
+  powerFill.style.width =
+    Math.round(power*100)+'%';
+
+  powerText.textContent =
+    Math.round(power*100)+'%';
+}
+
+
+/* -----------------------------------------
+   바람 표시
+----------------------------------------- */
+
+function updateWindDisplay(){
+
+  if(wind === 0){
+
+    windEl.textContent =
+      '고요';
+
+  }else{
+
+    /*
+      + = 아래 방향으로 영향
+      - = 위 방향으로 영향
+    */
+
+    windEl.textContent =
+      (
+        wind > 0
+          ? '↓ '
+          : '↑ '
+      ) +
+      Math.abs(wind);
+  }
+
+
+  windBox.classList.toggle(
+    'strong',
+    Math.abs(wind) >= 8
+  );
+}
+
+
+/* -----------------------------------------
+   게임 시작
+----------------------------------------- */
+
+function start(){
+
+  score = 0;
+
+  shots =
+    settings[difficulty].shots;
+
+  marks = [];
+
+  arrow = null;
+
+  combo = 0;
+  maxCombo = 0;
+  bullseyes = 0;
+
+  scoreEl.textContent = 0;
+  shotsEl.textContent = shots;
+  comboScoreEl.textContent = 0;
+  comboEl.textContent = '';
+
+  running = true;
+
+  O.classList.add('hide');
+
+  newRound();
+
+  last = performance.now();
+
+  tone(500,.08);
+
+  requestAnimationFrame(loop);
+}
+
+
+/* -----------------------------------------
+   화살 발사
+----------------------------------------- */
+
+function fire(){
+
+  if(
+    !running ||
+    arrow ||
+    shots <= 0
+  ){
+    return;
+  }
+
+
+  const cfg =
+    settings[difficulty];
+
+
+  /*
+    너무 약한 장력도 최소 보정.
+  */
+  power =
+    Math.max(.35,Math.min(1,power));
+
+
+  arrow = {
+
+    x:75,
+    y:aimY,
+
+    vx:
+      cfg.arrowSpeed *
+      (.72 + power*.38),
+
+    vy:0,
+
+    r:0,
+
+    startY:aimY,
+
+    power:power
+
+  };
+
+
+  shots--;
+
+  shotsEl.textContent =
+    shots;
+
+
+  tone(
+    210 + power*100,
+    .08,
+    'triangle'
+  );
+}
+
+
+/* -----------------------------------------
+   게임 업데이트
+----------------------------------------- */
+
+function update(dt,t){
+
+  /*
+    움직이는 과녁.
+  */
+  if(targetMoveRange > 0){
+
+    targetY =
+      targetBaseY +
+      Math.sin(
+        t/1000 *
+        targetSpeed +
+        targetPhase
+      ) *
+      targetMoveRange;
+
+  }else{
+
+    targetY =
+      targetBaseY;
+  }
+
+
+  /*
+    장력 충전
+  */
+  if(charging && !arrow){
+
+    const elapsed =
+      performance.now() -
+      chargeStarted;
+
+    /*
+      0.35 ~ 1 사이를 반복.
+    */
+    power =
+      .35 +
+      (
+        Math.sin(elapsed/360) *
+        .5 +
+        .5
+      ) *
+      .65;
+
+    powerFill.style.width =
+      Math.round(power*100) +
+      '%';
+
+    powerText.textContent =
+      Math.round(power*100) +
+      '%';
+  }
+
+
+  /*
+    화살 이동
+  */
+  if(arrow){
+
+    const totalWind =
+      wind +
+      gust *
+      Math.sin(t/310);
+
+    arrow.vy +=
+      totalWind *
+      5 *
+      dt;
+
+    arrow.x +=
+      arrow.vx *
+      dt;
+
+    arrow.y +=
+      arrow.vy *
+      dt;
+
+    arrow.r =
+      Math.atan2(
+        arrow.vy,
+        arrow.vx
+      );
+
+
+    if(
+      arrow.x >=
+      W - 100
+    ){
+
+      hitTarget();
+    }
+  }
+}
+
+
+/* -----------------------------------------
+   명중 판정
+----------------------------------------- */
+
+function hitTarget(){
+
+  const dist =
+    Math.abs(
+      arrow.y -
+      targetY
+    );
+
+
+  let pts = 0;
+  let label = '';
+  let icons = ['✨'];
+
+
+  if(dist < 10){
+
+    pts = 100;
+
+    label =
+      '🎯 PERFECT BULLSEYE!';
+
+    bullseyes++;
+
+    icons =
+      ['🎯','⭐','✨'];
+
+  }else if(dist < 23){
+
+    pts = 70;
+
+    label =
+      '🔥 GREAT!';
+
+    icons =
+      ['🔥','⭐'];
+
+  }else if(dist < 42){
+
+    pts = 40;
+
+    label =
+      '👍 GOOD!';
+
+    icons =
+      ['✨'];
+
+  }else if(dist < 65){
+
+    pts = 15;
+
+    label =
+      '🙂 HIT!';
+
+  }else{
+
+    pts = 0;
+
+    label =
+      '💨 MISS!';
+  }
+
+
+  /*
+    황금 과녁 점수 2배
+  */
+  if(
+    goldenTarget &&
+    pts > 0
+  ){
+
+    pts *= 2;
+
+    label +=
+      ' ⭐ x2';
+  }
+
+
+  /*
+    콤보
+  */
+  if(pts > 0){
+
+    combo++;
+
+    maxCombo =
+      Math.max(
+        maxCombo,
+        combo
+      );
+
+
+    /*
+      2콤보부터 작은 보너스.
+    */
+    const bonus =
+      combo >= 2
+        ? Math.min(
+            100,
+            combo * 5
+          )
+        : 0;
+
+    pts += bonus;
+
+
+    comboEl.textContent =
+      combo >= 2
+        ? `🔥 ${combo} COMBO`
+        : '';
+
+    comboScoreEl.textContent =
+      combo;
+
+
+    tone(
+      dist < 10
+        ? 900
+        :
+      dist < 23
+        ? 720
+        : 560,
+      .12
+    );
+
+
+    if(dist < 23){
+      particles(icons);
+    }
+
+  }else{
+
+    combo = 0;
+
+    comboEl.textContent = '';
+
+    comboScoreEl.textContent =
+      0;
+
+    tone(
+      120,
+      .18,
+      'sawtooth'
+    );
+  }
+
+
+  score += pts;
+
+  scoreEl.textContent =
+    score;
+
+
+  showMessage(
+    `${label} +${pts}`
+  );
+
+
+  marks.push({
+
+    y:arrow.y,
+
+    pts:pts,
+
+    good:
+      dist < 65
+
+  });
+
+
+  /*
+    화면에 너무 많은 화살 흔적을
+    남기지 않기 위해 최근 것만 유지.
+  */
+  marks =
+    marks.slice(-8);
+
+
+  arrow = null;
+
+
+  if(shots <= 0){
+
+    setTimeout(
+      finish,
+      650
+    );
+
+  }else{
+
+    setTimeout(
+      newRound,
+      650
+    );
+  }
+}
+
+
+/* -----------------------------------------
+   메시지
+----------------------------------------- */
+
+let messageTimer;
+
+function showMessage(text){
+
+  clearTimeout(
+    messageTimer
+  );
+
+  messageEl.textContent =
+    text;
+
+  messageEl.classList.add(
+    'show'
+  );
+
+
+  messageTimer =
+    setTimeout(
+      ()=>{
+        messageEl.classList.remove(
+          'show'
+        );
+      },
+      700
+    );
+}
+
+
+/* -----------------------------------------
+   파티클
+----------------------------------------- */
+
+function particles(icons){
+
+  for(
+    let i=0;
+    i<13;
+    i++
+  ){
+
+    const p =
+      document.createElement(
+        'span'
+      );
+
+    p.className =
+      'particle';
+
+    p.textContent =
+      icons[
+        Math.floor(
+          Math.random() *
+          icons.length
+        )
+      ];
+
+    p.style.left =
+      '78%';
+
+    p.style.top =
+      '45%';
+
+    p.style.setProperty(
+      '--x',
+      (
+        Math.random()*220 -
+        110
+      ) + 'px'
+    );
+
+    p.style.setProperty(
+      '--y',
+      (
+        Math.random()*240 -
+        150
+      ) + 'px'
+    );
+
+    G.appendChild(p);
+
+    setTimeout(
+      ()=>p.remove(),
+      1100
+    );
+  }
+}
+
+
+/* -----------------------------------------
+   화면 그리기
+----------------------------------------- */
+
+function draw(){
+
+  X.clearRect(
+    0,0,W,H
+  );
+
+
+  /* 하늘 + 잔디 */
+  const sky =
+    X.createLinearGradient(
+      0,0,0,H
+    );
+
+  sky.addColorStop(
+    0,
+    '#7dd3fc'
+  );
+
+  sky.addColorStop(
+    .62,
+    '#d9f99d'
+  );
+
+  sky.addColorStop(
+    .63,
+    '#65a30d'
+  );
+
+  sky.addColorStop(
+    1,
+    '#365314'
+  );
+
+  X.fillStyle =
+    sky;
+
+  X.fillRect(
+    0,0,W,H
+  );
+
+
+  /* 산 */
+  X.fillStyle =
+    '#64748b66';
+
+  X.beginPath();
+
+  X.moveTo(0,H*.52);
+
+  X.lineTo(W*.17,H*.25);
+
+  X.lineTo(W*.31,H*.5);
+
+  X.lineTo(W*.49,H*.23);
+
+  X.lineTo(W*.67,H*.5);
+
+  X.lineTo(W*.82,H*.28);
+
+  X.lineTo(W,H*.5);
+
+  X.lineTo(W,H*.63);
+
+  X.lineTo(0,H*.63);
+
+  X.closePath();
+
+  X.fill();
+
+
+  /* 구름 */
+  X.fillStyle =
+    '#ffffff8b';
+
+  for(let i=0;i<5;i++){
+
+    X.beginPath();
+
+    X.ellipse(
+      (i*179 + 30)%W,
+      55 + i*35,
+      48,
+      14,
+      0,
+      0,
+      Math.PI*2
+    );
+
+    X.fill();
+  }
+
+
+  /* 잔디 줄 */
+  X.strokeStyle =
+    '#bef26433';
+
+  X.lineWidth = 2;
+
+  for(
+    let y=H*.69;
+    y<H;
+    y+=30
+  ){
+
+    X.beginPath();
+    X.moveTo(0,y);
+    X.lineTo(W,y);
+    X.stroke();
+  }
+
+
+  const tx =
+    W - 100;
+
+
+  /*
+    과녁 받침대
+  */
+  X.fillStyle =
+    '#5b3418';
+
+  X.fillRect(
+    tx - 5,
+    targetY + 65,
+    10,
+    Math.max(
+      0,
+      H-targetY
+    )
+  );
+
+
+  /*
+    과녁 그림.
+  */
+  const rings =
+    goldenTarget
+      ? [
+          [68,'#fef3c7'],
+          [54,'#f59e0b'],
+          [40,'#fde047'],
+          [26,'#f97316'],
+          [11,'#fff7ed']
+        ]
+      : [
+          [68,'#f8fafc'],
+          [54,'#ef4444'],
+          [40,'#f8fafc'],
+          [26,'#ef4444'],
+          [11,'#facc15']
+        ];
+
+
+  for(
+    const [radius,color]
+    of rings
+  ){
+
+    X.fillStyle =
+      color;
+
+    X.beginPath();
+
+    X.arc(
+      tx,
+      targetY,
+      radius,
+      0,
+      Math.PI*2
+    );
+
+    X.fill();
+  }
+
+
+  /*
+    과녁 중심
+  */
+  X.fillStyle =
+    goldenTarget
+      ? '#92400e'
+      : '#b91c1c';
+
+  X.beginPath();
+
+  X.arc(
+    tx,
+    targetY,
+    4,
+    0,
+    Math.PI*2
+  );
+
+  X.fill();
+
+
+  /*
+    이전 화살 흔적
+  */
+  marks.forEach(
+    mark => {
+
+      X.strokeStyle =
+        mark.good
+          ? '#422006'
+          : '#475569';
+
+      X.lineWidth = 4;
+
+      X.beginPath();
+
+      X.moveTo(
+        tx-9,
+        mark.y
+      );
+
+      X.lineTo(
+        tx+32,
+        mark.y
+      );
+
+      X.stroke();
+    }
+  );
+
+
+  /*
+    궁수/활
+  */
+  X.font =
+    '52px sans-serif';
+
+  X.fillText(
+    '🏹',
+    22,
+    aimY+18
+  );
+
+
+  /*
+    조준 가이드.
+  */
+  X.strokeStyle =
+    '#11182799';
+
+  X.lineWidth = 2;
+
+  X.setLineDash(
+    [7,8]
+  );
+
+  X.beginPath();
+
+  X.moveTo(
+    72,
+    aimY
+  );
+
+  X.lineTo(
+    W-135,
+    aimY
+  );
+
+  X.stroke();
+
+  X.setLineDash([]);
+
+
+  /*
+    바람 파티클
+  */
+  X.font =
+    '18px sans-serif';
+
+  X.fillStyle =
+    '#ffffffaa';
+
+  if(Math.abs(wind)>1){
+
+    const arrow =
+      wind > 0
+        ? '↘'
+        : '↗';
+
+    for(let i=0;i<4;i++){
+
+      X.fillText(
+        arrow,
+        W*.25+i*70,
+        110+
+        Math.sin(
+          performance.now()/400+i
+        )*9
+      );
+    }
+  }
+
+
+  /*
+    날아가는 화살
+  */
+  if(arrow){
+
+    X.save();
+
+    X.translate(
+      arrow.x,
+      arrow.y
+    );
+
+    X.rotate(
+      arrow.r
+    );
+
+
+    X.strokeStyle =
+      '#422006';
+
+    X.lineWidth = 4;
+
+    X.beginPath();
+
+    X.moveTo(
+      -22,0
+    );
+
+    X.lineTo(
+      22,0
+    );
+
+    X.stroke();
+
+
+    /* 화살촉 */
+    X.fillStyle =
+      '#e5e7eb';
+
+    X.beginPath();
+
+    X.moveTo(
+      24,0
+    );
+
+    X.lineTo(
+      12,-7
+    );
+
+    X.lineTo(
+      12,7
+    );
+
+    X.closePath();
+
+    X.fill();
+
+
+    /* 깃 */
+    X.fillStyle =
+      '#dc2626';
+
+    X.beginPath();
+
+    X.moveTo(
+      -20,0
+    );
+
+    X.lineTo(
+      -13,-7
+    );
+
+    X.lineTo(
+      -9,0
+    );
+
+    X.lineTo(
+      -13,7
+    );
+
+    X.closePath();
+
+    X.fill();
+
+    X.restore();
+  }
+}
+
+
+/* -----------------------------------------
+   게임 종료
+----------------------------------------- */
+
+function finish(){
+
+  if(!running){
+    return;
+  }
+
+  running = false;
+
+  saveRecords();
+
+
+  let icon = '🏹';
+  let title = '';
+  let description = '';
+
+
+  if(score >= 850){
+
+    icon = '👑';
+
+    title =
+      '바람의 전설!';
+
+    description =
+      `최종 점수 <b>${score}점</b><br>
+       불스아이 ${bullseyes}회 · 최대 ${maxCombo}콤보<br>
+       바람까지 완벽하게 읽어냈어요!`;
+
+  }else if(score >= 600){
+
+    icon = '🏆';
+
+    title =
+      '명사수 등극!';
+
+    description =
+      `최종 점수 <b>${score}점</b><br>
+       불스아이 ${bullseyes}회 · 최대 ${maxCombo}콤보<br>
+       훌륭한 활 솜씨입니다!`;
+
+  }else if(score >= 350){
+
+    icon = '🎯';
+
+    title =
+      '좋은 사격이에요!';
+
+    description =
+      `최종 점수 <b>${score}점</b><br>
+       바람 방향과 과녁의 움직임을 조금 더 관찰해보세요.`;
+
+  }else{
+
+    icon = '💪';
+
+    title =
+      '다시 도전!';
+
+    description =
+      `최종 점수 <b>${score}점</b><br>
+       바람이 ↓라면 과녁보다 위를,<br>
+       ↑라면 과녁보다 아래를 조준해보세요.`;
+  }
+
+
+  document.querySelector('#ico')
+    .textContent =
+      icon;
+
+  document.querySelector('#title')
+    .textContent =
+      title;
+
+  document.querySelector('#desc')
+    .innerHTML =
+      description;
+
+  document.querySelector('#start')
+    .textContent =
+      '🔄 다시 쏘기';
+
+  O.classList.remove(
+    'hide'
+  );
+
+
+  if(score >= 600){
+
+    particles(
+      ['🏆','🎯','⭐','✨']
+    );
+  }
+}
+
+
+/* -----------------------------------------
+   게임 루프
+----------------------------------------- */
+
+function loop(t){
+
+  if(!running){
+    return;
+  }
+
+  const dt =
+    Math.min(
+      .032,
+      (t-last)/1000
+    );
+
+  last = t;
+
+  update(dt,t);
+
+  draw();
+
+  requestAnimationFrame(
+    loop
+  );
+}
+
+
+/* -----------------------------------------
+   포인터 좌표
+----------------------------------------- */
+
+function pointerY(e){
+
+  const r =
+    C.getBoundingClientRect();
+
+  return Math.max(
+    75,
+    Math.min(
+      H-75,
+      e.clientY-r.top
+    )
+  );
+}
+
+
+/* -----------------------------------------
+   터치/마우스 조작
+----------------------------------------- */
+
+C.addEventListener(
+  'pointerdown',
+  e => {
+
+    if(
+      !running ||
+      arrow
+    ){
+      return;
+    }
+
+    dragging = true;
+    charging = true;
+
+    chargeStarted =
+      performance.now();
+
+    aimY =
+      pointerY(e);
+
+    try{
+      C.setPointerCapture(
+        e.pointerId
+      );
+    }catch(err){}
+  }
+);
+
+
+C.addEventListener(
+  'pointermove',
+  e => {
+
+    if(!dragging){
+      return;
+    }
+
+    aimY =
+      pointerY(e);
+  }
+);
+
+
+C.addEventListener(
+  'pointerup',
+  e => {
+
+    if(!dragging){
+      return;
+    }
+
+    dragging = false;
+    charging = false;
+
+    aimY =
+      pointerY(e);
+
+    fire();
+  }
+);
+
+
+C.addEventListener(
+  'pointercancel',
+  () => {
+
+    dragging = false;
+    charging = false;
+  }
+);
+
+
+/* -----------------------------------------
+   난이도 버튼
+----------------------------------------- */
+
+document
+  .querySelectorAll('.mode')
+  .forEach(
+    button => {
+
+      button.addEventListener(
+        'click',
+        () => {
+
+          difficulty =
+            button.dataset.mode;
+
+          document
+            .querySelectorAll('.mode')
+            .forEach(
+              b =>
+                b.classList.remove(
+                  'active'
+                )
+            );
+
+          button.classList.add(
+            'active'
+          );
+        }
+      );
+    }
+  );
+
+
+/* -----------------------------------------
+   소리
+----------------------------------------- */
+
+document
+  .querySelector('#soundBtn')
+  .addEventListener(
+    'click',
+    () => {
+
+      soundOn =
+        !soundOn;
+
+      document
+        .querySelector('#soundBtn')
+        .textContent =
+          soundOn
+            ? '🔊 소리 ON'
+            : '🔇 소리 OFF';
+
+      if(soundOn){
+        tone(650,.08);
+      }
+    }
+  );
+
+
+document
+  .querySelector('#start')
+  .addEventListener(
+    'click',
+    start
+  );
+
+
+window.addEventListener(
+  'resize',
+  resize
+);
+
+
+loadRecords();
+resize();
+
+})();
+</script>
+
+</body>
+</html>

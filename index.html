@@ -108,45 +108,15 @@ header {
     -webkit-text-fill-color: transparent;
 }
 
-
-/* 학교 정보 */
-
-.teacher-info {
-    display: flex;
-    align-items: center;
-
-    gap: 10px;
-
-    padding:
-        10px 18px;
-
-    border-radius:
-        999px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #f3efff,
-            #eef7ff
-        );
-
-    color:
-        #5e4bc7;
-
-    font-size:
-        14px;
-
-    font-weight:
-        700;
-}
-
-.teacher-info strong {
-    color: #7555ff;
-    font-weight: 900;
-}
-
-.divider {
-    color: #c5bbec;
+.logo-subtitle {
+    display: block;
+    margin-top: 2px;
+    color: #72788a;
+    background: none;
+    -webkit-text-fill-color: #72788a;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0;
 }
 
 
@@ -278,7 +248,7 @@ main {
     margin: auto;
 
     padding:
-        0 6%
+        24px 6%
         80px;
 }
 
@@ -293,6 +263,8 @@ main {
     justify-content: space-between;
 
     margin-bottom: 25px;
+
+    scroll-margin-top: 150px;
 }
 
 .section-title h2 {
@@ -327,8 +299,8 @@ main {
 }
 
 /* 장르 바로가기와 장르별 목록 */
-.genre-nav { position:sticky; top:78px; z-index:90; display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:0 0 38px; padding:12px; border:1px solid rgba(118,87,255,.12); border-radius:20px; background:rgba(255,255,255,.92); box-shadow:0 8px 24px rgba(39,44,80,.08); backdrop-filter:blur(12px); }
-.genre-nav a { min-height:44px; display:inline-flex; align-items:center; justify-content:center; padding:10px 15px; border-radius:999px; color:#34364a; background:#f4f2ff; font-size:14px; font-weight:800; text-decoration:none; transition:transform .2s ease,background .2s ease,color .2s ease; }
+.genre-nav { flex:1 1 620px; max-width:760px; display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:8px; margin:0; padding:0; }
+.genre-nav a { min-height:44px; display:inline-flex; align-items:center; justify-content:center; padding:9px 13px; border:1px solid rgba(118,87,255,.12); border-radius:999px; color:#34364a; background:#f4f2ff; font-size:13px; font-weight:800; text-decoration:none; white-space:nowrap; transition:transform .2s ease,background .2s ease,color .2s ease; }
 .genre-nav a:hover,.genre-nav a:focus-visible { color:white; background:linear-gradient(135deg,#ff467e,#7657ff); transform:translateY(-2px); outline:none; }
 .genre-section { scroll-margin-top:160px; margin:0 0 66px; }
 .genre-heading { display:flex; align-items:end; justify-content:space-between; gap:18px; margin-bottom:22px; padding:0 4px 15px; border-bottom:3px solid var(--genre-color); }
@@ -340,6 +312,7 @@ main {
 .genre-strategy { --genre-color:#2878d0; }
 .genre-skill { --genre-color:#f59e0b; }
 .genre-casual { --genre-color:#13a88b; }
+.genre-coding { --genre-color:#7c3aed; }
 .back-to-genres { min-height:44px; display:flex; align-items:center; justify-content:center; width:max-content; margin:24px 0 0 auto; padding:10px 15px; border-radius:12px; color:#6548df; background:white; box-shadow:0 5px 16px rgba(39,44,80,.08); font-size:13px; font-weight:800; text-decoration:none; }
 
 
@@ -675,6 +648,14 @@ main {
 .game59 .game-icon { background: linear-gradient(135deg, #2193b0, #6dd5ed); }
 .game60 .game-icon { background: linear-gradient(135deg, #42275a, #734b6d); }
 
+/* 코딩 · 로봇 게임 아이콘 그라데이션 */
+.game62 .game-icon { background: linear-gradient(135deg, #ffb347, #ff6f61); }
+.game63 .game-icon { background: linear-gradient(135deg, #654ea3, #eaafc8); }
+.game64 .game-icon { background: linear-gradient(135deg, #00b09b, #96c93d); }
+.game65 .game-icon { background: linear-gradient(135deg, #4776e6, #8e54e9); }
+.game66 .game-icon { background: linear-gradient(135deg, #00c6ff, #7f00ff); }
+.game67 .game-icon { background: linear-gradient(135deg, #45f3ff, #735cff, #ff5ca8); }
+
 /* ========================================
    게임 정보
 ======================================== */
@@ -923,6 +904,9 @@ footer strong {
 
 @media(max-width:1000px) {
 
+    header { flex-direction:column; align-items:stretch; gap:12px; }
+    .genre-nav { flex-basis:auto; max-width:none; justify-content:center; }
+
     .game-grid {
         grid-template-columns:
             repeat(2, 1fr);
@@ -937,9 +921,8 @@ footer strong {
 
 @media(max-width:650px) {
 
-    .genre-nav { top:116px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; padding:9px; border-radius:16px; }
+    .genre-nav { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
     .genre-nav a { padding:9px 7px; font-size:12px; text-align:center; }
-    .genre-nav a:first-child { grid-column:1 / -1; }
     .genre-section { scroll-margin-top:240px; margin-bottom:48px; }
     .genre-heading { align-items:flex-start; gap:10px; }
     .genre-heading p { font-size:12px; }
@@ -948,33 +931,9 @@ footer strong {
         flex-direction: column;
 
         padding:
-            15px 5%;
+            10px 5%;
 
         gap: 12px;
-    }
-
-
-    .teacher-info {
-        width: 100%;
-
-        justify-content: center;
-
-        flex-wrap: wrap;
-
-        padding:
-            9px 12px;
-
-        font-size: 12px;
-    }
-
-
-    .hero {
-        padding-top: 45px;
-    }
-
-
-    .hero p {
-        font-size: 15px;
     }
 
 
@@ -1065,6 +1024,8 @@ footer strong {
 
 @media(max-width:400px) {
 
+    .genre-nav { grid-template-columns:repeat(2,minmax(0,1fr)); }
+
     .game-grid {
         grid-template-columns:
             1fr;
@@ -1080,10 +1041,6 @@ footer strong {
         display: block;
     }
 
-
-    .teacher-info .divider {
-        display: none;
-    }
 
 }
 
@@ -1103,94 +1060,19 @@ footer strong {
 
     <div class="logo">
         🎮 MY GAME ARCADE
+        <span class="logo-subtitle">내가 만든 게임 세상 · Digital Literacy · Siah</span>
     </div>
 
 
-    <div class="teacher-info">
-
-        <span>
-            🌳 지혜의숲학교
-        </span>
-
-        <span class="divider">
-            •
-        </span>
-
-        <span>
-            6학년
-        </span>
-
-        <span class="divider">
-            •
-        </span>
-
-        <span>
-            💻 Digital Literacy
-        </span>
-
-        <span class="divider">
-            •
-        </span>
-
-        <strong>
-            Siah
-        </strong>
-
-    </div>
+    <nav class="genre-nav" id="genres" aria-label="게임 장르 바로가기">
+        <a href="#strategy">♟ 전략 · 보드</a>
+        <a href="#coding">💻 코딩 · 로봇</a>
+        <a href="#puzzle">🧩 퍼즐</a>
+        <a href="#skill">🎯 반응</a>
+        <a href="#casual">🎨 창의</a>
+    </nav>
 
 </header>
-
-
-
-<!-- ========================================
-     HERO
-======================================== -->
-
-<section class="hero">
-
-    <div class="hero-badge">
-        🌳 지혜의숲학교 · 6학년 · DIGITAL LITERACY
-    </div>
-
-
-    <h1>
-
-        🎮 MY GAME ARCADE
-
-        <br>
-
-        <span>
-            내가 만든 게임 세상
-        </span>
-
-    </h1>
-
-
-    <p>
-
-        내가 상상한 게임을 직접 만들어 볼까요? 🎮
-
-        <br>
-
-        한 학기 동안 다양한 게임을 제작하고,
-        완성한 작품을 하나의 나만의 게임 포트폴리오로 만들어 봅시다!
-
-    </p>
-
-
-    <div class="teacher">
-
-        👩‍💻 Digital Literacy Class
-
-        <span>|</span>
-
-        Teacher.
-
-        <strong>Siah</strong>
-
-    </div>
-
-</section>
 
 
 
@@ -1201,28 +1083,19 @@ footer strong {
 <main>
 
 
-    <div class="section-title">
+    <div class="section-title" id="gameCollection">
 
         <h2>
             🕹️ MY GAME COLLECTION
         </h2>
 
         <span class="game-count" id="gameCount">
-            61 GAMES
+            67 GAMES
         </span>
 
     </div>
 
 
-
-    <nav class="genre-nav" id="genres" aria-label="게임 장르 바로가기">
-        <a href="#top">🎮 전체 게임</a>
-        <a href="#action">⚡ 액션 · 아케이드</a>
-        <a href="#puzzle">🧩 퍼즐 · 두뇌</a>
-        <a href="#strategy">♟️ 전략 · 보드</a>
-        <a href="#skill">🎯 반응 · 스킬</a>
-        <a href="#casual">🎨 창의 · 캐주얼</a>
-    </nav>
 
     <div class="game-grid" id="gameSource" hidden>
 
@@ -2092,35 +1965,46 @@ footer strong {
         <article class="game-card game58" data-link="58_카드전술.html"><div class="game-icon"><div class="icon">🃏</div></div><div class="game-info"><h3 class="game-title">🃏 카드 전술</h3><p class="game-description">세 전선에 유닛을 배치해 AI 기지를 공략하세요!</p><button class="play-button">▶ PLAY</button></div></article>
         <article class="game-card game59" data-link="59_기상관제소.html"><div class="game-icon"><div class="icon">🌦️</div></div><div class="game-info"><h3 class="game-title">🌦️ 기상 관제소</h3><p class="game-description">관측 장비를 조절해 예보 목표를 맞추세요!</p><button class="play-button">▶ PLAY</button></div></article>
         <article class="game-card game60" data-link="60_턴제던전.html"><div class="game-icon"><div class="icon">🧙</div></div><div class="game-info"><h3 class="game-title">🧙 턴제 던전</h3><p class="game-description">한 수씩 판단하며 다섯 층 던전을 돌파하세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game62" data-link="62_알고리즘셰프.html"><div class="game-icon"><div class="icon">👨‍🍳</div></div><div class="game-info"><h3 class="game-title">👨‍🍳 알고리즘 셰프</h3><p class="game-description">요리 블록을 순서대로 조립해 주문을 완성하세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game63" data-link="63_루프비트.html"><div class="game-icon"><div class="icon">🎵</div></div><div class="game-info"><h3 class="game-title">🎵 루프 비트</h3><p class="game-description">반복 블록으로 신나는 리듬 코드를 만드세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game64" data-link="64_IF택배센터.html"><div class="game-icon"><div class="icon">📦</div></div><div class="game-info"><h3 class="game-title">📦 IF 택배 센터</h3><p class="game-description">조건을 만들고 택배를 알맞은 통로로 분류하세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game65" data-link="65_버그헌터연구소.html"><div class="game-icon"><div class="icon">🐞</div></div><div class="game-info"><h3 class="game-title">🐞 버그 헌터 연구소</h3><p class="game-description">실행 결과를 관찰해 잘못된 명령을 고치세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game66" data-link="66_별빛로봇공방.html"><div class="game-icon"><div class="icon">🤖</div></div><div class="game-info"><h3 class="game-title">🤖 별빛 로봇 공방</h3><p class="game-description">회전과 이동 코드를 조립해 별을 모두 모으세요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game67" data-link="67_네온궤도비트.html"><div class="game-icon"><div class="icon">✨</div></div><div class="game-info"><h3 class="game-title">✨ 네온 궤도 비트</h3><p class="game-description">회전하는 두 구체를 박자에 맞춰 네온 길로 보내세요!</p><button class="play-button">▶ PLAY</button></div></article>
 
 
     </div>
 
     <div id="genreSections">
-        <section class="genre-section genre-action" id="action">
-            <div class="genre-heading"><div><h2>⚡ 액션 · 아케이드</h2><p>움직이고 피하며 신나게 도전하는 게임</p></div><span class="genre-total">0개 게임</span></div>
-            <div class="game-grid" data-genre-grid="action"></div>
-            <a class="back-to-genres" href="#genres">↑ 장르 메뉴로</a>
+        <section class="genre-section genre-strategy" id="strategy">
+            <div class="genre-heading"><div><h2>♟️ 전략 · 보드</h2><p>상대의 수를 읽고 계획을 세우는 게임</p></div><span class="genre-total">0개 게임</span></div>
+            <div class="game-grid" data-genre-grid="strategy"></div>
+            <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
+        </section>
+        <section class="genre-section genre-coding" id="coding">
+            <div class="genre-heading"><div><h2>💻 코딩 · 로봇</h2><p>명령하고, 생각하고, 직접 실행하며 배우는 코딩 게임</p></div><span class="genre-total">0개 게임</span></div>
+            <div class="game-grid" data-genre-grid="coding"></div>
+            <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
         </section>
         <section class="genre-section genre-puzzle" id="puzzle">
             <div class="genre-heading"><div><h2>🧩 퍼즐 · 두뇌</h2><p>규칙과 단서를 생각하며 해결하는 게임</p></div><span class="genre-total">0개 게임</span></div>
             <div class="game-grid" data-genre-grid="puzzle"></div>
-            <a class="back-to-genres" href="#genres">↑ 장르 메뉴로</a>
-        </section>
-        <section class="genre-section genre-strategy" id="strategy">
-            <div class="genre-heading"><div><h2>♟️ 전략 · 보드</h2><p>상대의 수를 읽고 계획을 세우는 게임</p></div><span class="genre-total">0개 게임</span></div>
-            <div class="game-grid" data-genre-grid="strategy"></div>
-            <a class="back-to-genres" href="#genres">↑ 장르 메뉴로</a>
+            <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
         </section>
         <section class="genre-section genre-skill" id="skill">
             <div class="genre-heading"><div><h2>🎯 반응 · 스킬</h2><p>빠른 판단과 정확한 타이밍이 중요한 게임</p></div><span class="genre-total">0개 게임</span></div>
             <div class="game-grid" data-genre-grid="skill"></div>
-            <a class="back-to-genres" href="#genres">↑ 장르 메뉴로</a>
+            <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
         </section>
         <section class="genre-section genre-casual" id="casual">
             <div class="genre-heading"><div><h2>🎨 창의 · 캐주얼</h2><p>만들고 키우며 편하게 즐기는 색다른 게임</p></div><span class="genre-total">0개 게임</span></div>
             <div class="game-grid" data-genre-grid="casual"></div>
-            <a class="back-to-genres" href="#genres">↑ 장르 메뉴로</a>
+            <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
+        </section>
+        <section class="genre-section genre-action" id="action">
+            <div class="genre-heading"><div><h2>⚡ 액션 · 아케이드</h2><p>움직이고 피하며 신나게 도전하는 게임</p></div><span class="genre-total">0개 게임</span></div>
+            <div class="game-grid" data-genre-grid="action"></div>
+            <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
         </section>
     </div>
 
@@ -2207,10 +2091,11 @@ footer strong {
 /* 게임을 대표 장르 한 곳에만 번호순으로 배치 */
 const genreGames = {
     action:   [3,7,12,27,28,36,37,39,40,43,45],
-    puzzle:   [2,9,10,18,20,24,33,34,35,41,42,50,52,53,55,56],
+    puzzle:   [2,9,10,18,20,24,33,34,35,41,42,50,52,55,56],
     strategy: [0,16,22,47,48,51,54,58,60],
-    skill:    [1,4,6,13,15,17,21,23,25,26,29,31,32,38],
-    casual:   [5,8,11,14,19,30,44,46,49,57,59]
+    skill:    [1,4,6,13,15,17,21,23,25,26,29,31,32,38,67],
+    casual:   [5,8,11,14,19,30,44,46,49,57,59],
+    coding:   [53,62,63,64,65,66]
 };
 
 const sourceCards = Array.from(document.querySelectorAll("#gameSource .game-card"));

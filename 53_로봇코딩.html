@@ -1,15 +1,2228 @@
-<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no"><title>🤖 로봇 코딩</title><style>
-:root{--c1:#0f766e;--c2:#5eead4}*{box-sizing:border-box}html,body{height:100%}body{margin:0;overflow:hidden;display:grid;place-items:center;color:#f8fafc;font-family:system-ui,"Noto Sans KR",sans-serif;background:radial-gradient(circle at 18% 10%,var(--c1),#11162e 52%,#030712);user-select:none;-webkit-user-select:none}.app{width:min(95vw,720px);height:min(95vh,860px);display:flex;flex-direction:column;gap:11px}.top{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:2px 4px}.brand small{display:block;color:#cbd5e1;font-size:10px;font-weight:900;letter-spacing:.2em}.brand h1{margin:2px 0 0;font-size:clamp(25px,5vw,38px);letter-spacing:-.05em}.hud{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.stat{min-width:67px;padding:7px 10px;text-align:center;border:1px solid #ffffff25;border-radius:14px;background:#0f172ac7}.stat small{display:block;color:#cbd5e1;font-size:9px}.stat b{font-size:19px}.stage{position:relative;flex:1;min-height:400px;overflow:hidden;border:1px solid #ffffff27;border-radius:25px;background:linear-gradient(145deg,#14203b,#090e21);box-shadow:0 25px 70px #0009;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:#050916e9}.overlay.hide{display:none}.card{width:min(100%,410px);padding:28px 24px;text-align:center;border:1px solid #ffffff25;border-radius:23px;background:#111a36ee;box-shadow:0 20px 55px #0008}.card .emoji{font-size:55px}.card h2{margin:8px;font-size:28px}.card p{margin:0 0 19px;color:#cbd5e1;font-size:14px;line-height:1.72;word-break:keep-all}.primary{min-height:48px;width:100%;padding:12px 18px;border:0;border-radius:13px;color:#08111f;background:linear-gradient(135deg,var(--c2),#fef3c7);font:900 15px system-ui;cursor:pointer}.tip{min-height:18px;text-align:center;color:#aebbd0;font-size:12px}.hidden{display:none!important}button{font-family:inherit}.code-game{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:12px;background:linear-gradient(145deg,#0f3f46,#0b1f31)}.code-grid{width:min(94%,500px);aspect-ratio:1;display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:6px;border:2px solid #5eead4;border-radius:15px;background:#071923}.ccell{display:grid;place-items:center;border-radius:8px;background:#ffffff0a;font-size:clamp(18px,5vw,35px)}.ccell.wall{background:#334155}.ccell.goal{background:#22c55e55}.queue{width:min(94%,500px);min-height:47px;padding:10px;overflow-x:auto;white-space:nowrap;border-radius:11px;background:#020617;color:#67e8f9;font-size:21px;letter-spacing:.17em}.commands{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}.commands button{min-width:49px;min-height:45px;padding:8px 12px;border:1px solid #ffffff22;border-radius:10px;color:#fff;background:#0f766e;font-weight:900;font-size:18px}.commands #runCmd{background:#fbbf24;color:#18302e}.code-msg{min-height:21px;text-align:center;color:#99f6e4;font-weight:800}
-@media(max-width:520px){.app{width:100%;height:100%;padding:9px}.stage{min-height:0;border-radius:20px}.brand h1{font-size:25px}.stat{min-width:61px;padding:6px 8px}.card{padding:24px 19px}.tip{font-size:11px}}
-</style></head><body><main class="app"><header class="top"><div class="brand"><small>CODE ROUTE</small><h1>🤖 로봇 코딩</h1></div><div class="hud" id="hud"></div></header><section class="stage" id="stage"><div class="code-game"><div class="code-grid" id="grid"></div><div class="queue" id="queue">명령을 추가하세요</div><div class="commands"><button data-c="U">↑</button><button data-c="L">←</button><button data-c="D">↓</button><button data-c="R">→</button><button id="backCmd">⌫</button><button id="runCmd">▶ 실행</button></div><div class="code-msg" id="message">명령을 미리 작성한 뒤 한 번에 실행하세요.</div></div><div class="overlay" id="overlay"><div class="card"><div class="emoji" id="resultEmoji">🤖</div><h2 id="resultTitle">로봇 코딩</h2><p id="resultText">이동 명령을 미리 조립하고 한 번에 실행해 로봇을 배터리까지 보내세요.</p><button class="primary" id="startBtn">게임 시작</button></div></div></section><div class="tip">이동 명령을 미리 조립하고 한 번에 실행해 로봇을 배터리까지 보내세요.</div></main><script>
-const $=s=>document.querySelector(s),stage=$('#stage'),overlay=$('#overlay'),startBtn=$('#startBtn');
-const safeGet=(k,d=0)=>{try{return Number(localStorage.getItem(k))||d}catch(e){return d}},safeSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
-function showResult(icon,title,text,button='다시 하기'){ $('#resultEmoji').textContent=icon;$('#resultTitle').textContent=title;$('#resultText').innerHTML=text;startBtn.textContent=button;overlay.classList.remove('hide') }
-const N=7,gridEl=$('#grid'),queueEl=$('#queue'),msg=$('#message'),hud=$('#hud');let walls=new Set,robot,goal,commands=[],playing=false,running=false,level=1,movesLimit=14;hud.innerHTML='<div class="stat"><small>레벨</small><b id="level">1</b></div><div class="stat"><small>최소 경로</small><b id="optimal">-</b></div><div class="stat"><small>명령 제한</small><b id="limit">14</b></div>';const idx=(x,y)=>y*N+x,dirs={U:[0,-1],D:[0,1],L:[-1,0],R:[1,0]},arrows={U:'↑',D:'↓',L:'←',R:'→'};
-function generate(){for(let tries=0;tries<300;tries++){robot={x:0,y:N-1};goal={x:N-1,y:0};walls=new Set;while(walls.size<7+level*2)walls.add(Math.floor(Math.random()*N*N));walls.delete(idx(robot.x,robot.y));walls.delete(idx(goal.x,goal.y));const d=bfs();if(d&&d<=movesLimit-1){$('#optimal').textContent=d;return}}walls=new Set;$('#optimal').textContent=12}
-function bfs(){const q=[[robot.x,robot.y,0]],seen=new Set([idx(robot.x,robot.y)]);while(q.length){const[x,y,d]=q.shift();if(x===goal.x&&y===goal.y)return d;for(const[dx,dy]of Object.values(dirs)){const nx=x+dx,ny=y+dy,k=idx(nx,ny);if(nx>=0&&nx<N&&ny>=0&&ny<N&&!walls.has(k)&&!seen.has(k)){seen.add(k);q.push([nx,ny,d+1])}}}return 0}
-function startGame(){commands=[];playing=true;running=false;movesLimit=Math.min(20,13+level);generate();$('#level').textContent=level;$('#limit').textContent=movesLimit;msg.textContent='로봇이 목표 배터리까지 갈 명령을 작성하세요.';overlay.classList.add('hide');render()}
-function render(){gridEl.innerHTML='';for(let i=0;i<N*N;i++){const c=document.createElement('div');c.className='ccell'+(walls.has(i)?' wall':'')+(i===idx(goal.x,goal.y)?' goal':'');c.textContent=walls.has(i)?'▦':i===idx(goal.x,goal.y)?'🔋':i===idx(robot.x,robot.y)?'🤖':'';gridEl.appendChild(c)}queueEl.textContent=commands.length?commands.map(c=>arrows[c]).join(' '):'명령을 추가하세요'}
-function add(c){if(playing&&!running&&commands.length<movesLimit){commands.push(c);render()}}async function run(){if(!playing||running||!commands.length)return;running=true;for(const c of commands){await new Promise(r=>setTimeout(r,260));const[dx,dy]=dirs[c],nx=robot.x+dx,ny=robot.y+dy;if(nx<0||nx>=N||ny<0||ny>=N||walls.has(idx(nx,ny))){running=false;msg.textContent='벽에 충돌했습니다! 명령을 수정해 보세요.';return}robot.x=nx;robot.y=ny;render();if(robot.x===goal.x&&robot.y===goal.y){playing=false;running=false;level++;return showResult('🤖','프로그램 성공!',`${commands.length}개의 명령으로 배터리에 도착했습니다.<br>다음 레벨은 장애물이 더 많아집니다.`,'다음 레벨')}}running=false;msg.textContent='명령이 끝났지만 목표에 도착하지 못했습니다. 다시 작성하세요.'}
-document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>add(b.dataset.c));$('#backCmd').onclick=()=>{if(!running){commands.pop();render()}};$('#runCmd').onclick=run;startBtn.onclick=startGame;
-</script></body></html>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🤖 로봇 코딩 어드벤처</title>
+
+<style>
+*{box-sizing:border-box}
+
+:root{
+  --cyan:#5eead4;
+  --teal:#0f766e;
+  --blue:#38bdf8;
+  --yellow:#fde047;
+  --green:#4ade80;
+  --red:#fb7185;
+  --purple:#a78bfa;
+  --dark:#071923;
+}
+
+html,body{
+  height:100%;
+}
+
+body{
+  margin:0;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  color:#f8fafc;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;
+  background:
+    radial-gradient(circle at 18% 10%,#0f766e,#11162e 52%,#030712);
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+button,select{
+  font:inherit;
+}
+
+button{
+  touch-action:manipulation;
+}
+
+.app{
+  width:min(96vw,820px);
+  height:min(97vh,930px);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  padding:4px;
+}
+
+/* ===============================
+   HEADER
+================================ */
+
+.top{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.brand small{
+  display:block;
+  color:#99f6e4;
+  font-size:9px;
+  font-weight:1000;
+  letter-spacing:.18em;
+}
+
+.brand h1{
+  margin:2px 0 0;
+  font-size:clamp(25px,5vw,39px);
+}
+
+.hud{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.stat{
+  min-width:63px;
+  padding:6px 8px;
+  text-align:center;
+  border:1px solid #ffffff20;
+  border-radius:13px;
+  background:#0f172acc;
+}
+
+.stat small{
+  display:block;
+  color:#cbd5e1;
+  font-size:8px;
+}
+
+.stat b{
+  font-size:16px;
+}
+
+.progress{
+  height:7px;
+  border-radius:99px;
+  overflow:hidden;
+  background:#ffffff18;
+}
+
+.progress-bar{
+  height:100%;
+  width:0;
+  background:linear-gradient(90deg,#5eead4,#38bdf8,#a78bfa);
+  transition:.25s;
+}
+
+/* ===============================
+   GAME
+================================ */
+
+.stage{
+  position:relative;
+  flex:1;
+  min-height:430px;
+  overflow:hidden;
+  border:1px solid #ffffff27;
+  border-radius:24px;
+  background:linear-gradient(145deg,#0f3f46,#0b1f31);
+  box-shadow:0 25px 70px #0009;
+}
+
+.code-game{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:7px;
+  padding:9px;
+}
+
+.mission{
+  width:min(96%,600px);
+  padding:8px 11px;
+  border-radius:12px;
+  background:#071923dd;
+  text-align:center;
+  color:#ccfbf1;
+  font-size:11px;
+  font-weight:900;
+}
+
+.mission strong{
+  color:#fde047;
+}
+
+/* ===============================
+   GRID
+================================ */
+
+.grid-wrap{
+  position:relative;
+  width:min(92%,500px);
+}
+
+.code-grid{
+  width:100%;
+  aspect-ratio:1;
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
+  padding:6px;
+  border:2px solid #5eead4;
+  border-radius:16px;
+  background:#071923;
+  box-shadow:
+    0 0 25px #5eead422,
+    inset 0 0 25px #0008;
+}
+
+.ccell{
+  position:relative;
+  display:grid;
+  place-items:center;
+  border-radius:8px;
+  background:#ffffff0a;
+  font-size:clamp(18px,5vw,34px);
+  transition:.2s;
+}
+
+.ccell.wall{
+  background:#334155;
+}
+
+.ccell.goal{
+  background:#22c55e3b;
+  box-shadow:inset 0 0 0 2px #4ade8066;
+}
+
+.ccell.path{
+  box-shadow:inset 0 0 0 2px #38bdf855;
+}
+
+.ccell.danger{
+  background:#7f1d1d88;
+}
+
+.ccell.portal{
+  background:#581c8788;
+}
+
+.ccell.door{
+  background:#78350f88;
+}
+
+.ccell.active{
+  outline:3px solid #fde047;
+  transform:scale(.95);
+}
+
+.robot{
+  display:inline-block;
+  animation:float .8s ease-in-out infinite alternate;
+  filter:drop-shadow(0 4px 5px #0005);
+}
+
+@keyframes float{
+  to{transform:translateY(-3px)}
+}
+
+/* ===============================
+   COMMAND QUEUE
+================================ */
+
+.queue-title{
+  width:min(94%,560px);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  color:#99f6e4;
+  font-size:10px;
+  font-weight:900;
+}
+
+.queue{
+  width:min(94%,560px);
+  min-height:60px;
+  padding:8px;
+  overflow-x:auto;
+  display:flex;
+  gap:6px;
+  align-items:center;
+  border-radius:12px;
+  background:#020617;
+}
+
+.empty{
+  width:100%;
+  color:#64748b;
+  text-align:center;
+  font-size:12px;
+}
+
+.cmd-block{
+  position:relative;
+  flex:0 0 auto;
+  min-width:47px;
+  padding:8px 7px;
+  border-radius:9px;
+  background:#0f766e;
+  text-align:center;
+  font-size:20px;
+  font-weight:1000;
+  transition:.18s;
+}
+
+.cmd-block.active{
+  background:#fde047;
+  color:#422006;
+  transform:translateY(-4px) scale(1.08);
+  box-shadow:0 0 14px #fde04788;
+}
+
+.cmd-block.done{
+  background:#14532d;
+}
+
+.cmd-block small{
+  display:block;
+  font-size:7px;
+  font-weight:700;
+}
+
+/* ===============================
+   COMMAND BUTTONS
+================================ */
+
+.commands{
+  width:min(96%,590px);
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:5px;
+}
+
+.commands button{
+  min-width:48px;
+  min-height:45px;
+  padding:7px 10px;
+  border:1px solid #ffffff22;
+  border-radius:10px;
+  color:#fff;
+  background:#0f766e;
+  font-weight:1000;
+  font-size:18px;
+  cursor:pointer;
+}
+
+.commands button:active{
+  transform:scale(.94);
+}
+
+.commands .repeat{
+  background:#7c3aed;
+}
+
+.commands .delete{
+  background:#475569;
+}
+
+.commands .clear{
+  background:#7f1d1d;
+}
+
+.commands .run{
+  background:#fbbf24;
+  color:#18302e;
+}
+
+.commands .step{
+  background:#38bdf8;
+  color:#082f49;
+}
+
+/* ===============================
+   OPTIONS
+================================ */
+
+.options{
+  width:min(94%,560px);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:5px;
+}
+
+.options button,
+.options select{
+  min-height:38px;
+  padding:6px 10px;
+  border:1px solid #ffffff20;
+  border-radius:9px;
+  background:#0f172a;
+  color:white;
+  font-weight:800;
+  font-size:11px;
+}
+
+.code-msg{
+  min-height:42px;
+  width:min(94%,580px);
+  padding:8px;
+  border-radius:11px;
+  background:#071923c9;
+  text-align:center;
+  color:#99f6e4;
+  font-size:12px;
+  font-weight:900;
+  line-height:1.4;
+}
+
+/* ===============================
+   JUDGE
+================================ */
+
+.judge{
+  position:absolute;
+  left:50%;
+  top:45%;
+  z-index:10;
+  transform:translate(-50%,-50%) scale(.4);
+  opacity:0;
+  pointer-events:none;
+  font-size:clamp(29px,7vw,52px);
+  font-weight:1000;
+  text-align:center;
+  text-shadow:0 4px 10px #000;
+}
+
+.judge.show{
+  animation:judgePop .7s ease;
+}
+
+@keyframes judgePop{
+  0%{
+    opacity:0;
+    transform:translate(-50%,-50%) scale(.4);
+  }
+  35%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.1);
+  }
+  100%{
+    opacity:0;
+    transform:translate(-50%,-70%) scale(1);
+  }
+}
+
+/* ===============================
+   PARTICLES
+================================ */
+
+.particle{
+  position:absolute;
+  z-index:15;
+  pointer-events:none;
+  font-size:23px;
+  animation:fly .9s ease forwards;
+}
+
+@keyframes fly{
+  to{
+    transform:translate(var(--x),var(--y)) rotate(360deg);
+    opacity:0;
+  }
+}
+
+/* ===============================
+   OVERLAY
+================================ */
+
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:30;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  background:#050916ef;
+  backdrop-filter:blur(7px);
+}
+
+.overlay.hide{
+  display:none;
+}
+
+.card{
+  width:min(100%,450px);
+  padding:24px 21px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:23px;
+  background:linear-gradient(145deg,#102f38,#111a36);
+  box-shadow:0 20px 55px #0008;
+}
+
+.card .emoji{
+  font-size:57px;
+}
+
+.card h2{
+  margin:7px;
+  font-size:29px;
+}
+
+.card p{
+  margin:0 0 14px;
+  color:#cbd5e1;
+  font-size:13px;
+  line-height:1.65;
+}
+
+.lesson{
+  margin:12px 0;
+  padding:10px;
+  border-radius:12px;
+  background:#ffffff0b;
+  text-align:left;
+  color:#cbd5e1;
+  font-size:11px;
+  line-height:1.55;
+}
+
+.primary{
+  width:100%;
+  min-height:49px;
+  border:0;
+  border-radius:13px;
+  background:linear-gradient(135deg,#5eead4,#fde68a);
+  color:#08111f;
+  font-weight:1000;
+  font-size:15px;
+  cursor:pointer;
+}
+
+.tip{
+  min-height:17px;
+  text-align:center;
+  color:#aebbd0;
+  font-size:10px;
+}
+
+/* ===============================
+   MOBILE
+================================ */
+
+@media(max-width:560px){
+
+  .app{
+    width:100%;
+    height:100%;
+    padding:5px;
+  }
+
+  .stage{
+    min-height:0;
+    border-radius:17px;
+  }
+
+  .brand h1{
+    font-size:23px;
+  }
+
+  .stat{
+    min-width:55px;
+    padding:4px 5px;
+  }
+
+  .stat b{
+    font-size:14px;
+  }
+
+  .code-grid{
+    gap:3px;
+    padding:4px;
+  }
+
+  .commands{
+    gap:4px;
+  }
+
+  .commands button{
+    min-width:44px;
+    min-height:42px;
+    padding:5px 8px;
+  }
+}
+
+@media(max-height:700px){
+  .tip{display:none}
+}
+</style>
+</head>
+
+<body>
+
+<main class="app">
+
+<header class="top">
+
+  <div class="brand">
+    <small>ROBOT CODE ADVENTURE</small>
+    <h1>🤖 로봇 코딩</h1>
+  </div>
+
+  <div class="hud">
+
+    <div class="stat">
+      <small>LEVEL</small>
+      <b id="level">1</b>
+    </div>
+
+    <div class="stat">
+      <small>최소</small>
+      <b id="optimal">-</b>
+    </div>
+
+    <div class="stat">
+      <small>명령</small>
+      <b><span id="used">0</span>/<span id="limit">14</span></b>
+    </div>
+
+    <div class="stat">
+      <small>별</small>
+      <b id="totalStars">0 ⭐</b>
+    </div>
+
+  </div>
+
+</header>
+
+<div class="progress">
+  <div class="progress-bar" id="progressBar"></div>
+</div>
+
+
+<section class="stage" id="stage">
+
+<div class="code-game">
+
+  <div class="mission" id="mission">
+    🤖 로봇을 <strong>🔋 배터리</strong>까지 보내세요!
+  </div>
+
+
+  <div class="grid-wrap">
+    <div class="code-grid" id="grid"></div>
+  </div>
+
+
+  <div class="queue-title">
+    <span>🧱 나의 프로그램</span>
+    <span id="queueInfo">0개 명령</span>
+  </div>
+
+
+  <div class="queue" id="queue">
+    <div class="empty">아래 명령을 눌러 프로그램을 만들어보세요.</div>
+  </div>
+
+
+  <div class="commands">
+
+    <button data-c="U" title="위로">⬆</button>
+    <button data-c="L" title="왼쪽">⬅</button>
+    <button data-c="D" title="아래">⬇</button>
+    <button data-c="R" title="오른쪽">➡</button>
+
+    <button class="repeat" id="repeat2">🔁×2</button>
+
+    <button class="delete" id="backCmd">⌫</button>
+    <button class="clear" id="clearCmd">🗑</button>
+
+    <button class="step" id="stepCmd">⏭</button>
+    <button class="run" id="runCmd">▶ 실행</button>
+
+  </div>
+
+
+  <div class="options">
+
+    <button id="hintBtn">💡 힌트</button>
+
+    <select id="speed">
+      <option value="650">🐢 느리게</option>
+      <option value="350" selected>🚶 보통</option>
+      <option value="150">🐇 빠르게</option>
+    </select>
+
+    <button id="soundBtn">🔊 소리 ON</button>
+
+  </div>
+
+
+  <div class="code-msg" id="message">
+    명령을 미리 작성한 뒤 ▶ 실행하세요.
+  </div>
+
+</div>
+
+
+<div class="judge" id="judge"></div>
+
+
+<div class="overlay" id="overlay">
+
+  <div class="card">
+
+    <div class="emoji" id="resultEmoji">🤖</div>
+
+    <h2 id="resultTitle">
+      로봇 코딩 어드벤처
+    </h2>
+
+    <p id="resultText">
+      이동 명령을 순서대로 조립한 뒤 한 번에 실행해서
+      로봇을 배터리까지 보내세요.
+    </p>
+
+    <div class="lesson">
+      🧠 <b>코딩 핵심 개념</b><br><br>
+
+      ① 먼저 길을 관찰합니다.<br>
+      ② 이동 명령을 순서대로 작성합니다.<br>
+      ③ 프로그램을 실행합니다.<br>
+      ④ 결과가 틀리면 명령을 고칩니다.<br><br>
+
+      이것이 <b>알고리즘 작성 → 실행 → 디버깅</b> 과정이에요.
+    </div>
+
+    <button class="primary" id="startBtn">
+      🚀 코딩 미션 시작
+    </button>
+
+  </div>
+
+</div>
+
+</section>
+
+<div class="tip">
+  명령을 먼저 작성 → 실행 → 결과 관찰 → 틀린 명령 수정
+</div>
+
+</main>
+
+
+<script>
+(() => {
+
+const $ = s => document.querySelector(s);
+
+const N = 7;
+
+const gridEl = $('#grid');
+const queueEl = $('#queue');
+const msg = $('#message');
+const overlay = $('#overlay');
+
+const dirs = {
+  U:[0,-1],
+  D:[0,1],
+  L:[-1,0],
+  R:[1,0]
+};
+
+const arrows = {
+  U:'⬆',
+  D:'⬇',
+  L:'⬅',
+  R:'➡'
+};
+
+const names = {
+  U:'위',
+  D:'아래',
+  L:'왼쪽',
+  R:'오른쪽'
+};
+
+
+/* =========================================================
+   스테이지
+========================================================= */
+
+const stages = [
+
+  {
+    title:'LEVEL 1 · 첫 번째 배터리',
+    start:[0,6],
+    goal:[3,6],
+    walls:[],
+    danger:[],
+    stars:[[1,6],[2,6]],
+    key:null,
+    door:null,
+    portal:null,
+    limit:6,
+    optimal:3,
+    hint:'오른쪽으로 세 번 이동하면 배터리에 도착합니다.'
+  },
+
+  {
+    title:'LEVEL 2 · 꺾이는 길',
+    start:[0,6],
+    goal:[3,4],
+    walls:[[1,5],[2,5]],
+    danger:[],
+    stars:[[1,6],[3,5]],
+    key:null,
+    door:null,
+    portal:null,
+    limit:8,
+    optimal:5,
+    hint:'먼저 오른쪽으로 이동한 뒤 위쪽으로 올라가 보세요.'
+  },
+
+  {
+    title:'LEVEL 3 · 벽을 피해라',
+    start:[0,6],
+    goal:[5,3],
+    walls:[[2,6],[2,5],[2,4],[4,4]],
+    danger:[],
+    stars:[[1,6],[3,5],[5,4]],
+    key:null,
+    door:null,
+    portal:null,
+    limit:13,
+    optimal:8,
+    hint:'벽 때문에 바로 오른쪽으로 갈 수 없습니다. 위쪽 길을 찾아보세요.'
+  },
+
+  {
+    title:'LEVEL 4 · 위험 구역',
+    start:[0,6],
+    goal:[6,3],
+    walls:[[2,5],[3,5],[4,5]],
+    danger:[[5,6],[4,3]],
+    stars:[[1,6],[5,4]],
+    key:null,
+    door:null,
+    portal:null,
+    limit:15,
+    optimal:9,
+    hint:'🔥 칸은 지나갈 수 없습니다. 안전한 길만 사용하세요.'
+  },
+
+  {
+    title:'LEVEL 5 · 열쇠를 찾아라',
+    start:[0,6],
+    goal:[6,1],
+    walls:[[1,5],[2,5],[3,5],[4,3],[5,3]],
+    danger:[],
+    stars:[[0,4],[4,4]],
+    key:[2,3],
+    door:[6,2],
+    portal:null,
+    limit:20,
+    optimal:14,
+    hint:'먼저 🔑 열쇠를 얻어야 🚪 문을 지나갈 수 있습니다.'
+  },
+
+  {
+    title:'LEVEL 6 · 순간이동 포털',
+    start:[0,6],
+    goal:[6,0],
+    walls:[[2,5],[3,5],[4,5],[5,3]],
+    danger:[[1,3]],
+    stars:[[1,6],[5,1]],
+    key:null,
+    door:null,
+    portal:[[1,4],[5,2]],
+    limit:17,
+    optimal:10,
+    hint:'🌀 포털에 들어가면 다른 포털로 순간이동합니다.'
+  },
+
+  {
+    title:'LEVEL 7 · 별 수집 임무',
+    start:[0,6],
+    goal:[6,0],
+    walls:[[2,6],[2,5],[4,4],[4,3],[5,3]],
+    danger:[[3,2]],
+    stars:[[1,5],[3,4],[5,1]],
+    key:null,
+    door:null,
+    portal:null,
+    requireStars:true,
+    limit:21,
+    optimal:14,
+    hint:'목표에 가기 전에 ⭐ 3개를 모두 모아야 합니다.'
+  },
+
+  {
+    title:'LEVEL 8 · 열쇠와 포털',
+    start:[0,6],
+    goal:[6,0],
+    walls:[[1,5],[2,5],[4,5],[5,5],[3,2]],
+    danger:[[2,3]],
+    stars:[[0,4],[6,2]],
+    key:[3,4],
+    door:[6,1],
+    portal:[[1,2],[5,3]],
+    limit:22,
+    optimal:15,
+    hint:'열쇠와 포털을 모두 이용해야 합니다.'
+  },
+
+  {
+    title:'LEVEL 9 · 로봇 구조 작전',
+    start:[0,6],
+    goal:[6,0],
+    walls:[[1,4],[2,4],[4,4],[5,4],[3,1],[4,1]],
+    danger:[[2,2],[5,2]],
+    stars:[[1,6],[3,3],[6,1]],
+    key:[0,2],
+    door:[6,2],
+    portal:[[3,5],[3,2]],
+    requireStars:true,
+    limit:25,
+    optimal:17,
+    hint:'별, 열쇠, 포털 순서를 생각해 보세요.'
+  },
+
+  {
+    title:'LEVEL 10 · 최종 코딩 미션',
+    start:[0,6],
+    goal:[6,0],
+    walls:[[1,5],[2,5],[4,5],[5,5],[1,2],[2,2],[4,2],[5,2]],
+    danger:[[3,4],[3,1]],
+    stars:[[0,4],[6,4],[3,0]],
+    key:[3,3],
+    door:[6,1],
+    portal:[[0,3],[6,3]],
+    requireStars:true,
+    limit:28,
+    optimal:20,
+    hint:'한 번에 풀려고 하지 말고 목표를 별 → 열쇠 → 문 → 배터리로 나눠보세요.'
+  }
+
+];
+
+
+/* =========================================================
+   상태
+========================================================= */
+
+let level = 0;
+
+let robot = {x:0,y:0};
+
+let commands = [];
+
+let running = false;
+let playing = false;
+
+let stepIndex = 0;
+
+let collectedStars = new Set();
+let hasKey = false;
+
+let path = [];
+
+let hintCount = 0;
+
+let totalStars = 0;
+
+let soundOn = true;
+let audioCtx = null;
+
+let savedStars = {};
+
+try{
+  savedStars =
+    JSON.parse(
+      localStorage.getItem('robotCodingStars') || '{}'
+    );
+}catch(e){}
+
+totalStars =
+  Object.values(savedStars)
+    .reduce((a,b)=>a+Number(b||0),0);
+
+$('#totalStars').textContent =
+  `${totalStars} ⭐`;
+
+
+/* =========================================================
+   AUDIO
+========================================================= */
+
+function activateAudio(){
+
+  if(!audioCtx){
+
+    try{
+      audioCtx =
+        new (
+          window.AudioContext ||
+          window.webkitAudioContext
+        )();
+    }catch(e){}
+  }
+
+  if(
+    audioCtx &&
+    audioCtx.state === 'suspended'
+  ){
+    audioCtx.resume();
+  }
+}
+
+
+function tone(freq,duration=.08,type='sine'){
+
+  if(!soundOn || !audioCtx) return;
+
+  const osc =
+    audioCtx.createOscillator();
+
+  const gain =
+    audioCtx.createGain();
+
+  osc.type = type;
+  osc.frequency.value = freq;
+
+  gain.gain.setValueAtTime(
+    .055,
+    audioCtx.currentTime
+  );
+
+  gain.gain.exponentialRampToValueAtTime(
+    .001,
+    audioCtx.currentTime+duration
+  );
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start();
+  osc.stop(audioCtx.currentTime+duration);
+}
+
+
+function soundMove(){
+  tone(430,.04,'triangle');
+}
+
+function soundStar(){
+  tone(700,.06);
+  setTimeout(()=>tone(880,.07),70);
+}
+
+function soundKey(){
+  tone(620,.07);
+  setTimeout(()=>tone(980,.09),80);
+}
+
+function soundPortal(){
+  tone(320,.07);
+  setTimeout(()=>tone(780,.12),60);
+}
+
+function soundError(){
+  tone(130,.17,'sawtooth');
+}
+
+function soundWin(){
+
+  [520,680,850,1050]
+    .forEach((f,i)=>
+      setTimeout(
+        ()=>tone(f,.1),
+        i*90
+      )
+    );
+}
+
+
+/* =========================================================
+   START
+========================================================= */
+
+function startLevel(){
+
+  activateAudio();
+
+  const s =
+    stages[level];
+
+  robot = {
+    x:s.start[0],
+    y:s.start[1]
+  };
+
+  commands = [];
+
+  collectedStars =
+    new Set();
+
+  hasKey = false;
+
+  path = [
+    `${robot.x},${robot.y}`
+  ];
+
+  stepIndex = 0;
+  hintCount = 0;
+
+  running = false;
+  playing = true;
+
+  $('#level').textContent =
+    level+1;
+
+  $('#optimal').textContent =
+    s.optimal;
+
+  $('#limit').textContent =
+    s.limit;
+
+  $('#used').textContent =
+    0;
+
+  $('#mission').innerHTML =
+    `${s.title}<br><strong>${missionText(s)}</strong>`;
+
+  $('#message').textContent =
+    '길을 관찰하고 이동 명령을 순서대로 작성하세요.';
+
+  $('#progressBar').style.width =
+    `${level/stages.length*100}%`;
+
+  overlay.classList.add('hide');
+
+  render();
+}
+
+
+/* =========================================================
+   MISSION TEXT
+========================================================= */
+
+function missionText(s){
+
+  let arr = [];
+
+  if(s.stars.length){
+    arr.push(`⭐ ${s.stars.length}개 수집`);
+  }
+
+  if(s.key){
+    arr.push('🔑 열쇠 획득');
+  }
+
+  if(s.portal){
+    arr.push('🌀 포털 활용');
+  }
+
+  arr.push('🔋 배터리 도착');
+
+  return arr.join(' → ');
+}
+
+
+/* =========================================================
+   RENDER
+========================================================= */
+
+function render(){
+
+  const s =
+    stages[level];
+
+  gridEl.innerHTML = '';
+
+  for(let y=0;y<N;y++){
+
+    for(let x=0;x<N;x++){
+
+      const cell =
+        document.createElement('div');
+
+      let cls =
+        'ccell';
+
+      const pos =
+        `${x},${y}`;
+
+      if(
+        s.walls.some(p=>p[0]===x&&p[1]===y)
+      ){
+        cls += ' wall';
+      }
+
+      if(
+        s.danger.some(p=>p[0]===x&&p[1]===y)
+      ){
+        cls += ' danger';
+      }
+
+      if(
+        s.portal &&
+        s.portal.some(p=>p[0]===x&&p[1]===y)
+      ){
+        cls += ' portal';
+      }
+
+      if(
+        s.door &&
+        s.door[0]===x &&
+        s.door[1]===y
+      ){
+        cls += ' door';
+      }
+
+      if(
+        s.goal[0]===x &&
+        s.goal[1]===y
+      ){
+        cls += ' goal';
+      }
+
+      if(
+        path.includes(pos)
+      ){
+        cls += ' path';
+      }
+
+      cell.className =
+        cls;
+
+      let icon = '';
+
+      if(
+        robot.x===x &&
+        robot.y===y
+      ){
+        icon =
+          '<span class="robot">🤖</span>';
+
+      }else if(
+        s.goal[0]===x &&
+        s.goal[1]===y
+      ){
+        icon = '🔋';
+
+      }else if(
+        s.walls.some(p=>p[0]===x&&p[1]===y)
+      ){
+        icon = '▦';
+
+      }else if(
+        s.danger.some(p=>p[0]===x&&p[1]===y)
+      ){
+        icon = '🔥';
+
+      }else if(
+        s.key &&
+        !hasKey &&
+        s.key[0]===x &&
+        s.key[1]===y
+      ){
+        icon = '🔑';
+
+      }else if(
+        s.door &&
+        s.door[0]===x &&
+        s.door[1]===y
+      ){
+        icon =
+          hasKey
+            ? '🚪'
+            : '🔒';
+
+      }else if(
+        s.portal &&
+        s.portal.some(p=>p[0]===x&&p[1]===y)
+      ){
+        icon = '🌀';
+
+      }else{
+
+        const starIndex =
+          s.stars.findIndex(
+            p=>p[0]===x&&p[1]===y
+          );
+
+        if(
+          starIndex >= 0 &&
+          !collectedStars.has(starIndex)
+        ){
+          icon = '⭐';
+        }
+      }
+
+      cell.innerHTML =
+        icon;
+
+      gridEl.appendChild(
+        cell
+      );
+    }
+  }
+
+  renderQueue();
+}
+
+
+/* =========================================================
+   QUEUE
+========================================================= */
+
+function renderQueue(){
+
+  $('#used').textContent =
+    commands.length;
+
+  $('#queueInfo').textContent =
+    `${commands.length}개 명령`;
+
+  if(!commands.length){
+
+    queueEl.innerHTML =
+      '<div class="empty">명령을 추가하세요.</div>';
+
+    return;
+  }
+
+  queueEl.innerHTML =
+    commands.map(
+      (c,i)=>`
+        <div class="cmd-block"
+             data-index="${i}">
+          ${arrows[c]}
+          <small>${i+1}</small>
+        </div>
+      `
+    ).join('');
+}
+
+
+/* =========================================================
+   ADD COMMAND
+========================================================= */
+
+function addCommand(c){
+
+  if(
+    !playing ||
+    running
+  ){
+    return;
+  }
+
+  const limit =
+    stages[level].limit;
+
+  if(
+    commands.length >= limit
+  ){
+
+    $('#message').textContent =
+      '⚠️ 명령 제한을 초과할 수 없습니다. 필요 없는 명령을 지워보세요.';
+
+    soundError();
+
+    return;
+  }
+
+  commands.push(c);
+
+  tone(520,.04);
+
+  renderQueue();
+}
+
+
+/* =========================================================
+   REPEAT
+========================================================= */
+
+function repeatLast(){
+
+  if(
+    running ||
+    !commands.length
+  ){
+    return;
+  }
+
+  const last =
+    commands[commands.length-1];
+
+  if(
+    commands.length+1 >
+    stages[level].limit
+  ){
+    return;
+  }
+
+  commands.push(last);
+
+  renderQueue();
+
+  $('#message').textContent =
+    `🔁 마지막 명령 ${arrows[last]}을 한 번 더 추가했습니다.`;
+}
+
+
+/* =========================================================
+   RESET ROBOT
+========================================================= */
+
+function resetRobot(){
+
+  const s =
+    stages[level];
+
+  robot = {
+    x:s.start[0],
+    y:s.start[1]
+  };
+
+  collectedStars =
+    new Set();
+
+  hasKey = false;
+
+  path = [
+    `${robot.x},${robot.y}`
+  ];
+
+  stepIndex = 0;
+
+  document
+    .querySelectorAll(
+      '.cmd-block'
+    )
+    .forEach(
+      b=>
+        b.classList.remove(
+          'active',
+          'done'
+        )
+    );
+
+  render();
+}
+
+
+/* =========================================================
+   EXECUTE ONE COMMAND
+========================================================= */
+
+async function executeOne(index){
+
+  const s =
+    stages[level];
+
+  const c =
+    commands[index];
+
+  if(!c){
+    return false;
+  }
+
+  const blocks =
+    document.querySelectorAll(
+      '.cmd-block'
+    );
+
+  blocks.forEach(
+    b=>
+      b.classList.remove(
+        'active'
+      )
+  );
+
+  if(blocks[index]){
+    blocks[index].classList.add('active');
+  }
+
+  const [dx,dy] =
+    dirs[c];
+
+  const nx =
+    robot.x+dx;
+
+  const ny =
+    robot.y+dy;
+
+  await wait(
+    Number($('#speed').value)
+  );
+
+  if(
+    nx<0 ||
+    nx>=N ||
+    ny<0 ||
+    ny>=N
+  ){
+
+    failCommand(
+      index,
+      '🚧 지도 밖으로 나갈 수 없습니다.'
+    );
+
+    return false;
+  }
+
+  if(
+    s.walls.some(
+      p=>p[0]===nx&&p[1]===ny
+    )
+  ){
+
+    failCommand(
+      index,
+      '💥 벽에 충돌했습니다!'
+    );
+
+    return false;
+  }
+
+  if(
+    s.danger.some(
+      p=>p[0]===nx&&p[1]===ny
+    )
+  ){
+
+    robot.x = nx;
+    robot.y = ny;
+    render();
+
+    failCommand(
+      index,
+      '🔥 위험 구역에 들어갔습니다!'
+    );
+
+    return false;
+  }
+
+  if(
+    s.door &&
+    s.door[0]===nx &&
+    s.door[1]===ny &&
+    !hasKey
+  ){
+
+    failCommand(
+      index,
+      '🔒 문이 잠겨 있습니다. 먼저 열쇠를 찾아야 해요.'
+    );
+
+    return false;
+  }
+
+  robot.x = nx;
+  robot.y = ny;
+
+  path.push(
+    `${robot.x},${robot.y}`
+  );
+
+  soundMove();
+
+  collectItems();
+
+  render();
+
+  if(blocks[index]){
+
+    blocks[index].classList.remove(
+      'active'
+    );
+
+    blocks[index].classList.add(
+      'done'
+    );
+  }
+
+  await checkPortal();
+
+  return true;
+}
+
+
+/* =========================================================
+   ITEM
+========================================================= */
+
+function collectItems(){
+
+  const s =
+    stages[level];
+
+  s.stars.forEach(
+    (p,i)=>{
+
+      if(
+        !collectedStars.has(i) &&
+        p[0]===robot.x &&
+        p[1]===robot.y
+      ){
+
+        collectedStars.add(i);
+
+        showJudge(
+          '⭐ STAR!',
+          '#fde047'
+        );
+
+        soundStar();
+      }
+    }
+  );
+
+  if(
+    s.key &&
+    !hasKey &&
+    s.key[0]===robot.x &&
+    s.key[1]===robot.y
+  ){
+
+    hasKey = true;
+
+    showJudge(
+      '🔑 KEY!',
+      '#fde047'
+    );
+
+    soundKey();
+
+    $('#message').textContent =
+      '🔑 열쇠 획득! 이제 잠긴 문을 통과할 수 있어요.';
+  }
+}
+
+
+/* =========================================================
+   PORTAL
+========================================================= */
+
+async function checkPortal(){
+
+  const s =
+    stages[level];
+
+  if(
+    !s.portal ||
+    s.portal.length !== 2
+  ){
+    return;
+  }
+
+  const index =
+    s.portal.findIndex(
+      p=>
+        p[0]===robot.x &&
+        p[1]===robot.y
+    );
+
+  if(index < 0){
+    return;
+  }
+
+  showJudge(
+    '🌀 PORTAL!',
+    '#c4b5fd'
+  );
+
+  soundPortal();
+
+  await wait(250);
+
+  const other =
+    s.portal[
+      index===0 ? 1 : 0
+    ];
+
+  robot.x =
+    other[0];
+
+  robot.y =
+    other[1];
+
+  path.push(
+    `${robot.x},${robot.y}`
+  );
+
+  render();
+}
+
+
+/* =========================================================
+   RUN ALL
+========================================================= */
+
+async function runAll(){
+
+  if(
+    !playing ||
+    running ||
+    !commands.length
+  ){
+    return;
+  }
+
+  activateAudio();
+
+  running = true;
+
+  resetRobot();
+
+  $('#message').textContent =
+    '▶ 프로그램을 위에서 아래로 실행합니다.';
+
+  for(
+    let i=0;
+    i<commands.length;
+    i++
+  ){
+
+    const ok =
+      await executeOne(i);
+
+    if(!ok){
+
+      running = false;
+
+      return;
+    }
+
+    if(checkSuccess()){
+
+      running = false;
+
+      finishLevel();
+
+      return;
+    }
+  }
+
+  running = false;
+
+  if(!checkSuccess()){
+
+    $('#message').textContent =
+      '🤔 명령 실행이 끝났지만 배터리에 도착하지 못했습니다. 코드를 수정해 보세요.';
+
+    showJudge(
+      'DEBUG!',
+      '#fde047'
+    );
+  }
+}
+
+
+/* =========================================================
+   STEP
+========================================================= */
+
+async function stepRun(){
+
+  if(
+    !playing ||
+    running ||
+    !commands.length
+  ){
+    return;
+  }
+
+  activateAudio();
+
+  if(
+    stepIndex===0
+  ){
+    resetRobot();
+  }
+
+  if(
+    stepIndex >= commands.length
+  ){
+
+    $('#message').textContent =
+      '모든 명령을 실행했습니다. 다시 실행하려면 처음 위치로 돌아갑니다.';
+
+    resetRobot();
+
+    return;
+  }
+
+  running = true;
+
+  const ok =
+    await executeOne(
+      stepIndex
+    );
+
+  if(ok){
+
+    stepIndex++;
+
+    $('#message').textContent =
+      `${stepIndex}번째 명령까지 실행했습니다. 현재 위치를 확인하세요.`;
+
+    if(checkSuccess()){
+
+      running = false;
+
+      finishLevel();
+
+      return;
+    }
+  }
+
+  running = false;
+}
+
+
+/* =========================================================
+   FAIL
+========================================================= */
+
+function failCommand(index,text){
+
+  soundError();
+
+  showJudge(
+    'BUG!',
+    '#fb7185'
+  );
+
+  $('#message').textContent =
+    `${index+1}번째 명령: ${text} 코드를 수정한 뒤 다시 실행하세요.`;
+
+  const block =
+    document.querySelector(
+      `.cmd-block[data-index="${index}"]`
+    );
+
+  if(block){
+    block.style.background =
+      '#b91c1c';
+  }
+}
+
+
+/* =========================================================
+   SUCCESS CHECK
+========================================================= */
+
+function checkSuccess(){
+
+  const s =
+    stages[level];
+
+  if(
+    robot.x !== s.goal[0] ||
+    robot.y !== s.goal[1]
+  ){
+    return false;
+  }
+
+  if(
+    s.requireStars &&
+    collectedStars.size <
+    s.stars.length
+  ){
+
+    $('#message').textContent =
+      `⚠️ 배터리에는 도착했지만 ⭐ ${s.stars.length-collectedStars.size}개가 남았습니다.`;
+
+    return false;
+  }
+
+  if(
+    s.key &&
+    !hasKey
+  ){
+
+    return false;
+  }
+
+  return true;
+}
+
+
+/* =========================================================
+   LEVEL CLEAR
+========================================================= */
+
+function finishLevel(){
+
+  playing =
+    false;
+
+  const s =
+    stages[level];
+
+  const diff =
+    commands.length -
+    s.optimal;
+
+  let earned = 1;
+
+  if(
+    diff <= 0 &&
+    hintCount===0
+  ){
+    earned = 3;
+
+  }else if(
+    diff <= 2 &&
+    hintCount<=1
+  ){
+    earned = 2;
+  }
+
+  const previous =
+    Number(
+      savedStars[level] || 0
+    );
+
+  if(earned > previous){
+
+    savedStars[level] =
+      earned;
+
+    try{
+      localStorage.setItem(
+        'robotCodingStars',
+        JSON.stringify(savedStars)
+      );
+    }catch(e){}
+  }
+
+  totalStars =
+    Object.values(savedStars)
+      .reduce(
+        (a,b)=>a+Number(b||0),
+        0
+      );
+
+  $('#totalStars').textContent =
+    `${totalStars} ⭐`;
+
+  soundWin();
+
+  particles(
+    ['🤖','⭐','✨','🔋']
+  );
+
+  showJudge(
+    'MISSION CLEAR!',
+    '#4ade80'
+  );
+
+  const starText =
+    '⭐'.repeat(earned);
+
+  $('#resultEmoji').textContent =
+    earned===3
+      ? '🏆🤖'
+      : '🤖🔋';
+
+  $('#resultTitle').textContent =
+    level===stages.length-1
+      ? '코딩 마스터!'
+      : '미션 성공!';
+
+  $('#resultText').innerHTML =
+    `${starText}<br><br>
+     <b>${commands.length}개 명령</b>으로 성공했습니다.<br>
+     최소 경로는 ${s.optimal}개입니다.<br>
+     ${
+       collectedStars.size
+         ? `⭐ 수집 ${collectedStars.size}/${s.stars.length}<br>`
+         : ''
+     }
+     ${
+       hintCount
+         ? `💡 힌트 ${hintCount}회 사용`
+         : '✨ 힌트 없이 해결!'
+     }`;
+
+  $('#startBtn').textContent =
+    level < stages.length-1
+      ? '➡️ 다음 레벨'
+      : '🔄 처음부터 다시';
+
+  $('#progressBar').style.width =
+    `${(level+1)/stages.length*100}%`;
+
+  overlay.classList.remove(
+    'hide'
+  );
+
+  $('#startBtn').onclick =
+    ()=>{
+
+      if(
+        level <
+        stages.length-1
+      ){
+        level++;
+
+      }else{
+        level = 0;
+      }
+
+      startLevel();
+    };
+}
+
+
+/* =========================================================
+   HINT
+========================================================= */
+
+function hint(){
+
+  if(
+    !playing ||
+    running
+  ){
+    return;
+  }
+
+  hintCount++;
+
+  const s =
+    stages[level];
+
+  if(hintCount===1){
+
+    $('#message').textContent =
+      '💡 힌트: 목표까지 가는 길을 손가락으로 먼저 따라가 보세요.';
+
+  }else{
+
+    $('#message').textContent =
+      `💡 ${s.hint}`;
+  }
+
+  tone(560,.08);
+}
+
+
+/* =========================================================
+   JUDGE
+========================================================= */
+
+function showJudge(text,color){
+
+  const el =
+    $('#judge');
+
+  el.textContent =
+    text;
+
+  el.style.color =
+    color;
+
+  el.classList.remove(
+    'show'
+  );
+
+  void el.offsetWidth;
+
+  el.classList.add(
+    'show'
+  );
+}
+
+
+/* =========================================================
+   PARTICLES
+========================================================= */
+
+function particles(icons){
+
+  for(
+    let i=0;
+    i<14;
+    i++
+  ){
+
+    const p =
+      document.createElement(
+        'span'
+      );
+
+    p.className =
+      'particle';
+
+    p.textContent =
+      icons[
+        Math.floor(
+          Math.random()*
+          icons.length
+        )
+      ];
+
+    p.style.left =
+      '50%';
+
+    p.style.top =
+      '45%';
+
+    p.style.setProperty(
+      '--x',
+      (
+        Math.random()*280-
+        140
+      )+'px'
+    );
+
+    p.style.setProperty(
+      '--y',
+      (
+        Math.random()*230-
+        150
+      )+'px'
+    );
+
+    $('#stage').appendChild(p);
+
+    setTimeout(
+      ()=>p.remove(),
+      1000
+    );
+  }
+}
+
+
+/* =========================================================
+   WAIT
+========================================================= */
+
+function wait(ms){
+
+  return new Promise(
+    resolve=>
+      setTimeout(
+        resolve,
+        ms
+      )
+  );
+}
+
+
+/* =========================================================
+   EVENTS
+========================================================= */
+
+document
+  .querySelectorAll('[data-c]')
+  .forEach(
+    button=>{
+
+      button.addEventListener(
+        'click',
+        ()=>{
+
+          activateAudio();
+
+          addCommand(
+            button.dataset.c
+          );
+        }
+      );
+    }
+  );
+
+
+$('#repeat2').onclick =
+  ()=>{
+    activateAudio();
+    repeatLast();
+  };
+
+
+$('#backCmd').onclick =
+  ()=>{
+
+    if(
+      running ||
+      !commands.length
+    ){
+      return;
+    }
+
+    commands.pop();
+
+    renderQueue();
+  };
+
+
+$('#clearCmd').onclick =
+  ()=>{
+
+    if(running){
+      return;
+    }
+
+    commands = [];
+
+    renderQueue();
+
+    $('#message').textContent =
+      '🗑 프로그램을 모두 지웠습니다.';
+  };
+
+
+$('#runCmd').onclick =
+  runAll;
+
+
+$('#stepCmd').onclick =
+  stepRun;
+
+
+$('#hintBtn').onclick =
+  hint;
+
+
+$('#soundBtn').onclick =
+  ()=>{
+
+    activateAudio();
+
+    soundOn =
+      !soundOn;
+
+    $('#soundBtn').textContent =
+      soundOn
+        ? '🔊 소리 ON'
+        : '🔇 소리 OFF';
+
+    if(soundOn){
+      tone(700,.08);
+    }
+  };
+
+
+$('#startBtn').onclick =
+  startLevel;
+
+})();
+</script>
+
+</body>
+</html>

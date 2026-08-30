@@ -1,0 +1,1801 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>🐞 버그 헌터 연구소</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+:root{
+  --blue:#4338ca;
+  --cyan:#22d3ee;
+  --green:#22c55e;
+  --yellow:#facc15;
+  --pink:#fb7185;
+  --ink:#172554;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 15% 10%,#cffafe,transparent 30%),
+    radial-gradient(circle at 85% 12%,#ddd6fe,transparent 30%),
+    linear-gradient(140deg,#ecfeff,#eef2ff);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:var(--ink);
+}
+
+button,
+select{
+  font:inherit;
+}
+
+button{
+  touch-action:manipulation;
+}
+
+.app{
+  width:min(1000px,100%);
+  margin:auto;
+  padding:14px;
+}
+
+.head{
+  text-align:center;
+  background:#ffffffdd;
+  border:2px solid #c7d2fe;
+  border-radius:24px;
+  padding:14px;
+  box-shadow:0 15px 35px #1e3a8a18;
+}
+
+.head h1{
+  margin:0;
+  font-size:clamp(28px,5vw,42px);
+}
+
+.concept{
+  margin:5px 0 11px;
+  color:#4338ca;
+  font-weight:800;
+}
+
+.hud{
+  display:flex;
+  justify-content:center;
+  gap:7px;
+  flex-wrap:wrap;
+}
+
+.hud b{
+  min-width:90px;
+  padding:8px 12px;
+  background:#fff;
+  border-radius:99px;
+  box-shadow:0 5px 15px #1e3a8a12;
+}
+
+.progress{
+  height:8px;
+  margin-top:11px;
+  overflow:hidden;
+  border-radius:99px;
+  background:#e2e8f0;
+}
+
+.progress-bar{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#22d3ee,#6366f1,#a855f7);
+  transition:.3s;
+}
+
+.lab{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+  margin-top:15px;
+}
+
+.card{
+  position:relative;
+  background:#fff;
+  border-radius:22px;
+  padding:15px;
+  box-shadow:0 12px 32px #1e3a8a18;
+}
+
+.card h2{
+  margin-top:0;
+}
+
+.case-title{
+  padding:10px;
+  border-radius:14px;
+  background:#eef2ff;
+  color:#3730a3;
+  font-weight:1000;
+  text-align:center;
+  margin-bottom:10px;
+}
+
+.mission{
+  margin-bottom:10px;
+  padding:9px;
+  border-radius:12px;
+  background:#ecfeff;
+  color:#0e7490;
+  font-weight:800;
+  font-size:13px;
+}
+
+.world{
+  position:relative;
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:5px;
+  aspect-ratio:1;
+  background:#c7d2fe;
+  padding:8px;
+  border-radius:17px;
+  overflow:hidden;
+}
+
+.cell{
+  position:relative;
+  display:grid;
+  place-items:center;
+  background:#f8fafc;
+  border-radius:8px;
+  font-size:clamp(18px,5vw,32px);
+  transition:.18s;
+}
+
+.cell.wall{
+  background:#64748b;
+}
+
+.cell.danger{
+  background:#fee2e2;
+}
+
+.cell.portal{
+  background:#ede9fe;
+}
+
+.cell.trace{
+  box-shadow:inset 0 0 0 4px #bfdbfe;
+}
+
+.ship{
+  display:inline-block;
+  filter:drop-shadow(0 5px 5px #0003);
+  animation:float 1s ease-in-out infinite alternate;
+}
+
+@keyframes float{
+  to{
+    transform:translateY(-3px);
+  }
+}
+
+.world.shake{
+  animation:shake .35s;
+}
+
+@keyframes shake{
+  25%{transform:translateX(-8px)}
+  75%{transform:translateX(8px)}
+}
+
+.code{
+  display:grid;
+  gap:8px;
+}
+
+.line{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:50px;
+  padding:7px 10px;
+  border-radius:12px;
+  background:#eef2ff;
+  transition:.18s;
+}
+
+.line span.num{
+  width:28px;
+  font-weight:1000;
+  color:#6366f1;
+}
+
+.line b{
+  flex:1;
+}
+
+.line.active{
+  outline:4px solid #facc15;
+  background:#fef3c7;
+  transform:scale(1.02);
+}
+
+.line.done{
+  background:#dcfce7;
+}
+
+.line.error{
+  background:#fee2e2;
+  outline:3px solid #fb7185;
+}
+
+.line select{
+  min-height:40px;
+  border:1px solid #a5b4fc;
+  border-radius:9px;
+  padding:5px 7px;
+  font:700 14px system-ui;
+  background:#fff;
+}
+
+.actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.actions button{
+  min-height:46px;
+  border:0;
+  border-radius:13px;
+  padding:8px 13px;
+  font:800 14px system-ui;
+  cursor:pointer;
+}
+
+.run{
+  background:#22c55e;
+  color:#052e16;
+}
+
+.step{
+  background:#fde047;
+  color:#422006;
+}
+
+.reset{
+  background:#e2e8f0;
+}
+
+.hint{
+  background:#ddd6fe;
+}
+
+.sound{
+  background:#bae6fd;
+}
+
+.speed{
+  min-height:46px;
+  border:0;
+  border-radius:13px;
+  padding:8px;
+  background:#f1f5f9;
+  font-weight:800;
+}
+
+.msg{
+  min-height:60px;
+  padding:12px;
+  text-align:center;
+  font-weight:900;
+  line-height:1.45;
+}
+
+.combo{
+  min-height:30px;
+  text-align:center;
+  color:#ea580c;
+  font-size:20px;
+  font-weight:1000;
+}
+
+.result{
+  display:none;
+  margin-top:10px;
+  padding:12px;
+  text-align:center;
+  border-radius:14px;
+  background:#f0fdf4;
+}
+
+.result.show{
+  display:block;
+}
+
+.stars{
+  font-size:30px;
+}
+
+.judge{
+  position:absolute;
+  left:50%;
+  top:44%;
+  transform:translate(-50%,-50%) scale(.5);
+  opacity:0;
+  z-index:5;
+  pointer-events:none;
+  font-size:clamp(26px,6vw,44px);
+  font-weight:1000;
+  text-align:center;
+  text-shadow:0 3px 9px #0005;
+}
+
+.judge.show{
+  animation:judgePop .7s ease;
+}
+
+@keyframes judgePop{
+  0%{
+    opacity:0;
+    transform:translate(-50%,-50%) scale(.4);
+  }
+  35%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.12);
+  }
+  100%{
+    opacity:0;
+    transform:translate(-50%,-70%) scale(1);
+  }
+}
+
+.particle{
+  position:absolute;
+  pointer-events:none;
+  z-index:10;
+  font-size:22px;
+  animation:fly .9s ease forwards;
+}
+
+@keyframes fly{
+  to{
+    transform:translate(var(--x),var(--y)) rotate(360deg);
+    opacity:0;
+  }
+}
+
+@media(max-width:680px){
+  .lab{
+    grid-template-columns:1fr;
+  }
+
+  .app{
+    padding:8px;
+  }
+
+  .world{
+    max-width:410px;
+    margin:auto;
+  }
+
+  .line{
+    font-size:13px;
+  }
+
+  .line select{
+    max-width:145px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<main class="app">
+
+<header class="head">
+
+  <h1>🐞 버그 헌터 연구소</h1>
+
+  <p class="concept">
+    오늘의 코딩 개념: 실행 결과를 관찰하고 잘못된 명령을 찾아 고치는 것이 디버깅이에요.
+  </p>
+
+  <div class="hud">
+    <b>사건 <span id="lv">1</span>/10</b>
+    <b>버그 <span id="score">0</span> 🐞</b>
+    <b>콤보 <span id="comboScore">0</span></b>
+    <b>목숨 <span id="life">❤️❤️❤️</span></b>
+  </div>
+
+  <div class="progress">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+</header>
+
+
+<section class="lab">
+
+  <div class="card">
+
+    <div class="case-title" id="caseTitle">
+      CASE 1 · 첫 번째 이상 신호
+    </div>
+
+    <div class="mission" id="mission">
+      우주선을 연구 장비까지 이동시키세요.
+    </div>
+
+    <h2>🖥 실행 화면</h2>
+
+    <div class="world" id="world"></div>
+
+    <div class="judge" id="judge"></div>
+
+    <div class="msg" id="msg">
+      코드에는 버그가 숨어 있어요. 먼저 실행해서 관찰하세요.
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h2>🧱 수상한 코드</h2>
+
+    <div class="code" id="code"></div>
+
+    <div class="actions">
+
+      <button class="run" id="run">
+        ▶ 전체 실행
+      </button>
+
+      <button class="step" id="step">
+        ⏭ 한 줄 실행
+      </button>
+
+      <button class="reset" id="reset">
+        ↺ 처음 위치
+      </button>
+
+      <button class="hint" id="hint">
+        💡 힌트
+      </button>
+
+      <button class="sound" id="sound">
+        🔊 소리 ON
+      </button>
+
+      <select class="speed" id="speed">
+        <option value="650">🐢 느리게</option>
+        <option value="390" selected>🚶 보통</option>
+        <option value="180">🐇 빠르게</option>
+      </select>
+
+    </div>
+
+    <div class="combo" id="combo"></div>
+
+    <div class="result" id="result">
+      <div class="stars" id="stars"></div>
+      <b id="resultText"></b>
+    </div>
+
+  </div>
+
+</section>
+
+</main>
+
+
+<script>
+const $ = s => document.querySelector(s);
+
+
+/* =========================================================
+   명령
+========================================================= */
+
+const labels = {
+  U:'↑ 위로',
+  D:'↓ 아래로',
+  L:'← 왼쪽',
+  R:'→ 오른쪽'
+};
+
+const dirs = {
+  U:[0,-1],
+  D:[0,1],
+  L:[-1,0],
+  R:[1,0]
+};
+
+
+/* =========================================================
+   사건 10개
+========================================================= */
+
+const stages = [
+
+  {
+    title:'CASE 1 · 첫 번째 이상 신호',
+    mission:'우주선을 연구 장비까지 이동시키세요.',
+    s:[0,4],
+    g:[2,2],
+    w:[],
+    danger:[],
+    portal:[],
+    c:['R','R','U','L'],
+    hint:'마지막 명령 때문에 목표에서 벗어나고 있어요.'
+  },
+
+  {
+    title:'CASE 2 · 막힌 실험실',
+    mission:'벽을 피해서 연구 장비까지 이동하세요.',
+    s:[0,4],
+    g:[3,3],
+    w:[21],
+    danger:[],
+    portal:[],
+    c:['L','R','R','R'],
+    hint:'첫 번째 명령부터 실제 이동 결과를 살펴보세요.'
+  },
+
+  {
+    title:'CASE 3 · 잘못된 귀환 명령',
+    mission:'회색 벽을 피해 목표 위치로 이동하세요.',
+    s:[4,4],
+    g:[1,2],
+    w:[18],
+    danger:[],
+    portal:[],
+    c:['L','L','L','U','D'],
+    hint:'마지막 명령이 앞에서 한 이동을 되돌리고 있어요.'
+  },
+
+  {
+    title:'CASE 4 · 연구실 통로 오류',
+    mission:'막힌 구역을 피해 오른쪽 연구실로 이동하세요.',
+    s:[0,0],
+    g:[3,2],
+    w:[6,7],
+    danger:[],
+    portal:[],
+    c:['R','R','R','D','U'],
+    hint:'아래로 이동한 뒤 다시 위로 올라가는 부분을 확인하세요.'
+  },
+
+  {
+    title:'CASE 5 · 레이저 구역',
+    mission:'벽과 위험 칸을 피해서 목표까지 이동하세요.',
+    s:[4,0],
+    g:[0,3],
+    w:[8,13],
+    danger:[11],
+    portal:[],
+    c:['L','L','L','L','D','D','U'],
+    hint:'마지막 근처의 세로 이동 중 하나가 문제예요.'
+  },
+
+  {
+    title:'CASE 6 · 위험한 배터리실',
+    mission:'🔥 위험 칸에 들어가지 않고 🔬에 도착하세요.',
+    s:[0,4],
+    g:[4,1],
+    w:[12],
+    danger:[7,8],
+    portal:[],
+    c:['R','R','R','U','R','U','U'],
+    hint:'가운데에서 바로 위로 올라가면 위험 구역이에요.'
+  },
+
+  {
+    title:'CASE 7 · 순간이동 장치',
+    mission:'🌀 포털을 이용해서 목표 위치까지 이동하세요.',
+    s:[0,4],
+    g:[4,0],
+    w:[11,16],
+    danger:[],
+    portal:[[2,4],[3,1]],
+    c:['R','R','R','R','U','U'],
+    hint:'포털에 들어가면 다른 위치로 순간이동합니다.'
+  },
+
+  {
+    title:'CASE 8 · 경보 구역',
+    mission:'위험 칸을 피해 연구 데이터를 회수하세요.',
+    s:[4,4],
+    g:[0,0],
+    w:[6,16],
+    danger:[7,12],
+    portal:[],
+    c:['L','L','U','U','L','U','L','U'],
+    hint:'중간의 위쪽 이동이 위험 칸으로 연결되는지 확인하세요.'
+  },
+
+  {
+    title:'CASE 9 · 포털 시스템 오류',
+    mission:'포털과 벽을 이용해 최단 경로를 찾아보세요.',
+    s:[0,0],
+    g:[4,4],
+    w:[6,7,17],
+    danger:[13],
+    portal:[[0,2],[4,2]],
+    c:['D','D','R','R','D','D'],
+    hint:'포털을 탄 뒤에도 현재 위치 기준으로 다음 명령이 실행돼요.'
+  },
+
+  {
+    title:'FINAL CASE · 중앙 시스템 복구',
+    mission:'벽, 위험 구역, 포털을 모두 분석해 중앙 시스템을 복구하세요.',
+    s:[0,4],
+    g:[4,0],
+    w:[6,11,13,18],
+    danger:[7,17],
+    portal:[[2,4],[4,2]],
+    c:['R','R','R','U','U','L','U','R'],
+    hint:'한 줄씩 실행하면서 포털 이후 위치를 꼭 확인하세요.'
+  }
+
+];
+
+
+/* =========================================================
+   상태
+========================================================= */
+
+let lv = 0;
+let pos = [0,0];
+
+let score = 0;
+let combo = 0;
+let maxCombo = 0;
+
+let lives = 3;
+
+let running = false;
+
+let stepIndex = 0;
+
+let trace = [];
+
+let hintCount = 0;
+
+let soundOn = true;
+let audioCtx = null;
+
+
+/* =========================================================
+   소리
+========================================================= */
+
+function tone(freq,duration=.1,type='sine'){
+
+  if(!soundOn){
+    return;
+  }
+
+  try{
+
+    if(!audioCtx){
+
+      audioCtx = new (
+        window.AudioContext ||
+        window.webkitAudioContext
+      )();
+    }
+
+    if(audioCtx.state === 'suspended'){
+      audioCtx.resume();
+    }
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = type;
+    osc.frequency.value = freq;
+
+    gain.gain.setValueAtTime(
+      .06,
+      audioCtx.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      .001,
+      audioCtx.currentTime + duration
+    );
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+
+  }catch(e){}
+}
+
+
+function soundMove(){
+  tone(420,.05,'triangle');
+}
+
+function soundError(){
+  tone(140,.18,'sawtooth');
+}
+
+function soundSuccess(){
+
+  tone(520,.07);
+
+  setTimeout(
+    ()=>tone(700,.08),
+    80
+  );
+
+  setTimeout(
+    ()=>tone(900,.12),
+    160
+  );
+}
+
+
+/* =========================================================
+   스테이지 불러오기
+========================================================= */
+
+function load(){
+
+  running = false;
+  stepIndex = 0;
+  trace = [];
+  hintCount = 0;
+
+  const s = stages[lv];
+
+  pos = [...s.s];
+
+  $('#lv').textContent =
+    lv+1;
+
+  $('#caseTitle').textContent =
+    s.title;
+
+  $('#mission').textContent =
+    s.mission;
+
+  $('#msg').textContent =
+    '먼저 코드를 실행하고 어디서 문제가 생기는지 관찰하세요.';
+
+  $('#result').classList.remove(
+    'show'
+  );
+
+  $('#progressBar').style.width =
+    (
+      lv /
+      stages.length *
+      100
+    ) + '%';
+
+
+  $('#code').innerHTML =
+    s.c
+      .map(
+        (v,i)=>`
+          <div class="line">
+            <span class="num">${i+1}</span>
+
+            <b>move</b>
+
+            <select data-i="${i}">
+              ${
+                Object.keys(labels)
+                  .map(
+                    k=>`
+                      <option
+                        value="${k}"
+                        ${k===v?'selected':''}>
+                        ${labels[k]}
+                      </option>
+                    `
+                  )
+                  .join('')
+              }
+            </select>
+          </div>
+        `
+      )
+      .join('');
+
+
+  draw();
+}
+
+
+/* =========================================================
+   지도
+========================================================= */
+
+function draw(){
+
+  const s =
+    stages[lv];
+
+  let html = '';
+
+
+  for(
+    let y=0;
+    y<5;
+    y++
+  ){
+
+    for(
+      let x=0;
+      x<5;
+      x++
+    ){
+
+      const i =
+        y*5+x;
+
+
+      let cls =
+        'cell';
+
+
+      if(
+        s.w.includes(i)
+      ){
+        cls += ' wall';
+      }
+
+
+      if(
+        s.danger.includes(i)
+      ){
+        cls += ' danger';
+      }
+
+
+      const portalIndex =
+        s.portal.findIndex(
+          p =>
+            p[0]===x &&
+            p[1]===y
+        );
+
+
+      if(portalIndex >= 0){
+        cls += ' portal';
+      }
+
+
+      if(
+        trace.some(
+          p =>
+            p[0]===x &&
+            p[1]===y
+        )
+      ){
+        cls += ' trace';
+      }
+
+
+      let content = '';
+
+
+      if(
+        pos[0]===x &&
+        pos[1]===y
+      ){
+
+        content =
+          '<span class="ship">🛸</span>';
+
+      }else if(
+        s.g[0]===x &&
+        s.g[1]===y
+      ){
+
+        content =
+          '🔬';
+
+      }else if(
+        s.w.includes(i)
+      ){
+
+        content =
+          '▦';
+
+      }else if(
+        s.danger.includes(i)
+      ){
+
+        content =
+          '🔥';
+
+      }else if(
+        portalIndex >= 0
+      ){
+
+        content =
+          '🌀';
+      }
+
+
+      html +=
+        `<div class="${cls}">${content}</div>`;
+    }
+  }
+
+
+  $('#world').innerHTML =
+    html;
+}
+
+
+/* =========================================================
+   현재 코드
+========================================================= */
+
+function getCommands(){
+
+  return [
+    ...document.querySelectorAll(
+      '#code select'
+    )
+  ]
+  .map(
+    select =>
+      select.value
+  );
+}
+
+
+/* =========================================================
+   한 명령 실행
+========================================================= */
+
+async function executeCommand(command,lineIndex){
+
+  const s =
+    stages[lv];
+
+
+  const lines =
+    document.querySelectorAll(
+      '.line'
+    );
+
+
+  lines.forEach(
+    line => {
+      line.classList.remove(
+        'active',
+        'error'
+      );
+    }
+  );
+
+
+  if(lines[lineIndex]){
+
+    lines[lineIndex]
+      .classList
+      .add('active');
+  }
+
+
+  const [dx,dy] =
+    dirs[command];
+
+
+  let nx =
+    pos[0]+dx;
+
+  let ny =
+    pos[1]+dy;
+
+
+  /*
+    밖으로 나가거나 벽
+  */
+
+  if(
+    nx<0 ||
+    nx>4 ||
+    ny<0 ||
+    ny>4 ||
+    s.w.includes(
+      ny*5+nx
+    )
+  ){
+
+    if(lines[lineIndex]){
+      lines[lineIndex]
+        .classList
+        .add('error');
+    }
+
+    $('#world')
+      .classList
+      .add('shake');
+
+    setTimeout(
+      ()=>{
+        $('#world')
+          .classList
+          .remove('shake');
+      },
+      400
+    );
+
+
+    $('#msg').textContent =
+      `💥 ${lineIndex+1}번째 줄에서 충돌했습니다! 이 줄 근처를 확인하세요.`;
+
+
+    showJudge(
+      'BUG!',
+      '#fb7185'
+    );
+
+    soundError();
+
+    return false;
+  }
+
+
+  /*
+    이동
+  */
+
+  pos = [nx,ny];
+
+  trace.push(
+    [...pos]
+  );
+
+
+  soundMove();
+
+  draw();
+
+
+  /*
+    위험 칸
+  */
+
+  if(
+    s.danger.includes(
+      ny*5+nx
+    )
+  ){
+
+    if(lines[lineIndex]){
+      lines[lineIndex]
+        .classList
+        .add('error');
+    }
+
+    $('#msg').textContent =
+      `🔥 ${lineIndex+1}번째 줄에서 위험 구역에 들어갔어요!`;
+
+    showJudge(
+      'DANGER!',
+      '#ef4444'
+    );
+
+    soundError();
+
+    return false;
+  }
+
+
+  /*
+    포털
+  */
+
+  const portalIndex =
+    s.portal.findIndex(
+      p =>
+        p[0]===pos[0] &&
+        p[1]===pos[1]
+    );
+
+
+  if(
+    portalIndex >= 0 &&
+    s.portal.length === 2
+  ){
+
+    const other =
+      s.portal[
+        portalIndex===0
+          ? 1
+          : 0
+      ];
+
+    await wait(180);
+
+    pos =
+      [...other];
+
+    trace.push(
+      [...pos]
+    );
+
+    $('#msg').textContent =
+      '🌀 포털 작동! 새로운 위치에서 다음 명령이 실행됩니다.';
+
+    tone(
+      780,
+      .12,
+      'sine'
+    );
+
+    draw();
+  }
+
+
+  await wait(
+    Number(
+      $('#speed').value
+    )
+  );
+
+
+  lines[lineIndex]
+    ?.classList
+    .remove('active');
+
+  lines[lineIndex]
+    ?.classList
+    .add('done');
+
+
+  return true;
+}
+
+
+/* =========================================================
+   전체 실행
+========================================================= */
+
+$('#run').addEventListener(
+  'click',
+  async()=>{
+
+    if(running){
+      return;
+    }
+
+
+    running = true;
+
+    resetPosition();
+
+
+    const commands =
+      getCommands();
+
+
+    const lines =
+      document.querySelectorAll(
+        '.line'
+      );
+
+
+    lines.forEach(
+      line =>
+        line.classList.remove(
+          'done',
+          'active',
+          'error'
+        )
+    );
+
+
+    let success =
+      true;
+
+
+    $('#msg').textContent =
+      '▶ 코드를 위에서 아래로 실행합니다.';
+
+
+    for(
+      let i=0;
+      i<commands.length;
+      i++
+    ){
+
+      const ok =
+        await executeCommand(
+          commands[i],
+          i
+        );
+
+
+      if(!ok){
+
+        success =
+          false;
+
+        break;
+      }
+    }
+
+
+    const goal =
+      stages[lv].g;
+
+
+    const solved =
+      success &&
+      pos[0]===goal[0] &&
+      pos[1]===goal[1];
+
+
+    if(solved){
+
+      solvedStage();
+
+    }else if(success){
+
+      failGoal();
+    }
+
+
+    running = false;
+  }
+);
+
+
+/* =========================================================
+   한 줄 실행
+========================================================= */
+
+$('#step').addEventListener(
+  'click',
+  async()=>{
+
+    if(running){
+      return;
+    }
+
+
+    const commands =
+      getCommands();
+
+
+    if(
+      stepIndex >=
+      commands.length
+    ){
+
+      resetPosition();
+      stepIndex = 0;
+
+      document
+        .querySelectorAll('.line')
+        .forEach(
+          line =>
+            line.classList.remove(
+              'done',
+              'active',
+              'error'
+            )
+        );
+    }
+
+
+    running = true;
+
+
+    const ok =
+      await executeCommand(
+        commands[stepIndex],
+        stepIndex
+      );
+
+
+    if(ok){
+
+      stepIndex++;
+
+
+      const goal =
+        stages[lv].g;
+
+
+      if(
+        stepIndex >=
+        commands.length
+      ){
+
+        if(
+          pos[0]===goal[0] &&
+          pos[1]===goal[1]
+        ){
+
+          solvedStage();
+
+        }else{
+
+          failGoal();
+        }
+      }
+
+    }
+
+
+    running = false;
+  }
+);
+
+
+/* =========================================================
+   성공
+========================================================= */
+
+function solvedStage(){
+
+  combo++;
+
+  maxCombo =
+    Math.max(
+      maxCombo,
+      combo
+    );
+
+
+  score++;
+
+  $('#score').textContent =
+    score;
+
+  $('#comboScore').textContent =
+    combo;
+
+
+  $('#combo').textContent =
+    combo>=2
+      ? `🔥 ${combo} CASE 연속 해결!`
+      : '';
+
+
+  let earnedStars =
+    3;
+
+
+  if(hintCount >= 2){
+
+    earnedStars = 1;
+
+  }else if(hintCount === 1){
+
+    earnedStars = 2;
+  }
+
+
+  $('#stars').textContent =
+    '⭐'.repeat(
+      earnedStars
+    );
+
+
+  $('#resultText').textContent =
+    `${lv+1}번째 사건 해결! 힌트 사용 ${hintCount}회`;
+
+
+  $('#result')
+    .classList
+    .add('show');
+
+
+  $('#msg').textContent =
+    '✅ 버그 수정 성공! 실행 결과가 목표와 정확히 같아요.';
+
+
+  showJudge(
+    'BUG FIXED!',
+    '#22c55e'
+  );
+
+
+  particles(
+    ['🐞','✨','⭐','🔬']
+  );
+
+
+  soundSuccess();
+
+
+  saveProgress();
+
+
+  if(
+    lv <
+    stages.length-1
+  ){
+
+    setTimeout(
+      ()=>{
+
+        lv++;
+
+        load();
+
+      },
+      1300
+    );
+
+  }else{
+
+    $('#progressBar').style.width =
+      '100%';
+
+    $('#msg').textContent =
+      '🏆 모든 버그를 해결했습니다! 최고의 디버깅 연구원이에요!';
+
+    $('#resultText').textContent =
+      `총 ${score}개 사건 해결 · 최대 ${maxCombo}콤보`;
+  }
+}
+
+
+/* =========================================================
+   목표 실패
+========================================================= */
+
+function failGoal(){
+
+  combo = 0;
+
+  $('#comboScore').textContent =
+    0;
+
+  $('#combo').textContent =
+    '';
+
+
+  lives--;
+
+  updateLives();
+
+
+  $('#msg').textContent =
+    '🧪 충돌은 없지만 목표 위치가 아니에요. 마지막 위치를 보고 코드를 수정하세요.';
+
+
+  showJudge(
+    'WRONG RESULT',
+    '#f59e0b'
+  );
+
+
+  soundError();
+
+
+  if(lives <= 0){
+
+    $('#msg').textContent =
+      '💔 연구 에너지가 모두 소진됐어요. 하지만 코드는 그대로 있으니 다시 분석해 보세요.';
+
+    lives = 3;
+
+    setTimeout(
+      updateLives,
+      900
+    );
+  }
+}
+
+
+/* =========================================================
+   초기 위치
+========================================================= */
+
+function resetPosition(){
+
+  pos =
+    [...stages[lv].s];
+
+  trace = [
+    [...pos]
+  ];
+
+  stepIndex = 0;
+
+
+  document
+    .querySelectorAll('.line')
+    .forEach(
+      line =>
+        line.classList.remove(
+          'done',
+          'active',
+          'error'
+        )
+    );
+
+
+  draw();
+}
+
+
+$('#reset').addEventListener(
+  'click',
+  ()=>{
+
+    if(running){
+      return;
+    }
+
+    resetPosition();
+
+    $('#msg').textContent =
+      '↺ 우주선을 처음 위치로 되돌렸습니다.';
+  }
+);
+
+
+/* =========================================================
+   힌트
+========================================================= */
+
+$('#hint').addEventListener(
+  'click',
+  ()=>{
+
+    if(running){
+      return;
+    }
+
+
+    hintCount++;
+
+
+    if(hintCount === 1){
+
+      $('#msg').textContent =
+        '💡 힌트 1: 코드를 한 줄씩 실행하면서 우주선의 위치를 관찰하세요.';
+
+    }else if(
+      hintCount === 2
+    ){
+
+      $('#msg').textContent =
+        `💡 힌트 2: ${stages[lv].hint}`;
+
+    }else{
+
+      const commands =
+        getCommands();
+
+      $('#msg').textContent =
+        `💡 힌트 3: 현재 명령은 ${commands.map(x=>labels[x]).join(' → ')} 입니다. 목표 방향과 비교해 보세요.`;
+    }
+
+
+    tone(
+      560,
+      .08
+    );
+  }
+);
+
+
+/* =========================================================
+   판정
+========================================================= */
+
+function showJudge(text,color){
+
+  const el =
+    $('#judge');
+
+  el.textContent =
+    text;
+
+  el.style.color =
+    color;
+
+  el.classList.remove(
+    'show'
+  );
+
+  void el.offsetWidth;
+
+  el.classList.add(
+    'show'
+  );
+}
+
+
+/* =========================================================
+   파티클
+========================================================= */
+
+function particles(icons){
+
+  const card =
+    $('#world').parentElement;
+
+
+  for(
+    let i=0;
+    i<15;
+    i++
+  ){
+
+    const p =
+      document.createElement(
+        'span'
+      );
+
+    p.className =
+      'particle';
+
+    p.textContent =
+      icons[
+        Math.floor(
+          Math.random() *
+          icons.length
+        )
+      ];
+
+    p.style.left =
+      '50%';
+
+    p.style.top =
+      '48%';
+
+
+    p.style.setProperty(
+      '--x',
+      (
+        Math.random()*260 -
+        130
+      ) + 'px'
+    );
+
+    p.style.setProperty(
+      '--y',
+      (
+        Math.random()*230 -
+        150
+      ) + 'px'
+    );
+
+
+    card.appendChild(p);
+
+
+    setTimeout(
+      ()=>p.remove(),
+      1000
+    );
+  }
+}
+
+
+/* =========================================================
+   목숨
+========================================================= */
+
+function updateLives(){
+
+  $('#life').textContent =
+    '❤️'.repeat(lives) +
+    '🖤'.repeat(3-lives);
+}
+
+
+/* =========================================================
+   저장
+========================================================= */
+
+function saveProgress(){
+
+  try{
+
+    localStorage.setItem(
+      'bugHunterClear',
+      String(
+        Math.max(
+          Number(
+            localStorage.getItem(
+              'bugHunterClear'
+            ) || 0
+          ),
+          lv+1
+        )
+      )
+    );
+
+    localStorage.setItem(
+      'bugHunterBestCombo',
+      String(
+        Math.max(
+          Number(
+            localStorage.getItem(
+              'bugHunterBestCombo'
+            ) || 0
+          ),
+          maxCombo
+        )
+      )
+    );
+
+  }catch(e){}
+}
+
+
+/* =========================================================
+   소리
+========================================================= */
+
+$('#sound').addEventListener(
+  'click',
+  ()=>{
+
+    soundOn =
+      !soundOn;
+
+
+    $('#sound').textContent =
+      soundOn
+        ? '🔊 소리 ON'
+        : '🔇 소리 OFF';
+
+
+    if(soundOn){
+
+      tone(
+        700,
+        .08
+      );
+    }
+  }
+);
+
+
+/* =========================================================
+   대기
+========================================================= */
+
+function wait(ms){
+
+  return new Promise(
+    resolve =>
+      setTimeout(
+        resolve,
+        ms
+      )
+  );
+}
+
+
+/* =========================================================
+   시작
+========================================================= */
+
+updateLives();
+load();
+
+</script>
+
+</body>
+</html>

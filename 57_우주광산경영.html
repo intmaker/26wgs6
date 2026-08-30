@@ -1,11 +1,2476 @@
-<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no"><title>🛰️ 우주 광산 경영</title><style>
-:root{--c1:#3730a3;--c2:#a5b4fc}*{box-sizing:border-box}html,body{height:100%}body{margin:0;overflow:hidden;display:grid;place-items:center;color:#f8fafc;font-family:system-ui,"Noto Sans KR",sans-serif;background:radial-gradient(circle at 18% 10%,var(--c1),#11162e 52%,#030712);user-select:none;-webkit-user-select:none}.app{width:min(95vw,720px);height:min(95vh,860px);display:flex;flex-direction:column;gap:11px}.top{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:2px 4px}.brand small{display:block;color:#cbd5e1;font-size:10px;font-weight:900;letter-spacing:.2em}.brand h1{margin:2px 0 0;font-size:clamp(25px,5vw,38px);letter-spacing:-.05em}.hud{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.stat{min-width:67px;padding:7px 10px;text-align:center;border:1px solid #ffffff25;border-radius:14px;background:#0f172ac7}.stat small{display:block;color:#cbd5e1;font-size:9px}.stat b{font-size:19px}.stage{position:relative;flex:1;min-height:400px;overflow:hidden;border:1px solid #ffffff27;border-radius:25px;background:linear-gradient(145deg,#14203b,#090e21);box-shadow:0 25px 70px #0009;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:#050916e9}.overlay.hide{display:none}.card{width:min(100%,410px);padding:28px 24px;text-align:center;border:1px solid #ffffff25;border-radius:23px;background:#111a36ee;box-shadow:0 20px 55px #0008}.card .emoji{font-size:55px}.card h2{margin:8px;font-size:28px}.card p{margin:0 0 19px;color:#cbd5e1;font-size:14px;line-height:1.72;word-break:keep-all}.primary{min-height:48px;width:100%;padding:12px 18px;border:0;border-radius:13px;color:#08111f;background:linear-gradient(135deg,var(--c2),#fef3c7);font:900 15px system-ui;cursor:pointer}.tip{min-height:18px;text-align:center;color:#aebbd0;font-size:12px}.hidden{display:none!important}button{font-family:inherit}.mine-game{height:100%;display:flex;flex-direction:column;align-items:center;gap:11px;padding:14px;background:radial-gradient(circle at 50% 25%,#312e81,#090b24 64%)}.planet{position:relative;width:145px;height:145px;display:grid;place-items:center;border-radius:50%;font-size:95px;background:#ffffff08;box-shadow:0 0 35px #818cf855}.orbit-drone{position:absolute;left:50%;top:50%;font-size:28px;animation:orbit 6s linear infinite}@keyframes orbit{from{transform:rotate(0) translateX(92px) rotate(0)}to{transform:rotate(360deg) translateX(92px) rotate(-360deg)}}.resources{width:min(100%,560px);display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.resources div{text-align:center;padding:10px;border-radius:12px;background:#ffffff0d;color:#c7d2fe}.departments{width:min(100%,560px);display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.dept{padding:10px 6px;border:1px solid #ffffff20;border-radius:14px;background:#11183b;text-align:center}.dept span,.dept b{display:block}.dept span{font-size:31px}.dept small{display:block;min-height:35px;color:#a5b4fc;font-size:10px}.alloc{display:flex;justify-content:center;align-items:center;gap:7px;margin-top:7px}.alloc button{width:38px;height:38px;border:0;border-radius:9px;background:#4f46e5;color:#fff;font-size:19px}.event{min-height:43px;padding:10px 14px;text-align:center;border-radius:12px;background:#fbbf2417;color:#fde68a;font-weight:800}@media(max-width:430px){.planet{width:110px;height:110px;font-size:70px}.departments{gap:4px}.dept{padding:7px 3px}.dept span{font-size:25px}}
-@media(max-width:520px){.app{width:100%;height:100%;padding:9px}.stage{min-height:0;border-radius:20px}.brand h1{font-size:25px}.stat{min-width:61px;padding:6px 8px}.card{padding:24px 19px}.tip{font-size:11px}}
-</style></head><body><main class="app"><header class="top"><div class="brand"><small>ASTRO MINING</small><h1>🛰️ 우주 광산 경영</h1></div><div class="hud" id="hud"></div></header><section class="stage" id="stage"><div class="mine-game"><div class="planet">🪨<div class="orbit-drone" id="droneVisual">🛰️</div></div><div class="resources"><div>⚡ 에너지 <b id="energy">80</b></div><div>⛏️ 원석 <b id="ore">0</b></div><div>💰 크레딧 <b id="credits">0</b></div></div><div class="departments" id="departments"></div><div class="event" id="mineEvent">목표: 90초 안에 800 크레딧</div></div><div class="overlay" id="overlay"><div class="card"><div class="emoji" id="resultEmoji">🛰️</div><h2 id="resultTitle">우주 광산 경영</h2><p id="resultText">드론을 발전·채굴·정제 부서에 재배치해 제한시간 안에 생산 목표를 달성하세요.</p><button class="primary" id="startBtn">게임 시작</button></div></div></section><div class="tip">드론을 발전·채굴·정제 부서에 재배치해 제한시간 안에 생산 목표를 달성하세요.</div></main><script>
-const $=s=>document.querySelector(s),stage=$('#stage'),overlay=$('#overlay'),startBtn=$('#startBtn');
-const safeGet=(k,d=0)=>{try{return Number(localStorage.getItem(k))||d}catch(e){return d}},safeSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
-function showResult(icon,title,text,button='다시 하기'){ $('#resultEmoji').textContent=icon;$('#resultTitle').textContent=title;$('#resultText').innerHTML=text;startBtn.textContent=button;overlay.classList.remove('hide') }
-const hud=$('#hud'),deps=$('#departments'),eventEl=$('#mineEvent');let running=false,time=90,energy=80,ore=0,credits=0,drones=[2,2,2],free=2,timer,tickCount=0;const defs=[['발전','⚡','에너지 생산'],['채굴','⛏️','에너지로 원석 채굴'],['정제','🏭','원석을 크레딧으로 변환']];hud.innerHTML='<div class="stat"><small>남은 시간</small><b id="time">90</b></div><div class="stat"><small>미배치 드론</small><b id="free">2</b></div>';function renderDeps(){deps.innerHTML='';defs.forEach((d,i)=>{const e=document.createElement('div');e.className='dept';e.innerHTML=`<span>${d[1]}</span><b>${d[0]}</b><small>${d[2]}</small><div class="alloc"><button data-i="${i}" data-d="-1">−</button><strong>${drones[i]}</strong><button data-i="${i}" data-d="1">＋</button></div>`;deps.appendChild(e)});deps.querySelectorAll('button').forEach(b=>b.onclick=()=>allocate(+b.dataset.i,+b.dataset.d));$('#free').textContent=free}
-function startGame(){clearInterval(timer);time=90;energy=80;ore=0;credits=0;drones=[2,2,2];free=2;tickCount=0;running=true;overlay.classList.add('hide');eventEl.textContent='목표: 90초 안에 800 크레딧';updateUI();renderDeps();timer=setInterval(tick,1000)}function allocate(i,d){if(!running)return;if(d>0&&free>0){drones[i]++;free--}if(d<0&&drones[i]>0){drones[i]--;free++}renderDeps()}
-function tick(){if(!running)return;tickCount++;energy+=drones[0]*7;const mined=Math.min(drones[1]*3,Math.floor(energy/2));energy-=mined*2;ore+=mined;const refined=Math.min(ore,drones[2]*3);ore-=refined;credits+=refined*5;if(tickCount%12===0){const events=[['태양 폭풍! 에너지 +35',()=>energy+=35],['광맥 발견! 원석 +25',()=>ore+=25],['장비 고장! 에너지 -25',()=>energy=Math.max(0,energy-25)],['상인 방문! 크레딧 +60',()=>credits+=60]],e=events[Math.floor(Math.random()*events.length)];e[1]();eventEl.textContent=e[0]}time--;updateUI();if(credits>=800)return end(true);if(time<=0)return end(false)}function updateUI(){$('#time').textContent=time;$('#energy').textContent=Math.floor(energy);$('#ore').textContent=Math.floor(ore);$('#credits').textContent=Math.floor(credits)}function end(win){running=false;clearInterval(timer);showResult(win?'🏆':'🪨',win?'광산 계약 달성!':'계약 시간 종료',win?`${90-time}초 만에 ${Math.floor(credits)} 크레딧을 생산했습니다.`:`${Math.floor(credits)} 크레딧을 생산했습니다.<br>발전→채굴→정제 순서의 병목을 찾아 드론을 재배치하세요.`)}startBtn.onclick=startGame;renderDeps();updateUI();
-</script></body></html>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🛰️ 우주 광산 경영 챌린지</title>
+
+<style>
+*{box-sizing:border-box}
+
+:root{
+  --indigo:#4f46e5;
+  --cyan:#67e8f9;
+  --green:#4ade80;
+  --yellow:#fde047;
+  --pink:#fb7185;
+  --red:#ef4444;
+  --dark:#070b18;
+}
+
+html,body{
+  min-height:100%;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  overflow-x:hidden;
+  background:
+    radial-gradient(circle at 20% 0,#4338ca88,transparent 35%),
+    radial-gradient(circle at 80% 8%,#0ea5e988,transparent 28%),
+    linear-gradient(150deg,#070b18,#111936 55%,#050713);
+  color:#f8fafc;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+button{
+  font:inherit;
+  touch-action:manipulation;
+}
+
+.app{
+  width:min(100%,1000px);
+  margin:auto;
+  padding:10px;
+}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:10px;
+  margin-bottom:8px;
+}
+
+.brand small{
+  display:block;
+  color:#a5f3fc;
+  font-size:9px;
+  font-weight:1000;
+  letter-spacing:.18em;
+}
+
+.brand h1{
+  margin:2px 0 0;
+  font-size:clamp(25px,5vw,40px);
+}
+
+.hud{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.stat{
+  min-width:65px;
+  padding:6px 8px;
+  border:1px solid #ffffff20;
+  border-radius:13px;
+  background:#ffffff0b;
+  text-align:center;
+}
+
+.stat small{
+  display:block;
+  color:#aebbd0;
+  font-size:8px;
+}
+
+.stat b{
+  font-size:16px;
+}
+
+.progress-wrap{
+  height:8px;
+  margin-bottom:8px;
+  overflow:hidden;
+  border-radius:99px;
+  background:#ffffff13;
+}
+
+.progress{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#22d3ee,#6366f1,#a3e635);
+  transition:.3s;
+}
+
+.stage{
+  position:relative;
+  min-height:730px;
+  overflow:hidden;
+  border:1px solid #ffffff22;
+  border-radius:25px;
+  background:
+    radial-gradient(circle at 50% 22%,#312e81,#11162e 60%,#070b18);
+  box-shadow:0 25px 70px #0009;
+}
+
+/* ========================================
+   전체 게임
+======================================== */
+
+.mine-game{
+  min-height:730px;
+  padding:12px;
+  display:grid;
+  grid-template-columns:.9fr 1.1fr;
+  gap:12px;
+}
+
+.left-panel,
+.right-panel{
+  border:1px solid #ffffff18;
+  border-radius:20px;
+  background:#ffffff08;
+  padding:12px;
+}
+
+/* ========================================
+   행성
+======================================== */
+
+.planet-area{
+  display:grid;
+  place-items:center;
+  min-height:250px;
+  position:relative;
+}
+
+.planet{
+  position:relative;
+  width:160px;
+  height:160px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  font-size:100px;
+  background:
+    radial-gradient(circle at 35% 25%,#ffffff20,transparent 20%),
+    #ffffff08;
+  box-shadow:
+    0 0 45px #818cf866,
+    inset -15px -15px 25px #0004;
+}
+
+.orbit-drone{
+  position:absolute;
+  left:50%;
+  top:50%;
+  font-size:30px;
+  animation:orbit 6s linear infinite;
+}
+
+@keyframes orbit{
+  from{
+    transform:rotate(0deg) translateX(100px) rotate(0deg);
+  }
+  to{
+    transform:rotate(360deg) translateX(100px) rotate(-360deg);
+  }
+}
+
+.stars-bg{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+.star{
+  position:absolute;
+  width:2px;
+  height:2px;
+  border-radius:50%;
+  background:#fff;
+  opacity:.7;
+  animation:twinkle 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes twinkle{
+  to{
+    opacity:.15;
+    transform:scale(.5);
+  }
+}
+
+/* ========================================
+   자원
+======================================== */
+
+.resources{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+  margin-top:8px;
+}
+
+.resource{
+  padding:9px 6px;
+  border-radius:12px;
+  background:#0f172acc;
+  text-align:center;
+}
+
+.resource small{
+  display:block;
+  color:#a5b4fc;
+  font-size:8px;
+}
+
+.resource b{
+  font-size:17px;
+}
+
+.resource.flash{
+  animation:resourceFlash .35s;
+}
+
+@keyframes resourceFlash{
+  50%{
+    background:#14532d;
+    transform:scale(1.04);
+  }
+}
+
+/* ========================================
+   계약
+======================================== */
+
+.contract{
+  margin-top:10px;
+  padding:10px;
+  border-radius:14px;
+  background:#172554bb;
+  border:1px solid #ffffff16;
+}
+
+.contract-title{
+  color:#93c5fd;
+  font-size:9px;
+  font-weight:1000;
+  letter-spacing:.12em;
+}
+
+.contract-name{
+  margin:3px 0;
+  font-size:17px;
+  font-weight:1000;
+}
+
+.contract-desc{
+  color:#cbd5e1;
+  font-size:11px;
+  line-height:1.45;
+}
+
+.goal{
+  margin-top:7px;
+  padding:7px;
+  border-radius:10px;
+  background:#ffffff0c;
+  text-align:center;
+  font-weight:900;
+  color:#fde68a;
+}
+
+/* ========================================
+   생산 흐름
+======================================== */
+
+.flow{
+  margin-top:10px;
+  padding:9px;
+  border-radius:13px;
+  background:#07111fcc;
+  text-align:center;
+  color:#cbd5e1;
+  font-size:11px;
+  font-weight:900;
+}
+
+.flow strong{
+  color:#fff;
+}
+
+.arrow{
+  color:#67e8f9;
+  padding:0 3px;
+}
+
+/* ========================================
+   부서
+======================================== */
+
+.right-panel h2{
+  margin-top:0;
+}
+
+.departments{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+
+.dept{
+  position:relative;
+  padding:10px 6px;
+  border:1px solid #ffffff20;
+  border-radius:15px;
+  background:#11183b;
+  text-align:center;
+  transition:.2s;
+}
+
+.dept.hot{
+  box-shadow:0 0 18px #facc1555;
+}
+
+.dept.bottleneck{
+  outline:3px solid #fb7185;
+}
+
+.dept span{
+  display:block;
+  font-size:34px;
+}
+
+.dept b{
+  display:block;
+}
+
+.dept small{
+  display:block;
+  min-height:34px;
+  color:#a5b4fc;
+  font-size:9px;
+}
+
+.alloc{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:6px;
+  margin-top:7px;
+}
+
+.alloc button{
+  width:38px;
+  height:38px;
+  border:0;
+  border-radius:9px;
+  background:#4f46e5;
+  color:#fff;
+  font-size:19px;
+  font-weight:1000;
+  cursor:pointer;
+}
+
+.alloc strong{
+  min-width:20px;
+}
+
+.rate{
+  margin-top:6px;
+  padding:5px;
+  border-radius:8px;
+  background:#ffffff08;
+  color:#cbd5e1;
+  font-size:9px;
+}
+
+/* ========================================
+   업그레이드
+======================================== */
+
+.upgrades{
+  margin-top:10px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+}
+
+.upgrade{
+  min-height:68px;
+  border:1px solid #ffffff18;
+  border-radius:12px;
+  padding:7px;
+  background:#ffffff0b;
+  color:#fff;
+  cursor:pointer;
+}
+
+.upgrade b{
+  display:block;
+  font-size:11px;
+}
+
+.upgrade small{
+  display:block;
+  margin-top:4px;
+  color:#cbd5e1;
+  font-size:8px;
+}
+
+.upgrade:disabled{
+  opacity:.35;
+}
+
+/* ========================================
+   이벤트
+======================================== */
+
+.event{
+  min-height:52px;
+  margin-top:10px;
+  padding:10px 13px;
+  display:grid;
+  place-items:center;
+  text-align:center;
+  border-radius:12px;
+  background:#fbbf2417;
+  color:#fde68a;
+  font-weight:900;
+  font-size:12px;
+}
+
+.event.good{
+  background:#22c55e18;
+  color:#bbf7d0;
+}
+
+.event.bad{
+  background:#ef444418;
+  color:#fecaca;
+}
+
+/* ========================================
+   분석
+======================================== */
+
+.analysis{
+  margin-top:9px;
+  padding:9px;
+  border-radius:12px;
+  background:#070d1acc;
+  font-size:10px;
+  color:#cbd5e1;
+  line-height:1.5;
+}
+
+.analysis b{
+  color:#fde047;
+}
+
+/* ========================================
+   버튼
+======================================== */
+
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:9px;
+}
+
+.actions button{
+  flex:1 1 110px;
+  min-height:43px;
+  border:0;
+  border-radius:11px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.hint{
+  background:#ddd6fe;
+  color:#312e81;
+}
+
+.boost{
+  background:#fde047;
+  color:#422006;
+}
+
+.sound{
+  background:#ffffff15;
+  color:#fff;
+}
+
+/* ========================================
+   판정
+======================================== */
+
+.judge{
+  position:absolute;
+  left:50%;
+  top:45%;
+  transform:translate(-50%,-50%) scale(.5);
+  z-index:18;
+  opacity:0;
+  pointer-events:none;
+  text-align:center;
+  font-size:clamp(30px,8vw,55px);
+  font-weight:1000;
+  text-shadow:0 4px 12px #000;
+}
+
+.judge.show{
+  animation:judgePop .75s ease;
+}
+
+@keyframes judgePop{
+  0%{
+    opacity:0;
+    transform:translate(-50%,-50%) scale(.4);
+  }
+  35%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.1);
+  }
+  100%{
+    opacity:0;
+    transform:translate(-50%,-70%) scale(1);
+  }
+}
+
+/* ========================================
+   오버레이
+======================================== */
+
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:30;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  background:#050916ef;
+  backdrop-filter:blur(7px);
+}
+
+.overlay.hide{
+  display:none;
+}
+
+.card{
+  width:min(100%,460px);
+  padding:24px 21px;
+  text-align:center;
+  border:1px solid #ffffff24;
+  border-radius:23px;
+  background:linear-gradient(145deg,#18214b,#10152d);
+  box-shadow:0 20px 60px #0009;
+}
+
+.card .emoji{
+  font-size:58px;
+}
+
+.card h2{
+  margin:7px;
+  font-size:29px;
+}
+
+.card p{
+  color:#cbd5e1;
+  line-height:1.65;
+  font-size:13px;
+}
+
+.lesson{
+  margin:12px 0;
+  padding:10px;
+  border-radius:13px;
+  background:#ffffff0b;
+  text-align:left;
+  color:#cbd5e1;
+  font-size:11px;
+  line-height:1.6;
+}
+
+.primary{
+  width:100%;
+  min-height:50px;
+  border:0;
+  border-radius:13px;
+  background:linear-gradient(135deg,#a5b4fc,#67e8f9);
+  color:#07111f;
+  font-weight:1000;
+  cursor:pointer;
+}
+
+.tip{
+  padding:7px;
+  text-align:center;
+  color:#aebbd0;
+  font-size:10px;
+}
+
+/* ========================================
+   파티클
+======================================== */
+
+.particle{
+  position:absolute;
+  z-index:20;
+  pointer-events:none;
+  font-size:23px;
+  animation:fly .9s ease forwards;
+}
+
+@keyframes fly{
+  to{
+    transform:translate(var(--x),var(--y)) rotate(360deg);
+    opacity:0;
+  }
+}
+
+@media(max-width:720px){
+
+  .mine-game{
+    grid-template-columns:1fr;
+  }
+
+  .stage{
+    min-height:auto;
+  }
+
+  .mine-game{
+    min-height:auto;
+  }
+
+  .planet-area{
+    min-height:190px;
+  }
+
+  .planet{
+    width:120px;
+    height:120px;
+    font-size:75px;
+  }
+
+  .orbit-drone{
+    font-size:24px;
+  }
+
+  .departments{
+    gap:5px;
+  }
+
+  .dept{
+    padding:7px 3px;
+  }
+
+  .dept span{
+    font-size:27px;
+  }
+
+  .app{
+    padding:6px;
+  }
+
+  .brand h1{
+    font-size:24px;
+  }
+
+  .stat{
+    min-width:55px;
+    padding:5px;
+  }
+
+  .stat b{
+    font-size:14px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<main class="app">
+
+<header class="top">
+
+  <div class="brand">
+    <small>ASTRO RESOURCE MANAGEMENT</small>
+    <h1>🛰️ 우주 광산 경영</h1>
+  </div>
+
+  <div class="hud">
+
+    <div class="stat">
+      <small>TIME</small>
+      <b id="time">90</b>
+    </div>
+
+    <div class="stat">
+      <small>FREE DRONE</small>
+      <b id="free">2</b>
+    </div>
+
+    <div class="stat">
+      <small>LEVEL</small>
+      <b id="level">1</b>
+    </div>
+
+    <div class="stat">
+      <small>BEST</small>
+      <b id="best">0</b>
+    </div>
+
+  </div>
+
+</header>
+
+<div class="progress-wrap">
+  <div class="progress" id="progress"></div>
+</div>
+
+<section class="stage" id="stage">
+
+<div class="mine-game">
+
+  <!-- 왼쪽 -->
+  <div class="left-panel">
+
+    <div class="planet-area">
+
+      <div class="stars-bg" id="starsBg"></div>
+
+      <div class="planet">
+        🪨
+        <div class="orbit-drone">🛰️</div>
+      </div>
+
+    </div>
+
+
+    <div class="resources">
+
+      <div class="resource" id="energyBox">
+        <small>⚡ 에너지</small>
+        <b id="energy">80</b>
+      </div>
+
+      <div class="resource" id="oreBox">
+        <small>⛏️ 원석</small>
+        <b id="ore">0</b>
+      </div>
+
+      <div class="resource" id="creditsBox">
+        <small>💰 크레딧</small>
+        <b id="credits">0</b>
+      </div>
+
+    </div>
+
+
+    <div class="contract">
+
+      <div class="contract-title">
+        CURRENT CONTRACT
+      </div>
+
+      <div class="contract-name" id="contractName">
+        초급 채굴 계약
+      </div>
+
+      <div class="contract-desc" id="contractDesc">
+        제한시간 안에 생산 체인을 안정화해 크레딧 목표를 달성하세요.
+      </div>
+
+      <div class="goal" id="goal">
+        목표: 800 크레딧
+      </div>
+
+    </div>
+
+
+    <div class="flow">
+      ⚡ <strong>발전</strong>
+      <span class="arrow">→</span>
+      ⛏️ <strong>채굴</strong>
+      <span class="arrow">→</span>
+      🏭 <strong>정제</strong>
+      <span class="arrow">→</span>
+      💰 <strong>크레딧</strong>
+    </div>
+
+  </div>
+
+
+  <!-- 오른쪽 -->
+  <div class="right-panel">
+
+    <h2>🤖 드론 배치</h2>
+
+    <div class="departments" id="departments"></div>
+
+
+    <div class="upgrades">
+
+      <button class="upgrade" id="upgradePower">
+        <b>⚡ 발전 업그레이드</b>
+        <small>비용 120C · 생산 +25%</small>
+      </button>
+
+      <button class="upgrade" id="upgradeMine">
+        <b>⛏️ 채굴 업그레이드</b>
+        <small>비용 150C · 채굴 +25%</small>
+      </button>
+
+      <button class="upgrade" id="upgradeRefine">
+        <b>🏭 정제 업그레이드</b>
+        <small>비용 180C · 판매 +25%</small>
+      </button>
+
+    </div>
+
+
+    <div class="event" id="mineEvent">
+      🛰️ 채굴 시스템 대기 중
+    </div>
+
+
+    <div class="analysis" id="analysis">
+      생산 흐름을 관찰해 병목을 찾아보세요.
+    </div>
+
+
+    <div class="actions">
+
+      <button class="hint" id="hintBtn">
+        💡 경영 분석
+      </button>
+
+      <button class="boost" id="boostBtn">
+        🚀 긴급 부스트
+      </button>
+
+      <button class="sound" id="soundBtn">
+        🔊 소리 ON
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<div class="judge" id="judge"></div>
+
+
+<div class="overlay" id="overlay">
+
+  <div class="card">
+
+    <div class="emoji" id="resultEmoji">
+      🛰️
+    </div>
+
+    <h2 id="resultTitle">
+      우주 광산 경영
+    </h2>
+
+    <p id="resultText">
+      드론을 발전·채굴·정제 부서에 배치해 생산 체인을 관리하세요.
+    </p>
+
+    <div class="lesson">
+      🧠 <b>핵심 개념</b><br><br>
+
+      발전 드론 → 에너지 생산<br>
+      채굴 드론 → 에너지를 사용해 원석 생산<br>
+      정제 드론 → 원석을 크레딧으로 변환<br><br>
+
+      어느 한 부서가 너무 부족하면 생산 전체가 느려집니다.<br>
+      이것을 <b>병목(Bottleneck)</b>이라고 합니다.<br><br>
+
+      자원이 쌓이는 곳과 부족한 곳을 관찰하면서
+      드론을 재배치해 보세요.
+    </div>
+
+    <button class="primary" id="startBtn">
+      🚀 광산 운영 시작
+    </button>
+
+  </div>
+
+</div>
+
+</section>
+
+<div class="tip">
+  발전 → 채굴 → 정제 생산 흐름을 관찰하고 병목이 생긴 부서에 드론을 배치하세요.
+</div>
+
+</main>
+
+
+<script>
+const $ = s => document.querySelector(s);
+
+
+/* ======================================================
+   계약
+====================================================== */
+
+const contracts = [
+
+  {
+    name:'초급 채굴 계약',
+    desc:'광산 운영을 시작해 기본 생산 흐름을 안정화하세요.',
+    target:800,
+    time:90
+  },
+
+  {
+    name:'대형 원석 공급 계약',
+    desc:'더 빠른 생산을 위해 드론 배치와 업그레이드를 활용하세요.',
+    target:1200,
+    time:100
+  },
+
+  {
+    name:'은하 연합 긴급 계약',
+    desc:'높은 생산량을 유지해 대규모 크레딧 목표를 달성하세요.',
+    target:1700,
+    time:110
+  }
+
+];
+
+
+/* ======================================================
+   상태
+====================================================== */
+
+let running = false;
+
+let time = 90;
+
+let energy = 80;
+let ore = 0;
+let credits = 0;
+
+let drones = [2,2,2];
+let free = 2;
+
+let timer = null;
+let tickCount = 0;
+
+let level = 1;
+let contract = contracts[0];
+
+let upgrade = {
+  power:0,
+  mine:0,
+  refine:0
+};
+
+let boostUsed = false;
+
+let soundOn = true;
+let audioCtx = null;
+
+let best = 0;
+
+try{
+  best = Number(
+    localStorage.getItem(
+      'astroMineBest'
+    ) || 0
+  );
+}catch(e){}
+
+$('#best').textContent =
+  best;
+
+
+/* ======================================================
+   정의
+====================================================== */
+
+const defs = [
+
+  {
+    name:'발전',
+    icon:'⚡',
+    desc:'에너지 생산'
+  },
+
+  {
+    name:'채굴',
+    icon:'⛏️',
+    desc:'에너지로 원석 채굴'
+  },
+
+  {
+    name:'정제',
+    icon:'🏭',
+    desc:'원석을 크레딧으로 변환'
+  }
+
+];
+
+
+/* ======================================================
+   오디오
+====================================================== */
+
+function activateAudio(){
+
+  if(!audioCtx){
+
+    try{
+
+      audioCtx =
+        new (
+          window.AudioContext ||
+          window.webkitAudioContext
+        )();
+
+    }catch(e){}
+  }
+
+
+  if(
+    audioCtx &&
+    audioCtx.state ===
+    'suspended'
+  ){
+
+    audioCtx.resume();
+  }
+}
+
+
+function tone(freq,duration=.08,type='sine'){
+
+  if(
+    !soundOn ||
+    !audioCtx
+  ){
+    return;
+  }
+
+
+  const osc =
+    audioCtx.createOscillator();
+
+  const gain =
+    audioCtx.createGain();
+
+
+  osc.type =
+    type;
+
+  osc.frequency.value =
+    freq;
+
+
+  gain.gain.setValueAtTime(
+    .055,
+    audioCtx.currentTime
+  );
+
+
+  gain.gain.exponentialRampToValueAtTime(
+    .001,
+    audioCtx.currentTime +
+    duration
+  );
+
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start();
+
+  osc.stop(
+    audioCtx.currentTime +
+    duration
+  );
+}
+
+
+function soundAllocate(){
+
+  tone(
+    520,
+    .05,
+    'triangle'
+  );
+}
+
+
+function soundProduction(){
+
+  tone(
+    330,
+    .025,
+    'triangle'
+  );
+}
+
+
+function soundEventGood(){
+
+  tone(620,.07);
+
+  setTimeout(
+    ()=>tone(820,.09),
+    70
+  );
+}
+
+
+function soundEventBad(){
+
+  tone(
+    150,
+    .14,
+    'sawtooth'
+  );
+}
+
+
+function soundUpgrade(){
+
+  [520,700,900]
+    .forEach(
+      (f,i)=>
+        setTimeout(
+          ()=>tone(f,.08),
+          i*70
+        )
+    );
+}
+
+
+function soundWin(){
+
+  [520,660,820,1040]
+    .forEach(
+      (f,i)=>
+        setTimeout(
+          ()=>tone(f,.12),
+          i*100
+        )
+    );
+}
+
+
+/* ======================================================
+   별
+====================================================== */
+
+function makeStars(){
+
+  const box =
+    $('#starsBg');
+
+
+  box.innerHTML =
+    '';
+
+
+  for(
+    let i=0;
+    i<30;
+    i++
+  ){
+
+    const s =
+      document.createElement(
+        'span'
+      );
+
+
+    s.className =
+      'star';
+
+
+    s.style.left =
+      Math.random()*100+'%';
+
+    s.style.top =
+      Math.random()*100+'%';
+
+    s.style.animationDelay =
+      Math.random()*2+'s';
+
+
+    box.appendChild(s);
+  }
+}
+
+
+/* ======================================================
+   시작
+====================================================== */
+
+function startGame(){
+
+  activateAudio();
+
+  clearInterval(timer);
+
+
+  level = 1;
+
+  contract =
+    contracts[0];
+
+
+  time =
+    contract.time;
+
+
+  energy = 80;
+  ore = 0;
+  credits = 0;
+
+
+  drones =
+    [2,2,2];
+
+  free = 2;
+
+
+  tickCount = 0;
+
+
+  upgrade = {
+    power:0,
+    mine:0,
+    refine:0
+  };
+
+
+  boostUsed =
+    false;
+
+
+  running =
+    true;
+
+
+  $('#overlay')
+    .classList
+    .add('hide');
+
+
+  $('#mineEvent').className =
+    'event';
+
+  $('#mineEvent').textContent =
+    '🛰️ 광산 운영을 시작합니다!';
+
+
+  renderContract();
+
+  renderDeps();
+
+  updateUI();
+
+
+  timer =
+    setInterval(
+      tick,
+      1000
+    );
+}
+
+
+/* ======================================================
+   계약 표시
+====================================================== */
+
+function renderContract(){
+
+  $('#level').textContent =
+    level;
+
+
+  $('#contractName').textContent =
+    contract.name;
+
+
+  $('#contractDesc').textContent =
+    contract.desc;
+
+
+  $('#goal').textContent =
+    `목표: ${contract.target} 크레딧`;
+
+
+  $('#progress').style.width =
+    Math.min(
+      100,
+      credits /
+      contract.target *
+      100
+    ) + '%';
+}
+
+
+/* ======================================================
+   부서
+====================================================== */
+
+function renderDeps(){
+
+  const deps =
+    $('#departments');
+
+
+  deps.innerHTML =
+    '';
+
+
+  defs.forEach(
+    (def,index)=>{
+
+      const el =
+        document.createElement(
+          'div'
+        );
+
+
+      el.className =
+        'dept';
+
+
+      const rate =
+        getDeptRate(index);
+
+
+      el.innerHTML =
+        `
+          <span>${def.icon}</span>
+
+          <b>${def.name}</b>
+
+          <small>${def.desc}</small>
+
+          <div class="alloc">
+
+            <button
+              data-i="${index}"
+              data-d="-1">
+              −
+            </button>
+
+            <strong>
+              ${drones[index]}
+            </strong>
+
+            <button
+              data-i="${index}"
+              data-d="1">
+              ＋
+            </button>
+
+          </div>
+
+          <div class="rate">
+            ${rate}
+          </div>
+        `;
+
+
+      deps.appendChild(
+        el
+      );
+    }
+  );
+
+
+  deps
+    .querySelectorAll(
+      'button'
+    )
+    .forEach(
+      button=>{
+
+        button.onclick =
+          ()=>allocate(
+            Number(
+              button.dataset.i
+            ),
+            Number(
+              button.dataset.d
+            )
+          );
+      }
+    );
+
+
+  $('#free').textContent =
+    free;
+
+
+  highlightBottleneck();
+}
+
+
+/* ======================================================
+   부서 생산량
+====================================================== */
+
+function getDeptRate(index){
+
+  if(index === 0){
+
+    const multiplier =
+      1 +
+      upgrade.power*.25;
+
+
+    return `초당 +${Math.round(drones[0]*7*multiplier)} 에너지`;
+  }
+
+
+  if(index === 1){
+
+    const multiplier =
+      1 +
+      upgrade.mine*.25;
+
+
+    return `최대 ${Math.round(drones[1]*3*multiplier)} 원석`;
+  }
+
+
+  const multiplier =
+    1 +
+    upgrade.refine*.25;
+
+
+  return `최대 ${Math.round(drones[2]*3*multiplier)} 원석 정제`;
+}
+
+
+/* ======================================================
+   드론 배치
+====================================================== */
+
+function allocate(index,delta){
+
+  if(!running){
+    return;
+  }
+
+
+  activateAudio();
+
+
+  if(
+    delta > 0 &&
+    free > 0
+  ){
+
+    drones[index]++;
+
+    free--;
+
+    soundAllocate();
+
+  }else if(
+    delta < 0 &&
+    drones[index] > 0
+  ){
+
+    drones[index]--;
+
+    free++;
+
+    soundAllocate();
+  }
+
+
+  renderDeps();
+
+  analyze();
+}
+
+
+/* ======================================================
+   생산 Tick
+====================================================== */
+
+function tick(){
+
+  if(!running){
+    return;
+  }
+
+
+  tickCount++;
+
+
+  /* 발전 */
+
+  const powerMult =
+    1 +
+    upgrade.power*.25;
+
+
+  const generated =
+    drones[0] *
+    7 *
+    powerMult;
+
+
+  energy +=
+    generated;
+
+
+  /* 채굴 */
+
+  const mineMult =
+    1 +
+    upgrade.mine*.25;
+
+
+  const miningCapacity =
+    drones[1] *
+    3 *
+    mineMult;
+
+
+  const mined =
+    Math.min(
+      miningCapacity,
+      Math.floor(
+        energy/2
+      )
+    );
+
+
+  energy -=
+    mined*2;
+
+
+  ore +=
+    mined;
+
+
+  /* 정제 */
+
+  const refineMult =
+    1 +
+    upgrade.refine*.25;
+
+
+  const refineCapacity =
+    drones[2] *
+    3 *
+    refineMult;
+
+
+  const refined =
+    Math.min(
+      ore,
+      refineCapacity
+    );
+
+
+  ore -=
+    refined;
+
+
+  const earned =
+    refined *
+    5 *
+    refineMult;
+
+
+  credits +=
+    earned;
+
+
+  if(
+    refined > 0
+  ){
+
+    soundProduction();
+  }
+
+
+  flashResource(
+    '#creditsBox'
+  );
+
+
+  /* 이벤트 */
+
+  if(
+    tickCount % 12 === 0
+  ){
+
+    randomEvent();
+  }
+
+
+  time--;
+
+
+  updateUI();
+
+  renderDeps();
+
+  analyze();
+
+
+  /* 계약 완료 */
+
+  if(
+    credits >=
+    contract.target
+  ){
+
+    completeContract();
+
+    return;
+  }
+
+
+  if(time <= 0){
+
+    finish(false);
+  }
+}
+
+
+/* ======================================================
+   계약 완료
+====================================================== */
+
+function completeContract(){
+
+  if(
+    level <
+    contracts.length
+  ){
+
+    showJudge(
+      'CONTRACT CLEAR!',
+      '#86efac'
+    );
+
+
+    soundUpgrade();
+
+
+    particles(
+      ['💰','✨','🛰️','⭐']
+    );
+
+
+    level++;
+
+
+    contract =
+      contracts[
+        level-1
+      ];
+
+
+    time += 35;
+
+
+    free += 1;
+
+
+    $('#mineEvent').className =
+      'event good';
+
+
+    $('#mineEvent').textContent =
+      `🎉 다음 계약 해금! 미배치 드론 +1`;
+
+
+    renderContract();
+
+    renderDeps();
+
+    return;
+  }
+
+
+  finish(true);
+}
+
+
+/* ======================================================
+   랜덤 이벤트
+====================================================== */
+
+function randomEvent(){
+
+  const events = [
+
+    {
+      text:'☀️ 태양 폭풍 포착! 에너지 +45',
+      good:true,
+      action:()=>{
+        energy += 45;
+      }
+    },
+
+    {
+      text:'💎 희귀 광맥 발견! 원석 +30',
+      good:true,
+      action:()=>{
+        ore += 30;
+      }
+    },
+
+    {
+      text:'👽 은하 상인 방문! 크레딧 +90',
+      good:true,
+      action:()=>{
+        credits += 90;
+      }
+    },
+
+    {
+      text:'🔧 장비 고장! 에너지 -30',
+      good:false,
+      action:()=>{
+        energy =
+          Math.max(
+            0,
+            energy-30
+          );
+      }
+    },
+
+    {
+      text:'☄️ 소행성 충돌! 원석 -20',
+      good:false,
+      action:()=>{
+        ore =
+          Math.max(
+            0,
+            ore-20
+          );
+      }
+    },
+
+    {
+      text:'🤖 구조 드론 합류! 미배치 드론 +1',
+      good:true,
+      action:()=>{
+        free++;
+      }
+    }
+
+  ];
+
+
+  const event =
+    events[
+      Math.floor(
+        Math.random() *
+        events.length
+      )
+    ];
+
+
+  event.action();
+
+
+  $('#mineEvent').className =
+    'event ' +
+    (
+      event.good
+        ? 'good'
+        : 'bad'
+    );
+
+
+  $('#mineEvent').textContent =
+    event.text;
+
+
+  if(event.good){
+
+    soundEventGood();
+
+  }else{
+
+    soundEventBad();
+  }
+
+
+  showJudge(
+    event.good
+      ? 'BONUS!'
+      : 'WARNING!',
+    event.good
+      ? '#86efac'
+      : '#fb7185'
+  );
+}
+
+
+/* ======================================================
+   병목 분석
+====================================================== */
+
+function analyze(){
+
+  if(!running){
+    return;
+  }
+
+
+  let text =
+    '✅ 생산 흐름이 비교적 안정적입니다.';
+
+
+  if(
+    energy < 20 &&
+    drones[1] >
+    drones[0]
+  ){
+
+    text =
+      '⚠️ <b>발전 병목!</b> 에너지가 부족합니다. 발전 부서에 드론을 늘려보세요.';
+
+  }else if(
+    energy > 150 &&
+    ore < 15
+  ){
+
+    text =
+      '⚠️ <b>채굴 병목!</b> 에너지는 많은데 원석 생산이 느립니다.';
+
+  }else if(
+    ore > 45
+  ){
+
+    text =
+      '⚠️ <b>정제 병목!</b> 원석이 쌓이고 있습니다. 정제 드론이 필요합니다.';
+
+  }else if(
+    ore < 5 &&
+    drones[2] >
+    drones[1]+1
+  ){
+
+    text =
+      '💡 정제 드론이 기다리고 있습니다. 일부를 채굴 쪽으로 옮겨보세요.';
+  }
+
+
+  $('#analysis').innerHTML =
+    text;
+
+
+  highlightBottleneck();
+}
+
+
+/* ======================================================
+   병목 표시
+====================================================== */
+
+function highlightBottleneck(){
+
+  const elements =
+    document.querySelectorAll(
+      '.dept'
+    );
+
+
+  elements.forEach(
+    e =>
+      e.classList.remove(
+        'bottleneck',
+        'hot'
+      )
+  );
+
+
+  if(
+    energy < 20
+  ){
+
+    elements[0]
+      ?.classList.add(
+        'bottleneck'
+      );
+
+  }else if(
+    energy > 150 &&
+    ore < 15
+  ){
+
+    elements[1]
+      ?.classList.add(
+        'bottleneck'
+      );
+
+  }else if(
+    ore > 45
+  ){
+
+    elements[2]
+      ?.classList.add(
+        'bottleneck'
+      );
+  }
+}
+
+
+/* ======================================================
+   힌트
+====================================================== */
+
+function showHint(){
+
+  if(!running){
+    return;
+  }
+
+
+  activateAudio();
+
+
+  analyze();
+
+
+  tone(
+    560,
+    .08
+  );
+
+
+  showJudge(
+    'ANALYSIS',
+    '#67e8f9'
+  );
+}
+
+
+/* ======================================================
+   긴급 부스트
+====================================================== */
+
+function boost(){
+
+  if(
+    !running ||
+    boostUsed
+  ){
+    return;
+  }
+
+
+  activateAudio();
+
+
+  boostUsed =
+    true;
+
+
+  energy += 60;
+  ore += 20;
+
+
+  $('#boostBtn').textContent =
+    '🚀 부스트 사용 완료';
+
+
+  $('#boostBtn').disabled =
+    true;
+
+
+  $('#mineEvent').className =
+    'event good';
+
+
+  $('#mineEvent').textContent =
+    '🚀 긴급 부스트! 에너지 +60 · 원석 +20';
+
+
+  soundUpgrade();
+
+
+  showJudge(
+    'BOOST!',
+    '#fde047'
+  );
+
+
+  particles(
+    ['🚀','⚡','✨']
+  );
+
+
+  updateUI();
+}
+
+
+/* ======================================================
+   업그레이드
+====================================================== */
+
+function buyUpgrade(type,cost){
+
+  if(
+    !running
+  ){
+    return;
+  }
+
+
+  activateAudio();
+
+
+  if(
+    credits <
+    cost
+  ){
+
+    $('#mineEvent').className =
+      'event bad';
+
+
+    $('#mineEvent').textContent =
+      `💸 크레딧이 부족합니다. ${cost}C 필요`;
+
+
+    soundEventBad();
+
+    return;
+  }
+
+
+  credits -=
+    cost;
+
+
+  upgrade[type]++;
+
+
+  soundUpgrade();
+
+
+  showJudge(
+    'UPGRADE!',
+    '#fde047'
+  );
+
+
+  $('#mineEvent').className =
+    'event good';
+
+
+  $('#mineEvent').textContent =
+    '🔧 생산 효율이 향상되었습니다!';
+
+
+  updateUI();
+
+  renderDeps();
+}
+
+
+/* ======================================================
+   UI
+====================================================== */
+
+function updateUI(){
+
+  $('#time').textContent =
+    time;
+
+
+  $('#free').textContent =
+    free;
+
+
+  $('#energy').textContent =
+    Math.floor(
+      energy
+    );
+
+
+  $('#ore').textContent =
+    Math.floor(
+      ore
+    );
+
+
+  $('#credits').textContent =
+    Math.floor(
+      credits
+    );
+
+
+  $('#progress').style.width =
+    Math.min(
+      100,
+      credits /
+      contract.target *
+      100
+    ) + '%';
+
+
+  $('#upgradePower').disabled =
+    credits < 120;
+
+
+  $('#upgradeMine').disabled =
+    credits < 150;
+
+
+  $('#upgradeRefine').disabled =
+    credits < 180;
+}
+
+
+/* ======================================================
+   자원 효과
+====================================================== */
+
+function flashResource(selector){
+
+  const el =
+    $(selector);
+
+
+  el.classList.remove(
+    'flash'
+  );
+
+
+  void el.offsetWidth;
+
+
+  el.classList.add(
+    'flash'
+  );
+}
+
+
+/* ======================================================
+   판정
+====================================================== */
+
+function showJudge(text,color){
+
+  const el =
+    $('#judge');
+
+
+  el.textContent =
+    text;
+
+
+  el.style.color =
+    color;
+
+
+  el.classList.remove(
+    'show'
+  );
+
+
+  void el.offsetWidth;
+
+
+  el.classList.add(
+    'show'
+  );
+}
+
+
+/* ======================================================
+   파티클
+====================================================== */
+
+function particles(icons){
+
+  for(
+    let i=0;
+    i<14;
+    i++
+  ){
+
+    const p =
+      document.createElement(
+        'span'
+      );
+
+
+    p.className =
+      'particle';
+
+
+    p.textContent =
+      icons[
+        Math.floor(
+          Math.random() *
+          icons.length
+        )
+      ];
+
+
+    p.style.left =
+      '50%';
+
+    p.style.top =
+      '48%';
+
+
+    p.style.setProperty(
+      '--x',
+      (
+        Math.random()*280 -
+        140
+      ) + 'px'
+    );
+
+
+    p.style.setProperty(
+      '--y',
+      (
+        Math.random()*240 -
+        150
+      ) + 'px'
+    );
+
+
+    $('#stage')
+      .appendChild(
+        p
+      );
+
+
+    setTimeout(
+      ()=>p.remove(),
+      1000
+    );
+  }
+}
+
+
+/* ======================================================
+   종료
+====================================================== */
+
+function finish(win){
+
+  if(!running){
+    return;
+  }
+
+
+  running =
+    false;
+
+
+  clearInterval(
+    timer
+  );
+
+
+  const finalScore =
+    Math.floor(
+      credits
+    );
+
+
+  if(
+    finalScore >
+    best
+  ){
+
+    best =
+      finalScore;
+
+
+    $('#best').textContent =
+      best;
+
+
+    try{
+
+      localStorage.setItem(
+        'astroMineBest',
+        String(best)
+      );
+
+    }catch(e){}
+  }
+
+
+  if(win){
+
+    soundWin();
+
+
+    particles(
+      ['🏆','💎','✨','🛰️']
+    );
+
+
+    $('#resultEmoji').textContent =
+      '🏆🛰️';
+
+
+    $('#resultTitle').textContent =
+      '은하 광산 CEO!';
+
+
+    $('#resultText').innerHTML =
+      `모든 계약을 완료했습니다!<br>
+       최종 크레딧 <b>${finalScore}</b><br>
+       발전·채굴·정제의 생산 흐름을 훌륭하게 관리했어요.`;
+
+  }else{
+
+    $('#resultEmoji').textContent =
+      '🪨⏰';
+
+
+    $('#resultTitle').textContent =
+      '계약 시간 종료';
+
+
+    $('#resultText').innerHTML =
+      `최종 크레딧 <b>${finalScore}</b><br>
+       도달 계약 LEVEL ${level}<br><br>
+       자원이 어디에 쌓이는지 확인하면 병목을 찾을 수 있습니다.`;
+  }
+
+
+  $('#startBtn').textContent =
+    '🔄 다시 경영';
+
+
+  $('#overlay')
+    .classList
+    .remove('hide');
+}
+
+
+/* ======================================================
+   버튼
+====================================================== */
+
+$('#hintBtn')
+  .addEventListener(
+    'click',
+    showHint
+  );
+
+
+$('#boostBtn')
+  .addEventListener(
+    'click',
+    boost
+  );
+
+
+$('#upgradePower')
+  .addEventListener(
+    'click',
+    ()=>buyUpgrade(
+      'power',
+      120
+    )
+  );
+
+
+$('#upgradeMine')
+  .addEventListener(
+    'click',
+    ()=>buyUpgrade(
+      'mine',
+      150
+    )
+  );
+
+
+$('#upgradeRefine')
+  .addEventListener(
+    'click',
+    ()=>buyUpgrade(
+      'refine',
+      180
+    )
+  );
+
+
+$('#soundBtn')
+  .addEventListener(
+    'click',
+    ()=>{
+
+      activateAudio();
+
+
+      soundOn =
+        !soundOn;
+
+
+      $('#soundBtn').textContent =
+        soundOn
+          ? '🔊 소리 ON'
+          : '🔇 소리 OFF';
+
+
+      if(soundOn){
+
+        tone(
+          700,
+          .08
+        );
+      }
+    }
+  );
+
+
+$('#startBtn')
+  .addEventListener(
+    'click',
+    startGame
+  );
+
+
+/* ======================================================
+   초기
+====================================================== */
+
+makeStars();
+
+renderDeps();
+
+updateUI();
+
+</script>
+
+</body>
+</html>

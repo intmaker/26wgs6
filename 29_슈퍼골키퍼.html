@@ -1,10 +1,1650 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>🥅 슈퍼 골키퍼</title><style>
-*{box-sizing:border-box}html,body{height:100%}body{margin:0;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 50% 15%,#16a34a,#064e3b 50%,#052e16);color:#fff;font-family:system-ui,"Noto Sans KR",sans-serif;user-select:none}.app{width:min(94vw,700px);height:min(95vh,840px);display:flex;flex-direction:column;gap:11px}.top{display:flex;justify-content:space-between;align-items:end}.tag{font-size:10px;letter-spacing:.2em;color:#86efac;font-weight:900}h1{margin:2px 0;font-size:clamp(26px,5vw,38px)}.stats{display:flex;gap:7px}.stat{min-width:70px;padding:8px;text-align:center;border:1px solid #ffffff25;border-radius:14px;background:#064e3bcc}.stat small{display:block;color:#bbf7d0;font-size:9px}.stat b{font-size:20px}.game{position:relative;flex:1;min-height:400px;overflow:hidden;border:1px solid #ffffff30;border-radius:25px;background:linear-gradient(#60a5fa 0 42%,#22c55e 42% 100%);box-shadow:0 25px 70px #0009}.crowd{position:absolute;inset:0 0 58%;background:repeating-linear-gradient(90deg,#1e293b 0 12px,#334155 12px 24px);opacity:.65}.goal{position:absolute;left:8%;right:8%;top:20%;height:47%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);border:9px solid #f8fafc;border-bottom-width:13px;box-shadow:0 8px 30px #0005;background:repeating-linear-gradient(45deg,#ffffff24 0 2px,transparent 2px 18px)}.zone{border:1px dashed #ffffff25;cursor:pointer;touch-action:manipulation}.zone:hover{background:#ffffff18}.keeper{position:absolute;left:50%;top:58%;font-size:62px;transform:translate(-50%,-50%);transition:left .18s,top .18s,transform .18s;z-index:2}.ball{position:absolute;left:50%;top:88%;font-size:35px;transform:translate(-50%,-50%);transition:left .48s cubic-bezier(.2,.8,.3,1),top .48s cubic-bezier(.2,.8,.3,1),transform .48s;z-index:3}.signal{position:absolute;left:50%;top:74%;transform:translateX(-50%);padding:9px 15px;border-radius:999px;background:#071827c9;font-weight:900;white-space:nowrap}.overlay{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding:20px;background:#052e16e8}.overlay.hide{display:none}.card{max-width:390px;padding:28px 24px;text-align:center;border:1px solid #ffffff25;border-radius:23px;background:#064e3b}.ico{font-size:55px}.card h2{margin:8px;font-size:28px}.card p{color:#dcfce7;font-size:14px;line-height:1.7}.card button{width:100%;padding:14px;border:0;border-radius:13px;background:linear-gradient(135deg,#86efac,#fef08a);color:#064e3b;font-weight:900;font-size:15px;cursor:pointer}.tip{text-align:center;color:#bbf7d0;font-size:12px}@media(max-width:520px){.app{width:100%;height:100%;padding:9px}.game{border-radius:20px}.goal{left:4%;right:4%}}
-</style></head><body><main class="app"><header class="top"><div><div class="tag">PENALTY GUARD</div><h1>🥅 슈퍼 골키퍼</h1></div><div class="stats"><div class="stat"><small>선방</small><b id="score">0</b></div><div class="stat"><small>남은 슛</small><b id="round">10</b></div></div></header><section class="game"><div class="crowd"></div><div class="goal" id="goal"></div><div class="keeper" id="keeper">🧤</div><div class="ball" id="ball">⚽</div><div class="signal" id="signal">키커의 몸 방향을 잘 보세요</div><div class="overlay" id="over"><div class="card"><div class="ico" id="ico">🥅</div><h2 id="title">페널티킥을 막아내세요!</h2><p id="desc">키커가 방향 힌트를 잠깐 보여준 뒤 슛합니다.<br>공이 출발하면 골대의 6개 구역 중 하나를 누르세요.<br>너무 일찍 몸을 날리면 키커가 방향을 바꿉니다.</p><button id="start">10번의 승부 시작</button></div></div></section><div class="tip">공이 출발한 뒤 골대 구역 클릭·터치 · 성급한 다이빙 주의</div></main><script>
-(()=>{const goal=document.querySelector('#goal'),keeper=document.querySelector('#keeper'),ball=document.querySelector('#ball'),signal=document.querySelector('#signal'),over=document.querySelector('#over'),scoreEl=document.querySelector('#score'),roundEl=document.querySelector('#round');let score=0,round=0,target=0,state='idle',timer;for(let i=0;i<6;i++){const z=document.createElement('button');z.className='zone';z.onclick=()=>dive(i);goal.appendChild(z)}const pos=i=>({x:[21,50,79][i%3],y:[32,57][Math.floor(i/3)]});
-function start(){clearTimeout(timer);score=0;round=0;scoreEl.textContent=0;roundEl.textContent=10;over.classList.add('hide');nextShot()}
-function nextShot(){if(round>=10)return finish();round++;roundEl.textContent=11-round;state='hint';target=Math.floor(Math.random()*6);resetActors();const side=['왼쪽','가운데','오른쪽'][target%3];signal.textContent=`키커의 시선: ${side}...?`;timer=setTimeout(()=>{state='shot';if(Math.random()<.22)target=(target+1+Math.floor(Math.random()*5))%6;const p=pos(target);signal.textContent='지금! 막으세요!';ball.style.left=p.x+'%';ball.style.top=p.y+'%';ball.style.transform='translate(-50%,-50%) scale(.72)';timer=setTimeout(()=>resolve(-1),650)},650+Math.random()*500)}
-function resetActors(){ball.style.transition='none';ball.style.left='50%';ball.style.top='88%';ball.style.transform='translate(-50%,-50%) scale(1)';keeper.style.left='50%';keeper.style.top='58%';keeper.style.transform='translate(-50%,-50%) scale(1)';void ball.offsetWidth;ball.style.transition='left .48s cubic-bezier(.2,.8,.3,1),top .48s cubic-bezier(.2,.8,.3,1),transform .48s'}
-function dive(i){if(state==='idle'||state==='done')return;if(state==='hint'){state='early';signal.textContent='너무 일찍 움직였어요!';target=(i+1+Math.floor(Math.random()*5))%6;timer=setTimeout(()=>{state='shot';const p=pos(target);ball.style.left=p.x+'%';ball.style.top=p.y+'%';timer=setTimeout(()=>resolve(i),520)},250);moveKeeper(i);return}if(state==='shot'){clearTimeout(timer);state='done';moveKeeper(i);setTimeout(()=>resolve(i),360)}}function moveKeeper(i){const p=pos(i);keeper.style.left=p.x+'%';keeper.style.top=p.y+'%';keeper.style.transform='translate(-50%,-50%) scale(1.22) rotate('+(i%3===0?-18:i%3===2?18:0)+'deg)'}
-function resolve(i){if(state==='resolved')return;state='resolved';if(i===target){score++;scoreEl.textContent=score;signal.textContent='🧤 슈퍼 세이브!'}else signal.textContent='⚽ 골! 다음 슛을 준비하세요';timer=setTimeout(nextShot,850)}function finish(){state='idle';document.querySelector('#ico').textContent=score>=7?'🏆':'🧤';document.querySelector('#title').textContent=`10개 중 ${score}개 선방!`;document.querySelector('#desc').innerHTML=score>=7?'놀라운 반사 신경이에요! 골문을 완벽하게 지켰습니다.':'공이 출발한 직후 방향을 보고 몸을 날려보세요.';document.querySelector('#start').textContent='다시 막기';over.classList.remove('hide')}document.querySelector('#start').onclick=start;
-})();</script></body></html>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🥅 슈퍼 골키퍼 챌린지</title>
+
+<style>
+*{box-sizing:border-box}
+
+html,body{
+  height:100%;
+}
+
+body{
+  margin:0;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 50% 15%,#22c55e,#047857 42%,#052e16 78%);
+  color:#fff;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+button{
+  font:inherit;
+  touch-action:manipulation;
+}
+
+.app{
+  width:min(96vw,760px);
+  height:min(96vh,880px);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:4px;
+}
+
+/* 상단 */
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  gap:10px;
+}
+
+.tag{
+  font-size:10px;
+  letter-spacing:.18em;
+  color:#86efac;
+  font-weight:900;
+}
+
+h1{
+  margin:2px 0;
+  font-size:clamp(27px,5vw,40px);
+}
+
+.stats{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.stat{
+  min-width:68px;
+  padding:7px 9px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:14px;
+  background:#064e3bcc;
+  backdrop-filter:blur(5px);
+}
+
+.stat small{
+  display:block;
+  color:#bbf7d0;
+  font-size:9px;
+}
+
+.stat b{
+  font-size:19px;
+}
+
+/* 진행도 */
+.progress{
+  height:8px;
+  border-radius:99px;
+  background:#ffffff20;
+  overflow:hidden;
+}
+
+.progress-bar{
+  width:0%;
+  height:100%;
+  background:linear-gradient(90deg,#facc15,#fb923c,#ef4444);
+  transition:.3s;
+}
+
+/* 경기장 */
+.game{
+  position:relative;
+  flex:1;
+  min-height:410px;
+  overflow:hidden;
+  border:1px solid #ffffff30;
+  border-radius:25px;
+  background:
+    linear-gradient(#60a5fa 0 40%,#22c55e 40% 100%);
+  box-shadow:0 25px 70px #0009;
+}
+
+/* 하늘 */
+.sun{
+  position:absolute;
+  width:62px;
+  height:62px;
+  border-radius:50%;
+  background:#fde047;
+  top:5%;
+  right:8%;
+  box-shadow:0 0 35px #fde047aa;
+}
+
+/* 관중석 */
+.crowd{
+  position:absolute;
+  inset:0 0 58%;
+  background:
+    radial-gradient(circle,#facc15 0 2px,transparent 3px) 0 0/18px 18px,
+    radial-gradient(circle,#38bdf8 0 2px,transparent 3px) 9px 8px/20px 20px,
+    #1e293b;
+  opacity:.72;
+}
+
+/* 잔디 줄무늬 */
+.field-lines{
+  position:absolute;
+  inset:40% 0 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #22c55e 0 55px,
+      #16a34a 55px 110px
+    );
+  opacity:.7;
+}
+
+.penalty-line{
+  position:absolute;
+  left:20%;
+  right:20%;
+  bottom:13%;
+  height:1px;
+  background:#ffffff90;
+}
+
+/* 골대 */
+.goal{
+  position:absolute;
+  left:7%;
+  right:7%;
+  top:20%;
+  height:47%;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  grid-template-rows:repeat(2,1fr);
+  border:9px solid #f8fafc;
+  border-bottom-width:13px;
+  box-shadow:0 8px 30px #0005;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      #ffffff24 0 2px,
+      transparent 2px 18px
+    );
+}
+
+.zone{
+  position:relative;
+  border:1px dashed #ffffff28;
+  background:transparent;
+  cursor:pointer;
+  color:#fff;
+  touch-action:manipulation;
+}
+
+.zone::after{
+  content:"";
+  position:absolute;
+  inset:10%;
+  border-radius:12px;
+  transition:.15s;
+}
+
+.zone.selected::after{
+  background:#fde04755;
+  box-shadow:inset 0 0 0 3px #fde047;
+}
+
+@media(hover:hover){
+  .zone:hover::after{
+    background:#ffffff18;
+  }
+}
+
+/* 골키퍼 */
+.keeper{
+  position:absolute;
+  left:50%;
+  top:58%;
+  font-size:clamp(52px,10vw,76px);
+  transform:translate(-50%,-50%);
+  transition:left .2s,top .2s,transform .2s;
+  z-index:3;
+  filter:drop-shadow(0 8px 5px #0005);
+}
+
+.keeper.save{
+  animation:savePop .4s ease;
+}
+
+@keyframes savePop{
+  50%{transform:translate(-50%,-50%) scale(1.45)}
+}
+
+/* 공 */
+.ball{
+  position:absolute;
+  left:50%;
+  top:88%;
+  font-size:clamp(30px,6vw,42px);
+  transform:translate(-50%,-50%);
+  transition:
+    left .48s cubic-bezier(.2,.8,.3,1),
+    top .48s cubic-bezier(.2,.8,.3,1),
+    transform .48s;
+  z-index:4;
+  filter:drop-shadow(0 5px 4px #0006);
+}
+
+/* 키커 */
+.kicker{
+  position:absolute;
+  left:50%;
+  top:78%;
+  transform:translate(-50%,-50%);
+  font-size:50px;
+  z-index:2;
+  transition:.3s;
+}
+
+.kicker.fake-left{
+  transform:translate(-50%,-50%) rotate(-12deg);
+}
+
+.kicker.fake-right{
+  transform:translate(-50%,-50%) rotate(12deg);
+}
+
+/* 신호 */
+.signal{
+  position:absolute;
+  left:50%;
+  top:69%;
+  transform:translateX(-50%);
+  padding:9px 15px;
+  border-radius:999px;
+  background:#071827df;
+  font-weight:900;
+  white-space:nowrap;
+  z-index:5;
+  box-shadow:0 5px 16px #0005;
+}
+
+.signal.go{
+  color:#fde047;
+  animation:pulse .35s ease infinite alternate;
+}
+
+@keyframes pulse{
+  to{transform:translateX(-50%) scale(1.08)}
+}
+
+/* 판정 */
+.judge{
+  position:absolute;
+  left:50%;
+  top:46%;
+  transform:translate(-50%,-50%) scale(.6);
+  opacity:0;
+  z-index:7;
+  font-size:clamp(25px,7vw,48px);
+  font-weight:1000;
+  text-shadow:0 4px 12px #0009;
+  pointer-events:none;
+}
+
+.judge.show{
+  animation:judgePop .7s ease;
+}
+
+@keyframes judgePop{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}
+  35%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}
+  100%{opacity:0;transform:translate(-50%,-70%) scale(1)}
+}
+
+/* 콤보 */
+.combo{
+  position:absolute;
+  top:4%;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:7;
+  font-weight:1000;
+  font-size:21px;
+  color:#fde047;
+  text-shadow:0 2px 6px #000;
+}
+
+/* 파워 게이지 */
+.power-box{
+  position:absolute;
+  left:50%;
+  bottom:4%;
+  transform:translateX(-50%);
+  width:min(70%,360px);
+  z-index:5;
+}
+
+.power-label{
+  display:flex;
+  justify-content:space-between;
+  font-size:10px;
+  font-weight:800;
+}
+
+.power-track{
+  margin-top:4px;
+  height:10px;
+  border-radius:99px;
+  background:#0006;
+  overflow:hidden;
+}
+
+.power-fill{
+  width:0;
+  height:100%;
+  background:linear-gradient(90deg,#22c55e,#fde047,#ef4444);
+  transition:width .15s;
+}
+
+/* 오버레이 */
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:20;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:#052e16ea;
+  backdrop-filter:blur(7px);
+}
+
+.overlay.hide{
+  display:none;
+}
+
+.card{
+  width:min(100%,420px);
+  padding:25px 22px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:23px;
+  background:linear-gradient(145deg,#064e3b,#14532d);
+  box-shadow:0 20px 60px #0008;
+}
+
+.ico{
+  font-size:58px;
+}
+
+.card h2{
+  margin:7px;
+  font-size:28px;
+}
+
+.card p{
+  color:#dcfce7;
+  font-size:14px;
+  line-height:1.7;
+}
+
+.mode-row{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+  margin:13px 0;
+}
+
+.mode{
+  min-height:46px;
+  border:1px solid #ffffff25;
+  border-radius:11px;
+  background:#ffffff10;
+  color:white;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.mode.active{
+  background:#fde047;
+  color:#064e3b;
+}
+
+.card .start{
+  width:100%;
+  min-height:50px;
+  padding:13px;
+  border:0;
+  border-radius:13px;
+  background:linear-gradient(135deg,#86efac,#fef08a);
+  color:#064e3b;
+  font-weight:1000;
+  font-size:15px;
+  cursor:pointer;
+}
+
+/* 하단 */
+.tip{
+  text-align:center;
+  color:#bbf7d0;
+  font-size:12px;
+}
+
+.footer-controls{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+}
+
+.footer-controls button{
+  min-height:42px;
+  border:1px solid #ffffff20;
+  border-radius:11px;
+  padding:7px 13px;
+  background:#064e3b;
+  color:#fff;
+  font-weight:800;
+}
+
+/* 파티클 */
+.particle{
+  position:absolute;
+  pointer-events:none;
+  font-size:25px;
+  z-index:15;
+  animation:fly 1s ease forwards;
+}
+
+@keyframes fly{
+  to{
+    transform:translate(var(--x),var(--y)) rotate(360deg);
+    opacity:0;
+  }
+}
+
+@media(max-width:560px){
+  .app{
+    width:100%;
+    height:100%;
+    padding:7px;
+  }
+
+  .game{
+    border-radius:18px;
+  }
+
+  .goal{
+    left:3%;
+    right:3%;
+  }
+
+  .stats{
+    gap:4px;
+  }
+
+  .stat{
+    min-width:59px;
+    padding:6px;
+  }
+
+  .stat b{
+    font-size:17px;
+  }
+
+  .signal{
+    font-size:12px;
+    top:70%;
+  }
+
+  .kicker{
+    font-size:42px;
+  }
+
+  .mode-row{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-height:680px){
+  .tip{
+    display:none;
+  }
+
+  .game{
+    min-height:330px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<main class="app">
+
+  <header class="top">
+    <div>
+      <div class="tag">PENALTY GUARD CHALLENGE</div>
+      <h1>🥅 슈퍼 골키퍼</h1>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <small>선방</small>
+        <b id="score">0</b>
+      </div>
+
+      <div class="stat">
+        <small>콤보</small>
+        <b id="comboScore">0</b>
+      </div>
+
+      <div class="stat">
+        <small>남은 슛</small>
+        <b id="round">10</b>
+      </div>
+
+      <div class="stat">
+        <small>최고</small>
+        <b id="best">0</b>
+      </div>
+    </div>
+  </header>
+
+  <div class="progress">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <section class="game" id="game">
+
+    <div class="sun"></div>
+    <div class="crowd"></div>
+    <div class="field-lines"></div>
+    <div class="penalty-line"></div>
+
+    <div class="goal" id="goal"></div>
+
+    <div class="keeper" id="keeper">🧤</div>
+    <div class="kicker" id="kicker">🧍</div>
+    <div class="ball" id="ball">⚽</div>
+
+    <div class="combo" id="combo"></div>
+
+    <div class="signal" id="signal">
+      키커의 몸 방향을 잘 보세요
+    </div>
+
+    <div class="judge" id="judge">
+      SUPER SAVE!
+    </div>
+
+    <div class="power-box">
+      <div class="power-label">
+        <span>슛 파워</span>
+        <span id="powerText">준비</span>
+      </div>
+
+      <div class="power-track">
+        <div class="power-fill" id="powerFill"></div>
+      </div>
+    </div>
+
+    <div class="overlay" id="over">
+      <div class="card">
+        <div class="ico" id="ico">🥅</div>
+
+        <h2 id="title">페널티킥을 막아내세요!</h2>
+
+        <p id="desc">
+          키커가 몸 방향과 시선을 잠깐 보여줍니다.<br>
+          공이 출발한 순간 골대의 6개 구역 중 하나를 선택하세요.<br>
+          너무 빨리 몸을 날리면 키커가 반대 방향으로 속일 수도 있어요!
+        </p>
+
+        <div class="mode-row" id="modes">
+          <button class="mode" data-mode="easy">🙂 쉬움</button>
+          <button class="mode active" data-mode="normal">🔥 보통</button>
+          <button class="mode" data-mode="hard">⚡ 어려움</button>
+        </div>
+
+        <button class="start" id="start">
+          ⚽ 10번의 승부 시작
+        </button>
+      </div>
+    </div>
+
+  </section>
+
+  <div class="footer-controls">
+    <button id="soundBtn">🔊 소리 ON</button>
+  </div>
+
+  <div class="tip">
+    공이 출발한 순간 골대 구역을 클릭·터치하세요 · 성급한 다이빙은 위험!
+  </div>
+
+</main>
+
+<script>
+(() => {
+
+  const $ = s => document.querySelector(s);
+
+  const goal = $('#goal');
+  const keeper = $('#keeper');
+  const ball = $('#ball');
+  const kicker = $('#kicker');
+  const signal = $('#signal');
+  const judge = $('#judge');
+  const over = $('#over');
+
+  const scoreEl = $('#score');
+  const comboScoreEl = $('#comboScore');
+  const roundEl = $('#round');
+  const bestEl = $('#best');
+  const comboEl = $('#combo');
+
+  const progressBar = $('#progressBar');
+  const powerFill = $('#powerFill');
+  const powerText = $('#powerText');
+
+  let score = 0;
+  let round = 0;
+  let target = 0;
+  let state = 'idle';
+
+  let timer = null;
+  let shotStartedAt = 0;
+
+  let combo = 0;
+  let maxCombo = 0;
+
+  let difficulty = 'normal';
+
+  let soundOn = true;
+  let audioCtx = null;
+
+  let reactionTimes = [];
+
+  let resolved = false;
+
+
+  /* =====================================================
+     골대 6개 구역 생성
+  ===================================================== */
+
+  for(let i=0;i<6;i++){
+
+    const zone = document.createElement('button');
+
+    zone.className = 'zone';
+
+    zone.setAttribute(
+      'aria-label',
+      `${Math.floor(i/3)+1}행 ${i%3+1}열`
+    );
+
+    zone.addEventListener(
+      'click',
+      () => dive(i)
+    );
+
+    goal.appendChild(zone);
+  }
+
+
+  function position(index){
+
+    return {
+      x:[21,50,79][index%3],
+      y:[32,57][Math.floor(index/3)]
+    };
+  }
+
+
+  /* =====================================================
+     난이도
+  ===================================================== */
+
+  const settings = {
+
+    easy:{
+      hintMin:900,
+      hintMax:1350,
+      shotTime:700,
+      fakeChance:.10
+    },
+
+    normal:{
+      hintMin:650,
+      hintMax:1100,
+      shotTime:520,
+      fakeChance:.23
+    },
+
+    hard:{
+      hintMin:430,
+      hintMax:780,
+      shotTime:390,
+      fakeChance:.38
+    }
+
+  };
+
+
+  document.querySelectorAll('.mode').forEach(button => {
+
+    button.addEventListener('click', () => {
+
+      difficulty = button.dataset.mode;
+
+      document
+        .querySelectorAll('.mode')
+        .forEach(b =>
+          b.classList.remove('active')
+        );
+
+      button.classList.add('active');
+    });
+  });
+
+
+  /* =====================================================
+     사운드
+  ===================================================== */
+
+  function tone(freq,duration=.1,type='sine'){
+
+    if(!soundOn){
+      return;
+    }
+
+    try{
+
+      if(!audioCtx){
+
+        audioCtx = new (
+          window.AudioContext ||
+          window.webkitAudioContext
+        )();
+      }
+
+      const osc =
+        audioCtx.createOscillator();
+
+      const gain =
+        audioCtx.createGain();
+
+      osc.type = type;
+      osc.frequency.value = freq;
+
+      gain.gain.setValueAtTime(
+        .07,
+        audioCtx.currentTime
+      );
+
+      gain.gain.exponentialRampToValueAtTime(
+        .001,
+        audioCtx.currentTime + duration
+      );
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start();
+
+      osc.stop(
+        audioCtx.currentTime + duration
+      );
+
+    }catch(e){}
+  }
+
+
+  $('#soundBtn').addEventListener(
+    'click',
+    () => {
+
+      soundOn = !soundOn;
+
+      $('#soundBtn').textContent =
+        soundOn
+          ? '🔊 소리 ON'
+          : '🔇 소리 OFF';
+
+      if(soundOn){
+        tone(600,.08);
+      }
+    }
+  );
+
+
+  /* =====================================================
+     게임 시작
+  ===================================================== */
+
+  function start(){
+
+    clearTimeout(timer);
+
+    score = 0;
+    round = 0;
+    combo = 0;
+    maxCombo = 0;
+
+    reactionTimes = [];
+
+    scoreEl.textContent = 0;
+    comboScoreEl.textContent = 0;
+    roundEl.textContent = 10;
+
+    progressBar.style.width = '0%';
+
+    over.classList.add('hide');
+
+    tone(500,.08);
+
+    setTimeout(()=>{
+      tone(700,.08);
+    },100);
+
+    nextShot();
+  }
+
+
+  /* =====================================================
+     다음 슛 준비
+  ===================================================== */
+
+  function nextShot(){
+
+    if(round >= 10){
+
+      finish();
+
+      return;
+    }
+
+    resolved = false;
+
+    round++;
+
+    roundEl.textContent =
+      11 - round;
+
+    progressBar.style.width =
+      ((round - 1) / 10 * 100) + '%';
+
+    state = 'hint';
+
+    target =
+      Math.floor(
+        Math.random() * 6
+      );
+
+    resetActors();
+
+    clearZoneSelection();
+
+
+    const side =
+      ['왼쪽','가운데','오른쪽'][target%3];
+
+    const height =
+      target < 3
+        ? '위쪽'
+        : '아래쪽';
+
+
+    signal.className = 'signal';
+
+    signal.textContent =
+      `👀 키커의 시선: ${side} ${height}...?`;
+
+
+    /*
+      키커 몸 방향 힌트
+    */
+    kicker.className =
+      'kicker ' +
+      (
+        target % 3 === 0
+          ? 'fake-left'
+          :
+        target % 3 === 2
+          ? 'fake-right'
+          : ''
+      );
+
+
+    const cfg =
+      settings[difficulty];
+
+    const delay =
+      cfg.hintMin +
+      Math.random() *
+      (
+        cfg.hintMax -
+        cfg.hintMin
+      );
+
+
+    powerFill.style.width = '20%';
+
+    powerText.textContent =
+      '준비';
+
+
+    timer =
+      setTimeout(
+        shootBall,
+        delay
+      );
+  }
+
+
+  /* =====================================================
+     실제 슛
+  ===================================================== */
+
+  function shootBall(){
+
+    state = 'shot';
+
+    const cfg =
+      settings[difficulty];
+
+
+    /*
+      페이크 슛
+    */
+    if(
+      Math.random() <
+      cfg.fakeChance
+    ){
+
+      let newTarget;
+
+      do{
+
+        newTarget =
+          Math.floor(
+            Math.random() * 6
+          );
+
+      }while(
+        newTarget === target
+      );
+
+      target = newTarget;
+    }
+
+
+    shotStartedAt =
+      performance.now();
+
+
+    signal.className =
+      'signal go';
+
+    signal.textContent =
+      '⚡ 지금! 막으세요!';
+
+
+    powerFill.style.width =
+      difficulty === 'hard'
+        ? '100%'
+        :
+      difficulty === 'normal'
+        ? '75%'
+        : '55%';
+
+    powerText.textContent =
+      difficulty === 'hard'
+        ? '강슛!'
+        :
+      difficulty === 'normal'
+        ? '강함'
+        : '보통';
+
+
+    tone(
+      difficulty === 'hard'
+        ? 170
+        : 210,
+      .12,
+      'square'
+    );
+
+
+    const p =
+      position(target);
+
+
+    ball.style.transition =
+      `left ${cfg.shotTime}ms cubic-bezier(.2,.8,.3,1),
+       top ${cfg.shotTime}ms cubic-bezier(.2,.8,.3,1),
+       transform ${cfg.shotTime}ms`;
+
+
+    ball.style.left =
+      p.x + '%';
+
+    ball.style.top =
+      p.y + '%';
+
+    ball.style.transform =
+      'translate(-50%,-50%) scale(.7) rotate(360deg)';
+
+
+    timer =
+      setTimeout(
+        () => resolve(-1,9999),
+        cfg.shotTime + 120
+      );
+  }
+
+
+  /* =====================================================
+     배우 다이빙
+  ===================================================== */
+
+  function dive(index){
+
+    if(
+      state === 'idle' ||
+      state === 'done' ||
+      state === 'resolved'
+    ){
+      return;
+    }
+
+
+    clearZoneSelection();
+
+    const zone =
+      goal.children[index];
+
+    if(zone){
+      zone.classList.add('selected');
+    }
+
+
+    /*
+      너무 일찍 움직인 경우
+    */
+    if(state === 'hint'){
+
+      clearTimeout(timer);
+
+      state = 'early';
+
+      combo = 0;
+      comboScoreEl.textContent = 0;
+
+      signal.className =
+        'signal';
+
+      signal.textContent =
+        '😱 너무 빨라요! 키커가 방향을 바꿉니다!';
+
+
+      moveKeeper(index);
+
+
+      /*
+        조기 다이빙 시 거의 반대 방향
+      */
+      const choices =
+        [0,1,2,3,4,5]
+        .filter(i =>
+          i !== index
+        );
+
+      target =
+        choices[
+          Math.floor(
+            Math.random() *
+            choices.length
+          )
+        ];
+
+
+      tone(110,.18,'sawtooth');
+
+
+      timer =
+        setTimeout(
+          () => {
+
+            state = 'shot';
+
+            shotStartedAt =
+              performance.now();
+
+            const p =
+              position(target);
+
+            signal.textContent =
+              '⚽ 키커가 반대쪽으로 찼어요!';
+
+            ball.style.left =
+              p.x + '%';
+
+            ball.style.top =
+              p.y + '%';
+
+            ball.style.transform =
+              'translate(-50%,-50%) scale(.7) rotate(360deg)';
+
+
+            timer =
+              setTimeout(
+                () =>
+                  resolve(
+                    index,
+                    9999
+                  ),
+                470
+              );
+          },
+          250
+        );
+
+      return;
+    }
+
+
+    if(state === 'shot'){
+
+      clearTimeout(timer);
+
+      const reaction =
+        performance.now() -
+        shotStartedAt;
+
+      reactionTimes.push(reaction);
+
+      state = 'done';
+
+      moveKeeper(index);
+
+      setTimeout(
+        () =>
+          resolve(
+            index,
+            reaction
+          ),
+        300
+      );
+    }
+  }
+
+
+  /* =====================================================
+     골키퍼 이동
+  ===================================================== */
+
+  function moveKeeper(index){
+
+    const p =
+      position(index);
+
+    keeper.style.left =
+      p.x + '%';
+
+    keeper.style.top =
+      p.y + '%';
+
+    const angle =
+      index % 3 === 0
+        ? -23
+        :
+      index % 3 === 2
+        ? 23
+        : 0;
+
+    keeper.style.transform =
+      `translate(-50%,-50%) scale(1.28) rotate(${angle}deg)`;
+  }
+
+
+  /* =====================================================
+     결과 처리
+  ===================================================== */
+
+  function resolve(index,reaction){
+
+    if(resolved){
+      return;
+    }
+
+    resolved = true;
+    state = 'resolved';
+
+    clearTimeout(timer);
+
+
+    if(index === target){
+
+      score++;
+      combo++;
+
+      maxCombo =
+        Math.max(
+          maxCombo,
+          combo
+        );
+
+      scoreEl.textContent =
+        score;
+
+      comboScoreEl.textContent =
+        combo;
+
+
+      keeper.classList.add(
+        'save'
+      );
+
+
+      let text =
+        '🧤 SAVE!';
+
+      let bonus = '';
+
+
+      if(reaction < 180){
+
+        text =
+          '⚡ LIGHTNING SAVE!';
+
+        bonus =
+          ' + 초고속 반응';
+
+      }
+      else if(reaction < 300){
+
+        text =
+          '🔥 SUPER SAVE!';
+      }
+
+
+      showJudge(text);
+
+      signal.className =
+        'signal';
+
+      signal.textContent =
+        `🧤 선방 성공!${bonus}`;
+
+
+      tone(650,.1);
+
+      setTimeout(
+        () => tone(850,.12),
+        80
+      );
+
+
+      if(combo >= 2){
+
+        comboEl.textContent =
+          `🔥 ${combo} COMBO!`;
+      }
+      else{
+
+        comboEl.textContent =
+          '';
+      }
+
+
+      createParticles(
+        ['🧤','⭐','✨']
+      );
+
+    }
+    else{
+
+      combo = 0;
+
+      comboScoreEl.textContent =
+        0;
+
+      comboEl.textContent =
+        '';
+
+      showJudge(
+        '⚽ GOAL!'
+      );
+
+      signal.className =
+        'signal';
+
+      signal.textContent =
+        '⚽ 골! 다음 슛을 준비하세요';
+
+      tone(130,.25,'sawtooth');
+    }
+
+
+    timer =
+      setTimeout(
+        nextShot,
+        1000
+      );
+  }
+
+
+  /* =====================================================
+     초기 위치
+  ===================================================== */
+
+  function resetActors(){
+
+    keeper.classList.remove('save');
+
+    ball.style.transition = 'none';
+
+    ball.style.left =
+      '50%';
+
+    ball.style.top =
+      '88%';
+
+    ball.style.transform =
+      'translate(-50%,-50%) scale(1)';
+
+    keeper.style.left =
+      '50%';
+
+    keeper.style.top =
+      '58%';
+
+    keeper.style.transform =
+      'translate(-50%,-50%) scale(1)';
+
+    kicker.className =
+      'kicker';
+
+    powerFill.style.width =
+      '0%';
+
+    void ball.offsetWidth;
+  }
+
+
+  function clearZoneSelection(){
+
+    document
+      .querySelectorAll('.zone')
+      .forEach(
+        zone =>
+          zone.classList.remove(
+            'selected'
+          )
+      );
+  }
+
+
+  /* =====================================================
+     판정 글자
+  ===================================================== */
+
+  function showJudge(text){
+
+    judge.textContent =
+      text;
+
+    judge.classList.remove(
+      'show'
+    );
+
+    void judge.offsetWidth;
+
+    judge.classList.add(
+      'show'
+    );
+  }
+
+
+  /* =====================================================
+     파티클
+  ===================================================== */
+
+  function createParticles(icons){
+
+    const game =
+      $('#game');
+
+    for(
+      let i=0;
+      i<13;
+      i++
+    ){
+
+      const p =
+        document.createElement(
+          'span'
+        );
+
+      p.className =
+        'particle';
+
+      p.textContent =
+        icons[
+          Math.floor(
+            Math.random() *
+            icons.length
+          )
+        ];
+
+      p.style.left =
+        50 + '%';
+
+      p.style.top =
+        45 + '%';
+
+      p.style.setProperty(
+        '--x',
+        (
+          Math.random()*300 -
+          150
+        ) + 'px'
+      );
+
+      p.style.setProperty(
+        '--y',
+        (
+          Math.random()*260 -
+          160
+        ) + 'px'
+      );
+
+      game.appendChild(p);
+
+      setTimeout(
+        () => p.remove(),
+        1100
+      );
+    }
+  }
+
+
+  /* =====================================================
+     최고 기록
+  ===================================================== */
+
+  function getBest(){
+
+    try{
+
+      return Number(
+        localStorage.getItem(
+          'superKeeperBest'
+        ) || 0
+      );
+
+    }catch(e){
+
+      return 0;
+    }
+  }
+
+
+  function saveBest(){
+
+    try{
+
+      const best =
+        getBest();
+
+      if(score > best){
+
+        localStorage.setItem(
+          'superKeeperBest',
+          score
+        );
+      }
+
+    }catch(e){}
+
+    bestEl.textContent =
+      getBest();
+  }
+
+
+  /* =====================================================
+     게임 종료
+  ===================================================== */
+
+  function finish(){
+
+    state = 'idle';
+
+    progressBar.style.width =
+      '100%';
+
+    saveBest();
+
+
+    const avg =
+      reactionTimes.length
+        ?
+        Math.round(
+          reactionTimes.reduce(
+            (a,b)=>a+b,
+            0
+          ) /
+          reactionTimes.length
+        )
+        : 0;
+
+
+    let title;
+    let icon;
+    let message;
+
+
+    if(score >= 9){
+
+      title =
+        '👑 전설의 골키퍼!';
+
+      icon =
+        '🏆';
+
+      message =
+        `10개 중 ${score}개 선방!<br>
+         거의 모든 슛을 막아냈어요.<br>
+         평균 반응속도 ${avg || '-'}ms`;
+
+    }
+    else if(score >= 7){
+
+      title =
+        '🔥 슈퍼 골키퍼!';
+
+      icon =
+        '🧤';
+
+      message =
+        `10개 중 ${score}개 선방!<br>
+         놀라운 반사 신경입니다.<br>
+         최대 ${maxCombo}콤보!`;
+
+    }
+    else if(score >= 4){
+
+      title =
+        '⚽ 좋은 경기였어요!';
+
+      icon =
+        '🥅';
+
+      message =
+        `10개 중 ${score}개 선방!<br>
+         키커의 시선보다 공이 출발하는 순간에 집중해보세요.`;
+
+    }
+    else{
+
+      title =
+        '💪 다시 도전!';
+
+      icon =
+        '🧤';
+
+      message =
+        `10개 중 ${score}개 선방!<br>
+         너무 일찍 움직이지 말고 공이 출발한 순간 방향을 선택해보세요.`;
+    }
+
+
+    $('#ico').textContent =
+      icon;
+
+    $('#title').textContent =
+      title;
+
+    $('#desc').innerHTML =
+      message;
+
+    $('#start').textContent =
+      '🔄 다시 막기';
+
+    over.classList.remove(
+      'hide'
+    );
+
+
+    if(score >= 7){
+
+      createParticles(
+        ['🏆','⭐','🎉','✨']
+      );
+    }
+  }
+
+
+  $('#start').addEventListener(
+    'click',
+    start
+  );
+
+
+  bestEl.textContent =
+    getBest();
+
+})();
+</script>
+
+</body>
+</html>

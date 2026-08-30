@@ -1,13 +1,2286 @@
-<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no"><title>🌦️ 기상 관제소</title><style>
-:root{--c1:#0284c7;--c2:#67e8f9}*{box-sizing:border-box}html,body{height:100%}body{margin:0;overflow:hidden;display:grid;place-items:center;color:#f8fafc;font-family:system-ui,"Noto Sans KR",sans-serif;background:radial-gradient(circle at 18% 10%,var(--c1),#11162e 52%,#030712);user-select:none;-webkit-user-select:none}.app{width:min(95vw,720px);height:min(95vh,860px);display:flex;flex-direction:column;gap:11px}.top{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:2px 4px}.brand small{display:block;color:#cbd5e1;font-size:10px;font-weight:900;letter-spacing:.2em}.brand h1{margin:2px 0 0;font-size:clamp(25px,5vw,38px);letter-spacing:-.05em}.hud{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.stat{min-width:67px;padding:7px 10px;text-align:center;border:1px solid #ffffff25;border-radius:14px;background:#0f172ac7}.stat small{display:block;color:#cbd5e1;font-size:9px}.stat b{font-size:19px}.stage{position:relative;flex:1;min-height:400px;overflow:hidden;border:1px solid #ffffff27;border-radius:25px;background:linear-gradient(145deg,#14203b,#090e21);box-shadow:0 25px 70px #0009;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:#050916e9}.overlay.hide{display:none}.card{width:min(100%,410px);padding:28px 24px;text-align:center;border:1px solid #ffffff25;border-radius:23px;background:#111a36ee;box-shadow:0 20px 55px #0008}.card .emoji{font-size:55px}.card h2{margin:8px;font-size:28px}.card p{margin:0 0 19px;color:#cbd5e1;font-size:14px;line-height:1.72;word-break:keep-all}.primary{min-height:48px;width:100%;padding:12px 18px;border:0;border-radius:13px;color:#08111f;background:linear-gradient(135deg,var(--c2),#fef3c7);font:900 15px system-ui;cursor:pointer}.tip{min-height:18px;text-align:center;color:#aebbd0;font-size:12px}.hidden{display:none!important}button{font-family:inherit}.weather{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;padding:14px;background:linear-gradient(#60a5fa,#bae6fd 48%,#64748b 49%,#334155)}.city{font-size:90px;filter:drop-shadow(0 10px 10px #0006)}.forecast{width:min(100%,540px);padding:10px;text-align:center;border-radius:13px;background:#0f172acc;color:#e0f2fe;font-weight:900}.gauges{width:min(100%,540px);display:grid;gap:8px}.gauges label{padding:9px 12px;border-radius:12px;background:#0f172ac7;color:#e0f2fe;font-weight:800}.gauges label b{float:right}.gauges input{width:100%;height:32px;accent-color:#22d3ee;touch-action:pan-x}.stabilize{min-height:47px;padding:10px 20px;border:0;border-radius:12px;background:#fef08a;color:#1e3a5f;font-weight:900}#weatherMsg{min-height:23px;text-align:center;color:#fff;font-weight:800;text-shadow:0 2px 4px #000}
-@media(max-width:520px){.app{width:100%;height:100%;padding:9px}.stage{min-height:0;border-radius:20px}.brand h1{font-size:25px}.stat{min-width:61px;padding:6px 8px}.card{padding:24px 19px}.tip{font-size:11px}}
-</style></head><body><main class="app"><header class="top"><div class="brand"><small>WEATHER CONTROL</small><h1>🌦️ 기상 관제소</h1></div><div class="hud" id="hud"></div></header><section class="stage" id="stage"><div class="weather"><div class="city" id="city">🏙️</div><div class="forecast" id="forecast"></div><div class="gauges"><label>🌡️ 온도 <b id="tempVal"></b><input id="temp" type="range" min="0" max="40"></label><label>💧 습도 <b id="humidVal"></b><input id="humid" type="range" min="10" max="90"></label><label>🌬️ 바람 <b id="windVal"></b><input id="wind" type="range" min="0" max="30"></label></div><button class="stabilize" id="stabilize">기상 안정화 실행</button><div id="weatherMsg">세 수치를 목표 범위에 맞추세요.</div></div><div class="overlay" id="overlay"><div class="card"><div class="emoji" id="resultEmoji">🌦️</div><h2 id="resultTitle">기상 관제소</h2><p id="resultText">온도·습도·바람을 도시의 임무 범위에 맞춰 제한시간 동안 기상을 안정화하세요.</p><button class="primary" id="startBtn">게임 시작</button></div></div></section><div class="tip">온도·습도·바람을 도시의 임무 범위에 맞춰 제한시간 동안 기상을 안정화하세요.</div></main><script>
-const $=s=>document.querySelector(s),stage=$('#stage'),overlay=$('#overlay'),startBtn=$('#startBtn');
-const safeGet=(k,d=0)=>{try{return Number(localStorage.getItem(k))||d}catch(e){return d}},safeSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
-function showResult(icon,title,text,button='다시 하기'){ $('#resultEmoji').textContent=icon;$('#resultTitle').textContent=title;$('#resultText').innerHTML=text;startBtn.textContent=button;overlay.classList.remove('hide') }
-const temp=$('#temp'),humid=$('#humid'),wind=$('#wind'),forecast=$('#forecast'),msg=$('#weatherMsg'),hud=$('#hud');let mission=0,score=0,time=75,running=false,timer,target;hud.innerHTML='<div class="stat"><small>안정화</small><b id="score">0</b></div><div class="stat"><small>남은 시간</small><b id="time">75</b></div>';const missions=[{n:'야외 체육대회',t:[18,24],h:[35,60],w:[2,12],e:'☀️'},{n:'도시 미세먼지 제거',t:[12,28],h:[30,70],w:[16,25],e:'🌬️'},{n:'농작물 보호',t:[20,27],h:[55,78],w:[0,9],e:'🌱'},{n:'눈 축제 유지',t:[0,5],h:[35,65],w:[3,14],e:'❄️'},{n:'산불 위험 억제',t:[8,23],h:[65,90],w:[0,8],e:'🌧️'}];
-function startGame(){clearInterval(timer);mission=0;score=0;time=75;running=true;temp.value=20;humid.value=50;wind.value=10;overlay.classList.add('hide');nextMission();update();timer=setInterval(()=>{time--;$('#time').textContent=time;if(time<=0)end()},1000)}function nextMission(){target=missions[Math.floor(Math.random()*missions.length)];forecast.innerHTML=`${target.e} <b>${target.n}</b><br>온도 ${target.t[0]}~${target.t[1]}℃ · 습도 ${target.h[0]}~${target.h[1]}% · 바람 ${target.w[0]}~${target.w[1]}km/h`;msg.textContent='슬라이더를 조절해 모든 수치를 범위 안에 맞추세요.'}
-function update(){const t=+temp.value,h=+humid.value,w=+wind.value;$('#tempVal').textContent=t+'℃';$('#humidVal').textContent=h+'%';$('#windVal').textContent=w+'km/h';$('#city').textContent=t<7?'🏙️❄️':h>70?'🏙️🌧️':w>20?'🏙️🌬️':'🏙️☀️'}
-function stabilize(){if(!running)return;const t=+temp.value,h=+humid.value,w=+wind.value,ok=t>=target.t[0]&&t<=target.t[1]&&h>=target.h[0]&&h<=target.h[1]&&w>=target.w[0]&&w<=target.w[1];if(ok){score++;$('#score').textContent=score;msg.textContent='기상 안정화 성공! 다음 도시 요청입니다.';setTimeout(nextMission,350)}else{time=Math.max(0,time-5);msg.textContent='목표 범위를 벗어났습니다. 패널티 -5초';$('#time').textContent=time}}
-function end(){running=false;clearInterval(timer);showResult(score>=8?'🏆':'🌦️','관제 임무 종료',`${score}개의 기상 임무를 안정화했습니다.<br>세 범위의 교집합을 빠르게 확인해 보세요.`)}[temp,humid,wind].forEach(x=>x.oninput=update);$('#stabilize').onclick=stabilize;startBtn.onclick=startGame;update();
-</script></body></html>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no">
+<title>🌦️ 기상 관제소 챌린지</title>
+
+<style>
+*{box-sizing:border-box}
+
+:root{
+  --blue:#0ea5e9;
+  --cyan:#67e8f9;
+  --green:#22c55e;
+  --yellow:#fde047;
+  --red:#fb7185;
+  --dark:#07111f;
+}
+
+html,body{
+  min-height:100%;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  overflow-x:hidden;
+  background:
+    radial-gradient(circle at 15% 5%,#38bdf855,transparent 30%),
+    radial-gradient(circle at 90% 15%,#a78bfa44,transparent 30%),
+    linear-gradient(145deg,#071526,#0f1d3c 55%,#07111f);
+  color:#f8fafc;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+button,select,input{
+  font:inherit;
+}
+
+button{
+  touch-action:manipulation;
+}
+
+.app{
+  width:min(100%,1000px);
+  margin:auto;
+  padding:10px;
+}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:10px;
+  margin-bottom:8px;
+}
+
+.brand small{
+  display:block;
+  color:#a5f3fc;
+  font-size:9px;
+  font-weight:1000;
+  letter-spacing:.18em;
+}
+
+.brand h1{
+  margin:2px 0 0;
+  font-size:clamp(25px,5vw,39px);
+}
+
+.hud{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.stat{
+  min-width:68px;
+  padding:6px 8px;
+  border:1px solid #ffffff20;
+  border-radius:13px;
+  background:#ffffff0b;
+  text-align:center;
+}
+
+.stat small{
+  display:block;
+  color:#b6c3d8;
+  font-size:8px;
+}
+
+.stat b{
+  font-size:16px;
+}
+
+.progress-wrap{
+  height:8px;
+  margin-bottom:8px;
+  overflow:hidden;
+  border-radius:99px;
+  background:#ffffff13;
+}
+
+.progress{
+  width:0%;
+  height:100%;
+  background:linear-gradient(90deg,#22d3ee,#38bdf8,#a3e635);
+  transition:.3s;
+}
+
+.stage{
+  position:relative;
+  min-height:720px;
+  overflow:hidden;
+  border:1px solid #ffffff22;
+  border-radius:25px;
+  background:
+    linear-gradient(160deg,#14203d,#090e21);
+  box-shadow:0 25px 70px #0009;
+}
+
+/* =====================================================
+   도시 / 날씨
+===================================================== */
+
+.weather-world{
+  position:relative;
+  min-height:720px;
+  padding:12px;
+  display:grid;
+  grid-template-columns:1.05fr .95fr;
+  gap:12px;
+}
+
+.city-panel,
+.control-panel{
+  border:1px solid #ffffff18;
+  border-radius:20px;
+  background:#ffffff08;
+  padding:13px;
+  backdrop-filter:blur(5px);
+}
+
+.city-panel{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.city-scene{
+  position:relative;
+  min-height:330px;
+  overflow:hidden;
+  border-radius:18px;
+  background:
+    linear-gradient(#7dd3fc 0 55%,#bbf7d0 55% 72%,#64748b 72%);
+  box-shadow:inset 0 0 30px #0003;
+}
+
+.sky-icon{
+  position:absolute;
+  top:15px;
+  right:18px;
+  font-size:64px;
+  filter:drop-shadow(0 5px 5px #0004);
+  transition:.3s;
+}
+
+.city-icon{
+  position:absolute;
+  left:50%;
+  bottom:15px;
+  transform:translateX(-50%);
+  font-size:100px;
+  filter:drop-shadow(0 10px 10px #0005);
+}
+
+.weather-effect{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+.drop{
+  position:absolute;
+  font-size:19px;
+  animation:fall 1.4s linear infinite;
+}
+
+@keyframes fall{
+  from{transform:translateY(-30px)}
+  to{transform:translateY(380px)}
+}
+
+.cloud{
+  position:absolute;
+  font-size:40px;
+  opacity:.75;
+  animation:cloudMove 8s linear infinite;
+}
+
+@keyframes cloudMove{
+  from{transform:translateX(-100px)}
+  to{transform:translateX(600px)}
+}
+
+/* =====================================================
+   미션
+===================================================== */
+
+.mission-card{
+  padding:11px;
+  border-radius:15px;
+  background:#07162bd9;
+  border:1px solid #ffffff1a;
+}
+
+.mission-title{
+  font-size:11px;
+  color:#93c5fd;
+  font-weight:1000;
+  letter-spacing:.08em;
+}
+
+.mission-name{
+  margin:5px 0;
+  font-size:20px;
+  font-weight:1000;
+}
+
+.mission-desc{
+  color:#cbd5e1;
+  font-size:12px;
+  line-height:1.5;
+}
+
+.target-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+  margin-top:8px;
+}
+
+.target{
+  padding:8px 5px;
+  text-align:center;
+  border-radius:11px;
+  background:#ffffff0d;
+}
+
+.target small{
+  display:block;
+  color:#94a3b8;
+  font-size:8px;
+}
+
+.target b{
+  font-size:12px;
+}
+
+/* =====================================================
+   상태 분석
+===================================================== */
+
+.analysis{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+}
+
+.analysis-box{
+  padding:8px;
+  border-radius:11px;
+  text-align:center;
+  background:#0f172acc;
+}
+
+.analysis-box small{
+  display:block;
+  color:#94a3b8;
+  font-size:8px;
+}
+
+.analysis-box b{
+  font-size:12px;
+}
+
+.analysis-box.good{
+  background:#14532dcc;
+  color:#bbf7d0;
+}
+
+.analysis-box.bad{
+  background:#7f1d1dcc;
+  color:#fecaca;
+}
+
+/* =====================================================
+   컨트롤
+===================================================== */
+
+.control-panel h2{
+  margin-top:0;
+}
+
+.gauge{
+  margin-bottom:13px;
+  padding:10px;
+  border-radius:14px;
+  background:#0f172acc;
+}
+
+.gauge-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:6px;
+}
+
+.gauge-top span{
+  font-weight:900;
+}
+
+.gauge-top b{
+  font-size:18px;
+}
+
+.range-wrap{
+  position:relative;
+}
+
+input[type="range"]{
+  width:100%;
+  height:34px;
+  accent-color:#22d3ee;
+}
+
+.range-scale{
+  display:flex;
+  justify-content:space-between;
+  font-size:9px;
+  color:#94a3b8;
+}
+
+.status-text{
+  margin-top:3px;
+  font-size:11px;
+  font-weight:900;
+}
+
+.ok{
+  color:#86efac;
+}
+
+.low{
+  color:#93c5fd;
+}
+
+.high{
+  color:#fca5a5;
+}
+
+/* =====================================================
+   변수 설명
+===================================================== */
+
+.variable-box{
+  padding:10px;
+  border-radius:14px;
+  background:#172554aa;
+  margin-bottom:10px;
+}
+
+.variable-box h3{
+  margin:0 0 6px;
+  font-size:14px;
+}
+
+.variable-box p{
+  margin:0;
+  color:#cbd5e1;
+  font-size:11px;
+  line-height:1.5;
+}
+
+/* =====================================================
+   버튼
+===================================================== */
+
+.actions{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+
+.actions button{
+  flex:1 1 120px;
+  min-height:47px;
+  border:0;
+  border-radius:13px;
+  font-weight:1000;
+  cursor:pointer;
+}
+
+.stabilize{
+  background:linear-gradient(135deg,#fde047,#fb923c);
+  color:#422006;
+}
+
+.hint{
+  background:#ddd6fe;
+  color:#312e81;
+}
+
+.auto{
+  background:#bae6fd;
+  color:#0c4a6e;
+}
+
+.sound{
+  background:#ffffff15;
+  color:#fff;
+}
+
+.message{
+  min-height:62px;
+  margin-top:10px;
+  padding:10px;
+  border-radius:13px;
+  background:#050916c9;
+  text-align:center;
+  font-weight:900;
+  line-height:1.5;
+}
+
+.combo{
+  min-height:29px;
+  text-align:center;
+  color:#fde047;
+  font-size:19px;
+  font-weight:1000;
+}
+
+/* =====================================================
+   판정
+===================================================== */
+
+.judge{
+  position:absolute;
+  z-index:15;
+  left:50%;
+  top:45%;
+  transform:translate(-50%,-50%) scale(.5);
+  opacity:0;
+  font-size:clamp(30px,8vw,58px);
+  font-weight:1000;
+  text-align:center;
+  text-shadow:0 4px 14px #000;
+  pointer-events:none;
+}
+
+.judge.show{
+  animation:judgePop .75s ease;
+}
+
+@keyframes judgePop{
+  0%{
+    opacity:0;
+    transform:translate(-50%,-50%) scale(.4);
+  }
+  35%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.1);
+  }
+  100%{
+    opacity:0;
+    transform:translate(-50%,-70%) scale(1);
+  }
+}
+
+/* =====================================================
+   오버레이
+===================================================== */
+
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:30;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  background:#050916ed;
+  backdrop-filter:blur(7px);
+}
+
+.overlay.hide{
+  display:none;
+}
+
+.card{
+  width:min(100%,460px);
+  padding:24px 21px;
+  border:1px solid #ffffff22;
+  border-radius:23px;
+  background:linear-gradient(145deg,#18234c,#10152d);
+  text-align:center;
+  box-shadow:0 20px 60px #0009;
+}
+
+.card .emoji{
+  font-size:58px;
+}
+
+.card h2{
+  margin:7px;
+  font-size:29px;
+}
+
+.card p{
+  color:#cbd5e1;
+  line-height:1.65;
+  font-size:13px;
+}
+
+.lesson{
+  margin:12px 0;
+  padding:10px;
+  border-radius:13px;
+  background:#ffffff0b;
+  text-align:left;
+  color:#cbd5e1;
+  font-size:11px;
+  line-height:1.65;
+}
+
+.primary{
+  width:100%;
+  min-height:49px;
+  border:0;
+  border-radius:13px;
+  background:linear-gradient(135deg,#67e8f9,#c4b5fd);
+  color:#071020;
+  font-weight:1000;
+}
+
+.tip{
+  padding:7px;
+  text-align:center;
+  color:#aebbd0;
+  font-size:10px;
+}
+
+/* =====================================================
+   파티클
+===================================================== */
+
+.particle{
+  position:absolute;
+  z-index:18;
+  pointer-events:none;
+  font-size:23px;
+  animation:fly .9s ease forwards;
+}
+
+@keyframes fly{
+  to{
+    transform:translate(var(--x),var(--y)) rotate(360deg);
+    opacity:0;
+  }
+}
+
+@media(max-width:700px){
+
+  .weather-world{
+    grid-template-columns:1fr;
+  }
+
+  .stage{
+    min-height:auto;
+  }
+
+  .weather-world{
+    min-height:auto;
+  }
+
+  .city-scene{
+    min-height:250px;
+  }
+
+  .city-icon{
+    font-size:75px;
+  }
+
+  .sky-icon{
+    font-size:48px;
+  }
+
+  .app{
+    padding:6px;
+  }
+
+  .brand h1{
+    font-size:24px;
+  }
+
+  .stat{
+    min-width:57px;
+    padding:5px;
+  }
+
+  .stat b{
+    font-size:14px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<main class="app">
+
+<header class="top">
+
+  <div class="brand">
+    <small>WEATHER SYSTEM LAB</small>
+    <h1>🌦️ 기상 관제소</h1>
+  </div>
+
+  <div class="hud">
+
+    <div class="stat">
+      <small>MISSION</small>
+      <b id="missionNo">1 / 8</b>
+    </div>
+
+    <div class="stat">
+      <small>SCORE</small>
+      <b id="score">0</b>
+    </div>
+
+    <div class="stat">
+      <small>COMBO</small>
+      <b id="comboScore">0</b>
+    </div>
+
+    <div class="stat">
+      <small>TIME</small>
+      <b id="time">90</b>
+    </div>
+
+  </div>
+
+</header>
+
+<div class="progress-wrap">
+  <div class="progress" id="progress"></div>
+</div>
+
+<section class="stage" id="stage">
+
+<div class="weather-world">
+
+  <!-- 왼쪽 도시 -->
+  <div class="city-panel">
+
+    <div class="mission-card">
+
+      <div class="mission-title">
+        CURRENT MISSION
+      </div>
+
+      <div class="mission-name" id="missionName"></div>
+
+      <div class="mission-desc" id="missionDesc"></div>
+
+      <div class="target-grid">
+
+        <div class="target">
+          <small>🌡 목표 온도</small>
+          <b id="targetTemp"></b>
+        </div>
+
+        <div class="target">
+          <small>💧 목표 습도</small>
+          <b id="targetHumid"></b>
+        </div>
+
+        <div class="target">
+          <small>🌬 목표 바람</small>
+          <b id="targetWind"></b>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="city-scene">
+
+      <div class="sky-icon" id="skyIcon">☀️</div>
+
+      <div class="weather-effect" id="effect"></div>
+
+      <div class="city-icon" id="city">
+        🏙️
+      </div>
+
+    </div>
+
+    <div class="analysis">
+
+      <div class="analysis-box" id="tempCheck">
+        <small>온도 조건</small>
+        <b>분석 중</b>
+      </div>
+
+      <div class="analysis-box" id="humidCheck">
+        <small>습도 조건</small>
+        <b>분석 중</b>
+      </div>
+
+      <div class="analysis-box" id="windCheck">
+        <small>바람 조건</small>
+        <b>분석 중</b>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- 오른쪽 제어 -->
+  <div class="control-panel">
+
+    <h2>🎛 기상 변수 제어</h2>
+
+    <div class="variable-box">
+      <h3>🧠 오늘의 핵심 개념</h3>
+      <p>
+        온도·습도·바람은 서로 다른 <b>변수</b>입니다.
+        세 변수 모두 목표 조건을 만족해야 임무가 성공합니다.
+        하나라도 범위를 벗어나면 조건은 실패합니다.
+      </p>
+    </div>
+
+
+    <div class="gauge">
+
+      <div class="gauge-top">
+        <span>🌡️ 온도</span>
+        <b id="tempVal">20℃</b>
+      </div>
+
+      <input id="temp" type="range" min="-5" max="40" value="20">
+
+      <div class="range-scale">
+        <span>-5℃</span>
+        <span>40℃</span>
+      </div>
+
+      <div class="status-text" id="tempStatus"></div>
+
+    </div>
+
+
+    <div class="gauge">
+
+      <div class="gauge-top">
+        <span>💧 습도</span>
+        <b id="humidVal">50%</b>
+      </div>
+
+      <input id="humid" type="range" min="10" max="95" value="50">
+
+      <div class="range-scale">
+        <span>10%</span>
+        <span>95%</span>
+      </div>
+
+      <div class="status-text" id="humidStatus"></div>
+
+    </div>
+
+
+    <div class="gauge">
+
+      <div class="gauge-top">
+        <span>🌬️ 바람</span>
+        <b id="windVal">10km/h</b>
+      </div>
+
+      <input id="wind" type="range" min="0" max="35" value="10">
+
+      <div class="range-scale">
+        <span>0</span>
+        <span>35km/h</span>
+      </div>
+
+      <div class="status-text" id="windStatus"></div>
+
+    </div>
+
+
+    <div class="actions">
+
+      <button class="stabilize" id="stabilize">
+        ⚙️ 기상 안정화
+      </button>
+
+      <button class="hint" id="hint">
+        💡 분석 힌트
+      </button>
+
+      <button class="auto" id="auto">
+        🎯 자동 목표값
+      </button>
+
+      <button class="sound" id="sound">
+        🔊 소리 ON
+      </button>
+
+    </div>
+
+
+    <div class="combo" id="combo"></div>
+
+    <div class="message" id="weatherMsg">
+      세 변수를 모두 목표 범위 안에 맞춰보세요.
+    </div>
+
+  </div>
+
+</div>
+
+
+<div class="judge" id="judge"></div>
+
+
+<div class="overlay" id="overlay">
+
+  <div class="card">
+
+    <div class="emoji" id="resultEmoji">
+      🌦️
+    </div>
+
+    <h2 id="resultTitle">
+      기상 관제소
+    </h2>
+
+    <p id="resultText">
+      도시의 상황에 맞게 온도·습도·바람을 조절하세요.
+    </p>
+
+    <div class="lesson">
+      🌡 <b>온도</b> = 숫자 변수<br>
+      💧 <b>습도</b> = 숫자 변수<br>
+      🌬 <b>바람</b> = 숫자 변수<br><br>
+
+      성공 조건은 다음과 같습니다.<br>
+
+      <b>
+        온도 조건 AND 습도 조건 AND 바람 조건
+      </b><br><br>
+
+      즉, 세 조건이 모두 참(TRUE)일 때만
+      기상 안정화가 성공합니다.
+    </div>
+
+    <button class="primary" id="startBtn">
+      🌍 관제 임무 시작
+    </button>
+
+  </div>
+
+</div>
+
+</section>
+
+<div class="tip">
+  세 변수의 범위를 비교하세요 · 모든 조건이 TRUE일 때 안정화 성공!
+</div>
+
+</main>
+
+
+<script>
+const $ = s => document.querySelector(s);
+
+
+/* =====================================================
+   미션
+===================================================== */
+
+const missions = [
+
+  {
+    name:'🏃 야외 체육대회',
+    desc:'학생들이 안전하고 쾌적하게 운동할 수 있는 날씨를 만들어 주세요.',
+    t:[18,24],
+    h:[35,60],
+    w:[2,12],
+    sky:'☀️'
+  },
+
+  {
+    name:'🌬️ 미세먼지 제거 작전',
+    desc:'도시 공기를 순환시키기 위해 충분한 바람이 필요합니다.',
+    t:[12,28],
+    h:[30,70],
+    w:[16,25],
+    sky:'🌬️'
+  },
+
+  {
+    name:'🌱 농작물 보호',
+    desc:'작물이 마르지 않도록 충분한 습도와 약한 바람을 유지하세요.',
+    t:[20,27],
+    h:[55,78],
+    w:[0,9],
+    sky:'🌱'
+  },
+
+  {
+    name:'❄️ 눈 축제 유지',
+    desc:'눈이 녹지 않도록 낮은 온도를 유지하면서 강풍을 피하세요.',
+    t:[-3,5],
+    h:[35,65],
+    w:[3,14],
+    sky:'❄️'
+  },
+
+  {
+    name:'🔥 산불 위험 억제',
+    desc:'기온을 낮추고 습도를 높이며 바람을 약하게 유지하세요.',
+    t:[8,23],
+    h:[65,90],
+    w:[0,8],
+    sky:'🌧️'
+  },
+
+  {
+    name:'✈️ 드론 배송 작전',
+    desc:'드론이 안전하게 날 수 있도록 비와 강풍이 적은 환경을 만드세요.',
+    t:[10,30],
+    h:[25,65],
+    w:[0,10],
+    sky:'🚁'
+  },
+
+  {
+    name:'🏖️ 해변 축제',
+    desc:'너무 덥지도 않고 너무 습하지도 않은 시원한 날씨가 필요합니다.',
+    t:[22,28],
+    h:[35,60],
+    w:[5,15],
+    sky:'🏖️'
+  },
+
+  {
+    name:'🚨 슈퍼 태풍 대비',
+    desc:'마지막 임무입니다. 위험한 기상을 최대한 안정적인 상태로 조절하세요.',
+    t:[15,22],
+    h:[45,65],
+    w:[0,7],
+    sky:'🌪️'
+  }
+
+];
+
+
+/* =====================================================
+   상태
+===================================================== */
+
+let missionIndex = 0;
+
+let score = 0;
+let combo = 0;
+let maxCombo = 0;
+
+let time = 90;
+
+let running = false;
+
+let timer = null;
+
+let current = null;
+
+let hintUsed = 0;
+
+let soundOn = true;
+let audioCtx = null;
+
+
+/* =====================================================
+   요소
+===================================================== */
+
+const temp = $('#temp');
+const humid = $('#humid');
+const wind = $('#wind');
+
+
+/* =====================================================
+   오디오
+===================================================== */
+
+function activateAudio(){
+
+  if(!audioCtx){
+
+    try{
+
+      audioCtx =
+        new (
+          window.AudioContext ||
+          window.webkitAudioContext
+        )();
+
+    }catch(e){}
+  }
+
+
+  if(
+    audioCtx &&
+    audioCtx.state === 'suspended'
+  ){
+
+    audioCtx.resume();
+  }
+}
+
+
+function tone(freq,duration=.1,type='sine'){
+
+  if(
+    !soundOn ||
+    !audioCtx
+  ){
+    return;
+  }
+
+
+  const osc =
+    audioCtx.createOscillator();
+
+  const gain =
+    audioCtx.createGain();
+
+
+  osc.type =
+    type;
+
+  osc.frequency.value =
+    freq;
+
+
+  gain.gain.setValueAtTime(
+    .065,
+    audioCtx.currentTime
+  );
+
+
+  gain.gain.exponentialRampToValueAtTime(
+    .001,
+    audioCtx.currentTime +
+    duration
+  );
+
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start();
+
+  osc.stop(
+    audioCtx.currentTime +
+    duration
+  );
+}
+
+
+function soundSuccess(){
+
+  [520,680,880]
+    .forEach(
+      (f,i)=>
+        setTimeout(
+          ()=>tone(f,.1),
+          i*90
+        )
+    );
+}
+
+
+function soundFail(){
+
+  tone(
+    150,
+    .18,
+    'sawtooth'
+  );
+}
+
+
+function soundSlider(){
+
+  tone(
+    300,
+    .025,
+    'triangle'
+  );
+}
+
+
+/* =====================================================
+   시작
+===================================================== */
+
+function startGame(){
+
+  activateAudio();
+
+  clearInterval(timer);
+
+
+  missionIndex = 0;
+
+  score = 0;
+
+  combo = 0;
+
+  maxCombo = 0;
+
+  time = 90;
+
+  running = true;
+
+
+  $('#score').textContent =
+    score;
+
+  $('#comboScore').textContent =
+    0;
+
+  $('#time').textContent =
+    time;
+
+  $('#overlay')
+    .classList
+    .add('hide');
+
+
+  nextMission();
+
+
+  timer =
+    setInterval(
+      ()=>{
+
+        if(!running){
+          return;
+        }
+
+
+        time--;
+
+
+        $('#time').textContent =
+          time;
+
+
+        if(time <= 0){
+
+          finish();
+
+        }
+
+      },
+      1000
+    );
+}
+
+
+/* =====================================================
+   다음 미션
+===================================================== */
+
+function nextMission(){
+
+  if(
+    missionIndex >=
+    missions.length
+  ){
+
+    finish(true);
+
+    return;
+  }
+
+
+  current =
+    missions[missionIndex];
+
+
+  hintUsed = 0;
+
+
+  $('#missionNo').textContent =
+    `${missionIndex+1} / ${missions.length}`;
+
+
+  $('#missionName').textContent =
+    current.name;
+
+
+  $('#missionDesc').textContent =
+    current.desc;
+
+
+  $('#targetTemp').textContent =
+    `${current.t[0]} ~ ${current.t[1]}℃`;
+
+
+  $('#targetHumid').textContent =
+    `${current.h[0]} ~ ${current.h[1]}%`;
+
+
+  $('#targetWind').textContent =
+    `${current.w[0]} ~ ${current.w[1]}km/h`;
+
+
+  $('#progress').style.width =
+    (
+      missionIndex /
+      missions.length *
+      100
+    ) + '%';
+
+
+  /*
+    매 미션마다 일부러
+    약간 틀린 날씨에서 시작
+  */
+
+  temp.value =
+    randomInt(
+      Math.max(-5,current.t[0]-10),
+      Math.min(40,current.t[1]+10)
+    );
+
+
+  humid.value =
+    randomInt(
+      Math.max(10,current.h[0]-25),
+      Math.min(95,current.h[1]+25)
+    );
+
+
+  wind.value =
+    randomInt(
+      Math.max(0,current.w[0]-10),
+      Math.min(35,current.w[1]+10)
+    );
+
+
+  $('#weatherMsg').textContent =
+    '🛰 현재 기상 데이터를 분석하고 세 변수를 목표 범위에 맞추세요.';
+
+
+  update();
+}
+
+
+/* =====================================================
+   난수
+===================================================== */
+
+function randomInt(min,max){
+
+  return Math.floor(
+    Math.random() *
+    (max-min+1)
+  ) + min;
+}
+
+
+/* =====================================================
+   범위 상태
+===================================================== */
+
+function stateOf(value,range){
+
+  if(
+    value <
+    range[0]
+  ){
+
+    return 'low';
+  }
+
+
+  if(
+    value >
+    range[1]
+  ){
+
+    return 'high';
+  }
+
+
+  return 'ok';
+}
+
+
+function statusText(type,state){
+
+  if(type==='temp'){
+
+    return state==='low'
+      ? '🥶 너무 낮아요'
+      :
+    state==='high'
+      ? '🥵 너무 높아요'
+      : '✅ 적정 온도';
+
+  }
+
+
+  if(type==='humid'){
+
+    return state==='low'
+      ? '🏜 너무 건조해요'
+      :
+    state==='high'
+      ? '💦 너무 습해요'
+      : '✅ 적정 습도';
+
+  }
+
+
+  return state==='low'
+    ? '🍃 바람이 너무 약해요'
+    :
+  state==='high'
+    ? '🌪 바람이 너무 강해요'
+    : '✅ 적정 바람';
+}
+
+
+/* =====================================================
+   화면 업데이트
+===================================================== */
+
+function update(){
+
+  if(!current){
+    return;
+  }
+
+
+  const t =
+    Number(temp.value);
+
+  const h =
+    Number(humid.value);
+
+  const w =
+    Number(wind.value);
+
+
+  $('#tempVal').textContent =
+    `${t}℃`;
+
+  $('#humidVal').textContent =
+    `${h}%`;
+
+  $('#windVal').textContent =
+    `${w}km/h`;
+
+
+  const ts =
+    stateOf(
+      t,
+      current.t
+    );
+
+  const hs =
+    stateOf(
+      h,
+      current.h
+    );
+
+  const ws =
+    stateOf(
+      w,
+      current.w
+    );
+
+
+  updateStatus(
+    '#tempStatus',
+    'temp',
+    ts
+  );
+
+  updateStatus(
+    '#humidStatus',
+    'humid',
+    hs
+  );
+
+  updateStatus(
+    '#windStatus',
+    'wind',
+    ws
+  );
+
+
+  updateCheck(
+    '#tempCheck',
+    ts
+  );
+
+  updateCheck(
+    '#humidCheck',
+    hs
+  );
+
+  updateCheck(
+    '#windCheck',
+    ws
+  );
+
+
+  updateWeatherVisual(
+    t,h,w
+  );
+}
+
+
+/* =====================================================
+   변수 상태 표시
+===================================================== */
+
+function updateStatus(selector,type,state){
+
+  const el =
+    $(selector);
+
+
+  el.className =
+    `status-text ${state}`;
+
+
+  el.textContent =
+    statusText(
+      type,
+      state
+    );
+}
+
+
+function updateCheck(selector,state){
+
+  const el =
+    $(selector);
+
+
+  el.className =
+    'analysis-box ' +
+    (
+      state === 'ok'
+        ? 'good'
+        : 'bad'
+    );
+
+
+  el.querySelector('b')
+    .textContent =
+      state === 'ok'
+        ? 'TRUE ✅'
+        :
+      state === 'low'
+        ? 'LOW ⬇'
+        : 'HIGH ⬆';
+}
+
+
+/* =====================================================
+   날씨 시각화
+===================================================== */
+
+function updateWeatherVisual(t,h,w){
+
+  const scene =
+    $('.city-scene');
+
+  const effect =
+    $('#effect');
+
+
+  effect.innerHTML = '';
+
+
+  /*
+    온도
+  */
+
+  if(t <= 4){
+
+    $('#skyIcon').textContent =
+      '❄️';
+
+
+    scene.style.background =
+      'linear-gradient(#bfe8ff,#e0f2fe 55%,#cbd5e1 55%)';
+
+
+    createWeather(
+      '❄️',
+      14
+    );
+
+  }else if(
+    h >= 75
+  ){
+
+    $('#skyIcon').textContent =
+      '🌧️';
+
+
+    scene.style.background =
+      'linear-gradient(#64748b,#94a3b8 55%,#475569 55%)';
+
+
+    createWeather(
+      '💧',
+      15
+    );
+
+  }else if(
+    w >= 20
+  ){
+
+    $('#skyIcon').textContent =
+      '🌬️';
+
+
+    scene.style.background =
+      'linear-gradient(#7dd3fc,#bae6fd 55%,#94a3b8 55%)';
+
+
+    createClouds();
+
+  }else if(
+    t >= 30
+  ){
+
+    $('#skyIcon').textContent =
+      '☀️';
+
+
+    scene.style.background =
+      'linear-gradient(#38bdf8,#fef08a 55%,#84cc16 55%)';
+
+  }else{
+
+    $('#skyIcon').textContent =
+      '🌤️';
+
+
+    scene.style.background =
+      'linear-gradient(#7dd3fc,#bae6fd 55%,#86efac 55%)';
+  }
+}
+
+
+/* =====================================================
+   비 / 눈
+===================================================== */
+
+function createWeather(icon,count){
+
+  const effect =
+    $('#effect');
+
+
+  for(
+    let i=0;
+    i<count;
+    i++
+  ){
+
+    const d =
+      document.createElement(
+        'span'
+      );
+
+
+    d.className =
+      'drop';
+
+    d.textContent =
+      icon;
+
+
+    d.style.left =
+      Math.random()*100 +
+      '%';
+
+
+    d.style.animationDelay =
+      Math.random()*1.5 +
+      's';
+
+
+    d.style.animationDuration =
+      (
+        .8 +
+        Math.random()*.9
+      ) + 's';
+
+
+    effect.appendChild(d);
+  }
+}
+
+
+/* =====================================================
+   바람
+===================================================== */
+
+function createClouds(){
+
+  const effect =
+    $('#effect');
+
+
+  for(
+    let i=0;
+    i<4;
+    i++
+  ){
+
+    const c =
+      document.createElement(
+        'span'
+      );
+
+
+    c.className =
+      'cloud';
+
+    c.textContent =
+      '☁️';
+
+
+    c.style.top =
+      (
+        30 +
+        i*45
+      ) + 'px';
+
+
+    c.style.animationDelay =
+      (-i*1.3) + 's';
+
+
+    effect.appendChild(c);
+  }
+}
+
+
+/* =====================================================
+   안정화
+===================================================== */
+
+function stabilize(){
+
+  if(!running){
+    return;
+  }
+
+
+  activateAudio();
+
+
+  const t =
+    Number(temp.value);
+
+  const h =
+    Number(humid.value);
+
+  const w =
+    Number(wind.value);
+
+
+  const tOk =
+    t >= current.t[0] &&
+    t <= current.t[1];
+
+
+  const hOk =
+    h >= current.h[0] &&
+    h <= current.h[1];
+
+
+  const wOk =
+    w >= current.w[0] &&
+    w <= current.w[1];
+
+
+  /*
+    핵심:
+    세 조건을 AND로 판단
+  */
+
+  const success =
+    tOk &&
+    hOk &&
+    wOk;
+
+
+  if(success){
+
+    combo++;
+
+    maxCombo =
+      Math.max(
+        maxCombo,
+        combo
+      );
+
+
+    const bonus =
+      100 +
+      combo*20 +
+      Math.max(
+        0,
+        3-hintUsed
+      )*20;
+
+
+    score += bonus;
+
+
+    $('#score').textContent =
+      score;
+
+
+    $('#comboScore').textContent =
+      combo;
+
+
+    $('#combo').textContent =
+      combo >= 2
+        ? `🔥 ${combo} COMBO`
+        : '';
+
+
+    $('#weatherMsg').textContent =
+      `✅ 모든 조건 TRUE! 기상 안정화 성공! +${bonus}점`;
+
+
+    showJudge(
+      'STABLE!',
+      '#86efac'
+    );
+
+
+    soundSuccess();
+
+
+    particles(
+      ['☀️','🌈','✨','✅']
+    );
+
+
+    time += 5;
+
+
+    $('#time').textContent =
+      time;
+
+
+    missionIndex++;
+
+
+    setTimeout(
+      nextMission,
+      900
+    );
+
+  }else{
+
+    combo = 0;
+
+
+    $('#comboScore').textContent =
+      0;
+
+    $('#combo').textContent =
+      '';
+
+
+    /*
+      실패 원인 개수 계산
+    */
+
+    const wrong =
+      [
+        tOk,
+        hOk,
+        wOk
+      ].filter(
+        x=>!x
+      ).length;
+
+
+    time =
+      Math.max(
+        0,
+        time -
+        wrong*3
+      );
+
+
+    $('#time').textContent =
+      time;
+
+
+    $('#weatherMsg').textContent =
+      `❌ ${wrong}개의 조건이 FALSE입니다. 표시된 HIGH/LOW를 보고 수정하세요. -${wrong*3}초`;
+
+
+    showJudge(
+      'UNSTABLE!',
+      '#fb7185'
+    );
+
+
+    soundFail();
+
+
+    if(time <= 0){
+      finish();
+    }
+  }
+}
+
+
+/* =====================================================
+   힌트
+===================================================== */
+
+function showHint(){
+
+  if(
+    !running ||
+    !current
+  ){
+    return;
+  }
+
+
+  activateAudio();
+
+
+  hintUsed++;
+
+
+  const t =
+    Number(temp.value);
+
+  const h =
+    Number(humid.value);
+
+  const w =
+    Number(wind.value);
+
+
+  const problems = [];
+
+
+  if(t < current.t[0]){
+
+    problems.push(
+      '🌡 온도를 조금 올려보세요.'
+    );
+
+  }else if(
+    t > current.t[1]
+  ){
+
+    problems.push(
+      '🌡 온도를 조금 내려보세요.'
+    );
+  }
+
+
+  if(h < current.h[0]){
+
+    problems.push(
+      '💧 습도를 높여보세요.'
+    );
+
+  }else if(
+    h > current.h[1]
+  ){
+
+    problems.push(
+      '💧 습도를 낮춰보세요.'
+    );
+  }
+
+
+  if(w < current.w[0]){
+
+    problems.push(
+      '🌬 바람을 강하게 해보세요.'
+    );
+
+  }else if(
+    w > current.w[1]
+  ){
+
+    problems.push(
+      '🌬 바람을 약하게 해보세요.'
+    );
+  }
+
+
+  $('#weatherMsg').textContent =
+    problems.length
+      ?
+      `💡 ${problems[0]}`
+      :
+      '💡 세 조건이 모두 TRUE입니다. 안정화 버튼을 눌러보세요!';
+
+
+  tone(
+    580,
+    .08
+  );
+}
+
+
+/* =====================================================
+   자동 목표값
+===================================================== */
+
+function autoTarget(){
+
+  if(
+    !running ||
+    !current
+  ){
+    return;
+  }
+
+
+  activateAudio();
+
+
+  /*
+    교육용 기능:
+    조건 범위의 중앙값이 어떤 값인지
+    확인하게 하는 기능.
+    점수 보너스 감소.
+  */
+
+  hintUsed += 2;
+
+
+  temp.value =
+    Math.round(
+      (
+        current.t[0] +
+        current.t[1]
+      ) / 2
+    );
+
+
+  humid.value =
+    Math.round(
+      (
+        current.h[0] +
+        current.h[1]
+      ) / 2
+    );
+
+
+  wind.value =
+    Math.round(
+      (
+        current.w[0] +
+        current.w[1]
+      ) / 2
+    );
+
+
+  update();
+
+
+  $('#weatherMsg').textContent =
+    '🎯 목표 범위의 중앙값으로 자동 설정했습니다. 각 변수가 왜 조건을 만족하는지 확인해 보세요.';
+
+
+  tone(
+    700,
+    .09
+  );
+}
+
+
+/* =====================================================
+   판정
+===================================================== */
+
+function showJudge(text,color){
+
+  const el =
+    $('#judge');
+
+
+  el.textContent =
+    text;
+
+  el.style.color =
+    color;
+
+
+  el.classList.remove(
+    'show'
+  );
+
+
+  void el.offsetWidth;
+
+
+  el.classList.add(
+    'show'
+  );
+}
+
+
+/* =====================================================
+   파티클
+===================================================== */
+
+function particles(icons){
+
+  for(
+    let i=0;
+    i<15;
+    i++
+  ){
+
+    const p =
+      document.createElement(
+        'span'
+      );
+
+
+    p.className =
+      'particle';
+
+
+    p.textContent =
+      icons[
+        Math.floor(
+          Math.random() *
+          icons.length
+        )
+      ];
+
+
+    p.style.left =
+      '50%';
+
+    p.style.top =
+      '48%';
+
+
+    p.style.setProperty(
+      '--x',
+      (
+        Math.random()*280 -
+        140
+      ) + 'px'
+    );
+
+
+    p.style.setProperty(
+      '--y',
+      (
+        Math.random()*240 -
+        150
+      ) + 'px'
+    );
+
+
+    $('#stage')
+      .appendChild(p);
+
+
+    setTimeout(
+      ()=>p.remove(),
+      1000
+    );
+  }
+}
+
+
+/* =====================================================
+   종료
+===================================================== */
+
+function finish(clear=false){
+
+  if(!running){
+    return;
+  }
+
+
+  running = false;
+
+
+  clearInterval(timer);
+
+
+  if(clear){
+
+    soundSuccess();
+
+
+    $('#progress').style.width =
+      '100%';
+
+
+    $('#resultEmoji').textContent =
+      '🏆🌈';
+
+
+    $('#resultTitle').textContent =
+      '기상 관제 마스터!';
+
+
+    $('#resultText').innerHTML =
+      `8개의 도시 임무를 모두 완료했습니다!<br>
+       최종 점수 <b>${score}</b><br>
+       최대 콤보 <b>${maxCombo}</b><br><br>
+       세 변수의 조건을 동시에 판단하는 데 성공했습니다.`;
+
+  }else{
+
+    $('#resultEmoji').textContent =
+      '⏰🌦️';
+
+
+    $('#resultTitle').textContent =
+      '관제 시간 종료';
+
+
+    $('#resultText').innerHTML =
+      `${missionIndex}개의 임무를 완료했습니다.<br>
+       최종 점수 <b>${score}</b><br><br>
+       HIGH / LOW 표시를 보고 한 변수씩 수정해 보세요.`;
+  }
+
+
+  $('#startBtn').textContent =
+    '🔄 다시 도전';
+
+
+  $('#overlay')
+    .classList
+    .remove('hide');
+}
+
+
+/* =====================================================
+   입력
+===================================================== */
+
+[temp,humid,wind]
+  .forEach(
+    slider => {
+
+      slider.addEventListener(
+        'input',
+        ()=>{
+
+          update();
+        }
+      );
+
+
+      slider.addEventListener(
+        'change',
+        ()=>{
+
+          activateAudio();
+
+          if(soundOn){
+            soundSlider();
+          }
+        }
+      );
+    }
+  );
+
+
+$('#stabilize')
+  .addEventListener(
+    'click',
+    stabilize
+  );
+
+
+$('#hint')
+  .addEventListener(
+    'click',
+    showHint
+  );
+
+
+$('#auto')
+  .addEventListener(
+    'click',
+    autoTarget
+  );
+
+
+$('#sound')
+  .addEventListener(
+    'click',
+    ()=>{
+
+      activateAudio();
+
+
+      soundOn =
+        !soundOn;
+
+
+      $('#sound').textContent =
+        soundOn
+          ? '🔊 소리 ON'
+          : '🔇 소리 OFF';
+
+
+      if(soundOn){
+
+        tone(
+          700,
+          .08
+        );
+      }
+    }
+  );
+
+
+$('#startBtn')
+  .addEventListener(
+    'click',
+    startGame
+  );
+
+
+/* 최초 화면 */
+
+current =
+  missions[0];
+
+update();
+
+</script>
+
+</body>
+</html>

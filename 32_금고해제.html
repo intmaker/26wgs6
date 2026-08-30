@@ -1,19 +1,2338 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>🔐 금고해제</title><style>
-*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:radial-gradient(circle at 20% 10%,#3730a3,#070b18 45%,#020617);color:#f8fafc;font-family:system-ui,"Noto Sans KR",sans-serif;display:grid;place-items:center;overflow:hidden;user-select:none}.app{width:min(94vw,700px);height:min(94vh,820px);display:flex;flex-direction:column;gap:11px}.top{display:flex;justify-content:space-between;align-items:end}.tag{color:#67e8f9;font-size:10px;font-weight:900;letter-spacing:.2em}h1{margin:2px 0;font-size:clamp(25px,5vw,37px)}.hud{display:flex;gap:7px}.pill{background:#111936cc;border:1px solid #ffffff20;border-radius:14px;padding:7px 12px;text-align:center;min-width:69px}.pill small{display:block;color:#94a3b8;font-size:9px}.pill b{font-size:20px}.game{position:relative;flex:1;min-height:380px;background:linear-gradient(#071126e8,#15214be8);border:1px solid #ffffff22;border-radius:24px;overflow:hidden;box-shadow:0 25px 60px #0008;touch-action:none}canvas{width:100%;height:100%;display:block}.tip{text-align:center;color:#a9b7cc;font-size:12px}.over{position:absolute;inset:0;display:grid;place-items:center;padding:20px;background:#030712dc;z-index:4}.over.hide{display:none}.card{text-align:center;max-width:390px;padding:27px 23px;border:1px solid #ffffff22;border-radius:23px;background:#101936e8}.ico{font-size:55px}.card h2{font-size:27px;margin:8px}.card p{color:#bdc8d9;line-height:1.65;font-size:14px;margin:0 0 20px;word-break:keep-all}button{border:0;border-radius:13px;padding:13px 28px;font-weight:900;font-size:15px;background:linear-gradient(135deg,#67e8f9,#a7f3d0);color:#07111f;cursor:pointer}@media(max-width:520px){.app{width:100%;height:100%;padding:10px}.game{border-radius:20px}}
-</style></head><body><main class="app"><header class="top"><div><div class="tag">MINI ARCADE</div><h1>🔐 금고해제</h1></div><div class="hud"><div class="pill"><small>점수</small><b id="score">0</b></div><div class="pill"><small>최고</small><b id="best">0</b></div></div></header><section class="game" id="game"><canvas id="c"></canvas><div class="over" id="over"><div class="card"><div class="ico">🔐</div><h2 id="title">금고해제</h2><p id="desc">표시된 숫자 순서대로 다이얼을 멈추세요<br>클릭·터치 또는 방향키로 플레이할 수 있어요.</p><button id="start">게임 시작</button></div></div></section><div class="tip">표시된 숫자 순서대로 다이얼을 멈추세요 · 방향키 / 클릭 / 터치</div></main><script>
-(()=>{const KIND='dial',KEY='g32',C=document.querySelector('#c'),x=C.getContext('2d'),G=document.querySelector('#game'),O=document.querySelector('#over'),SE=document.querySelector('#score'),BE=document.querySelector('#best');let W,H,d=1,on=0,score=0,best=+(localStorage[KEY]||0),t0=0,S={p:{x:0,y:0,w:0,h:0},items:[],grid:[]},keys={};BE.textContent=best;const R=(a,b)=>a+Math.random()*(b-a),hit=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
-function resize(){let r=G.getBoundingClientRect();W=r.width;H=r.height;d=Math.min(2,devicePixelRatio||1);C.width=W*d;C.height=H*d;x.setTransform(d,0,0,d,0,0);if(on)draw(0)}function add(n=1){score+=n;SE.textContent=score;if(score>best){BE.textContent=best=score;localStorage[KEY]=best}}function end(msg='다시 도전해 보세요!'){if(!on)return;on=0;document.querySelector('#title').textContent=`${score}점!`;document.querySelector('#desc').innerHTML=msg;document.querySelector('#start').textContent='다시 하기';O.classList.remove('hide')}
-function init(){score=0;SE.textContent=0;S={time:0,p:{x:W/2-25,y:H-70,w:50,h:18},items:[],grid:[],sel:null};if(KIND==='break'){for(let j=0;j<5;j++)for(let i=0;i<8;i++)S.items.push({x:12+i*(W-24)/8,y:45+j*25,w:(W-24)/8-4,h:18});S.ball={x:W/2,y:H-100,vx:150,vy:-190,r:7}}if(KIND==='snake'){S.sn=[{x:8,y:10}];S.dir={x:1,y:0};food()}if(['mines','lights','pipes','match','laser'].includes(KIND))gridInit();if(KIND==='dodge')S.p={x:W/2-22,y:H-85,w:44,h:65};if(KIND==='lander')S.p={x:W/2-18,y:50,w:36,h:40,vy:0};if(KIND==='balance')S.ang=0;if(KIND==='orbit')S.a=0;if(KIND==='flap')S.p={x:90,y:H/2,w:30,h:24,vy:0};if(KIND==='parking')S.p={x:30,y:H-80,w:42,h:65,a:0};on=1;O.classList.add('hide');t0=performance.now();requestAnimationFrame(loop)}
-function gridInit(){let n=KIND==='mines'?8:5;S.n=n;for(let i=0;i<n*n;i++)S.grid.push({v:KIND==='lights'?Math.random()<.5?1:0:Math.floor(R(0,5)),open:0,mine:0});if(KIND==='mines'){for(let k=0;k<9;k++){let q=Math.floor(R(0,n*n));S.grid[q].mine=1}}}function food(){S.food={x:Math.floor(R(0,18)),y:Math.floor(R(0,22))}}
-function press(px,py){if(!on)return;if(KIND==='meter'){let z=(Math.sin(S.time*4)+1)/2;if(z>.43&&z<.57)add(3);else if(z>.3&&z<.7)add();else end('타이밍 바가 초록색일 때 눌러보세요.')}else if(KIND==='aim'){let z=Math.abs((Math.sin(S.time*2)*W*.35+W/2)-W/2);add(z<20?5:z<60?2:1)}else if(KIND==='dial'){let v=Math.floor(((S.time*45)%100));let target=(score*37+17)%100;if(Math.abs(v-target)<6)add();else end(`목표 숫자 ${target} 근처에서 멈춰야 해요.`)}else if(KIND==='flap')S.p.vy=-280;else if(KIND==='orbit'){if(Math.abs(Math.sin(S.a))>.82)add();else end('행성과 가까워지는 순간 이동하세요.')}else if(['mines','lights','pipes','match','laser'].includes(KIND)){let n=S.n,i=Math.floor(px/W*n),j=Math.floor(py/H*n),q=j*n+i;if(q<0||q>=n*n)return;if(KIND==='mines'){let c=S.grid[q];if(c.mine)return end('지뢰를 밟았어요!');if(!c.open){c.open=1;add();if(score>=n*n-9)end('모든 안전 칸을 찾았습니다!')}}else if(KIND==='lights'){[q,q-1,q+1,q-n,q+n].forEach(v=>{if(v>=0&&v<n*n)S.grid[v].v^=1});add();if(S.grid.every(c=>!c.v))end('모든 전구를 껐어요!')}else if(KIND==='match'){if(S.sel==null)S.sel=q;else{if(Math.abs(S.sel-q)==1||Math.abs(S.sel-q)==n){let z=S.grid[S.sel].v;S.grid[S.sel].v=S.grid[q].v;S.grid[q].v=z;let gain=matches();if(gain)add(gain);else{z=S.grid[S.sel].v;S.grid[S.sel].v=S.grid[q].v;S.grid[q].v=z}}S.sel=null}}else{S.grid[q].v=(S.grid[q].v+1)%4;add();if(score>=15)end('퍼즐을 완성했습니다!')}}else if(KIND==='slice'){for(let a of S.items)if(Math.hypot(px-a.x,py-a.y)<35&&!a.cut){a.cut=1;a.bomb?end('폭탄은 베면 안 돼요!'):add()}}else if(KIND==='hockey'){S.ball.vx+=(S.ball.x-px)*2;S.ball.vy=-Math.abs(S.ball.vy)-80}}
-function matches(){let n=S.n,c=0;for(let j=0;j<n;j++)for(let i=0;i<n-2;i++){let q=j*n+i;if(S.grid[q].v===S.grid[q+1].v&&S.grid[q].v===S.grid[q+2].v)c++}return c}
-function update(dt){S.time+=dt;let speed=210;if(keys.ArrowLeft||keys.a)S.p.x-=speed*dt;if(keys.ArrowRight||keys.d)S.p.x+=speed*dt;if(keys.ArrowUp||keys.w)S.p.y-=speed*dt;if(keys.ArrowDown||keys.s)S.p.y+=speed*dt;S.p.x=Math.max(0,Math.min(W-S.p.w,S.p.x));S.p.y=Math.max(0,Math.min(H-S.p.h,S.p.y));
-if(['dodge','catch','slice'].includes(KIND)){if(S.time>(S.next||0)){S.next=S.time+Math.max(.35,1-score*.015);S.items.push({x:R(15,W-30),y:-30,w:KIND==='dodge'?42:28,h:KIND==='dodge'?55:28,vy:R(130,230),bomb:KIND==='slice'&&Math.random()<.2})}S.items.forEach(a=>{a.y+=a.vy*dt;if(KIND==='dodge'&&hit(S.p,a))end('장애물에 부딪혔어요!');if(KIND==='catch'&&hit(S.p,a)){a.got=1;add()}if(a.y>H){if(KIND==='dodge')add();if(KIND==='catch'&&!a.got)end('공을 놓쳤어요!')}});S.items=S.items.filter(a=>a.y<H+50&&!a.got)}
-if(KIND==='break'){let b=S.ball;b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.x<7||b.x>W-7)b.vx*=-1;if(b.y<7)b.vy=Math.abs(b.vy);if(hit({x:b.x-7,y:b.y-7,w:14,h:14},S.p))b.vy=-Math.abs(b.vy);for(let a of S.items)if(!a.dead&&hit({x:b.x-7,y:b.y-7,w:14,h:14},a)){a.dead=1;b.vy*=-1;add()}if(b.y>H)end('공을 놓쳤어요!');if(S.items.every(a=>a.dead))end('모든 벽돌을 깼습니다!')}
-if(KIND==='snake'&&S.time>(S.next||0)){S.next=S.time+.13;let h=S.sn[0],q={x:h.x+S.dir.x,y:h.y+S.dir.y};if(q.x<0||q.x>=18||q.y<0||q.y>=22||S.sn.some(a=>a.x===q.x&&a.y===q.y))return end('꼬리나 벽에 부딪혔어요!');S.sn.unshift(q);if(q.x===S.food.x&&q.y===S.food.y){add();food()}else S.sn.pop()}
-if(KIND==='flap'){S.p.vy+=720*dt;S.p.y+=S.p.vy*dt;if(S.time>(S.next||0)){S.next=S.time+1.7;S.items.push({x:W,gap:R(100,H-100),w:55})}S.items.forEach(a=>a.x-=150*dt);for(let a of S.items)if(S.p.x+S.p.w>a.x&&S.p.x<a.x+a.w&&(S.p.y>a.gap+65||S.p.y+S.p.h<a.gap-65))end('동굴 기둥에 부딪혔어요!');S.items=S.items.filter(a=>{if(a.x+a.w<0){add();return 0}return 1});if(S.p.y<0||S.p.y>H)end('비행 고도를 놓쳤어요!')}
-if(KIND==='orbit')S.a+=dt*(2+score*.08);if(KIND==='lander'){S.p.vy+=(keys.ArrowUp||keys.w?-120:90)*dt;S.p.y+=S.p.vy*dt;if(S.p.y+S.p.h>H-25){S.p.vy<75?end('부드러운 착륙 성공!'):end('착륙 속도가 너무 빨랐어요!')}}if(KIND==='balance'){S.ang+=(Math.random()-.5)*dt*2+(keys.ArrowLeft?-.8:0)+(keys.ArrowRight?.8:0);S.ang*=.995;if(Math.abs(S.ang)>1.1)end('화물이 균형을 잃었어요!');if(Math.floor(S.time)>score)add()}
-if(KIND==='jump'){S.p.vy=(S.p.vy||0)+700*dt;S.p.y+=S.p.vy*dt;if(S.p.y>H-45){S.p.y=H-45;S.p.vy=-390;add()}if(S.p.y<80){S.p.y=80;add()}}if(KIND==='parking'&&hit(S.p,{x:W-90,y:35,w:70,h:110}))end('주차 성공!')}
-function draw(){x.clearRect(0,0,W,H);let bg=x.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#07152e');bg.addColorStop(1,'#182454');x.fillStyle=bg;x.fillRect(0,0,W,H);x.fillStyle='#ffffff15';for(let i=0;i<25;i++)x.fillRect(i*73%W,i*47%H,2,2);if(['mines','lights','pipes','match','laser'].includes(KIND)){let n=S.n||5,cw=W/n,ch=H/n;S.grid.forEach((c,i)=>{let px=i%n*cw,py=Math.floor(i/n)*ch;x.fillStyle=KIND==='lights'?(c.v?'#fde047':'#172554'):KIND==='mines'?(c.open?'#334155':'#64748b'):colors[c.v%colors.length];x.strokeStyle='#ffffff30';x.fillRect(px+3,py+3,cw-6,ch-6);x.strokeRect(px+3,py+3,cw-6,ch-6);if(KIND==='mines'&&c.open){let count=0;x.fillStyle='white';x.font='bold 18px sans-serif';x.fillText(count,px+cw/2,py+ch/2)}});return}x.fillStyle='#67e8f9';x.fillRect(S.p.x,S.p.y,S.p.w,S.p.h);if(KIND==='break'){S.items.forEach(a=>{if(!a.dead){x.fillStyle='#fb7185';x.fillRect(a.x,a.y,a.w,a.h)}});x.beginPath();x.arc(S.ball.x,S.ball.y,7,0,7);x.fill()}if(['dodge','catch','slice'].includes(KIND)){S.items.forEach(a=>{x.font='28px sans-serif';x.fillText(a.bomb?'💣':KIND==='dodge'?'🚧':KIND==='catch'?'⚽':'🍉',a.x,a.y+26)})}if(KIND==='meter'){x.fillStyle='#334155';x.fillRect(W*.1,H*.48,W*.8,28);x.fillStyle='#22c55e';x.fillRect(W*.43,H*.48,W*.14,28);x.fillStyle='white';x.fillRect(W*.1+(Math.sin(S.time*4)+1)/2*W*.8,H*.45,5,50)}if(KIND==='aim'){let q=Math.sin(S.time*2)*W*.35+W/2;x.strokeStyle='#fb7185';x.lineWidth=8;x.beginPath();x.arc(q,H/2,45,0,7);x.stroke();x.fillStyle='white';x.beginPath();x.arc(W/2,H-70,6,0,7);x.fill()}if(KIND==='dial'){x.font='bold 70px monospace';x.textAlign='center';x.fillStyle='white';x.fillText(Math.floor(S.time*45%100).toString().padStart(2,'0'),W/2,H/2);x.font='18px sans-serif';x.fillText('목표 '+((score*37+17)%100),W/2,H/2+50)}if(KIND==='snake'){let z=W/18;x.fillStyle='#34d399';S.sn.forEach(a=>x.fillRect(a.x*z,a.y*z,z-2,z-2));x.fillStyle='#fbbf24';x.fillRect(S.food.x*z,S.food.y*z,z-2,z-2)}if(KIND==='flap'){x.font='28px sans-serif';x.fillText('🐦',S.p.x,S.p.y+24);x.fillStyle='#34d399';S.items.forEach(a=>{x.fillRect(a.x,0,a.w,a.gap-65);x.fillRect(a.x,a.gap+65,a.w,H)})}if(KIND==='orbit'){let qx=W/2+Math.cos(S.a)*W*.3,qy=H/2+Math.sin(S.a)*130;x.font='45px sans-serif';x.fillText('🪐',W/2-25,H/2+15);x.font='25px sans-serif';x.fillText('🚀',qx,qy)}if(KIND==='balance'){x.save();x.translate(W/2,H/2);x.rotate(S.ang);x.fillStyle='#fbbf24';x.fillRect(-W*.3,-8,W*.6,16);x.fillStyle='#fb7185';x.fillRect(-20,-48,40,40);x.restore()}if(KIND==='lander'){x.font='35px sans-serif';x.fillText('🚀',S.p.x,S.p.y+35);x.fillStyle='#94a3b8';x.fillRect(0,H-25,W,25)}if(KIND==='parking'){x.strokeStyle='#f8fafc';x.lineWidth=4;x.strokeRect(W-90,35,70,110);x.font='38px sans-serif';x.fillText('🚗',S.p.x,S.p.y+38)}if(['pipes','laser'].includes(KIND)){} }
-const colors=['#67e8f9','#a78bfa','#fb7185','#fbbf24','#34d399'];function loop(t){if(!on)return;let dt=Math.min(.032,(t-t0)/1000);t0=t;update(dt);draw();requestAnimationFrame(loop)}G.addEventListener('pointerdown',e=>{let r=C.getBoundingClientRect();press(e.clientX-r.left,e.clientY-r.top)});addEventListener('keydown',e=>{keys[e.key]=1;if(KIND==='snake'){if(e.key==='ArrowLeft'&&S.dir.x!==1)S.dir={x:-1,y:0};if(e.key==='ArrowRight'&&S.dir.x!==-1)S.dir={x:1,y:0};if(e.key==='ArrowUp'&&S.dir.y!==1)S.dir={x:0,y:-1};if(e.key==='ArrowDown'&&S.dir.y!==-1)S.dir={x:0,y:1}}if(e.code==='Space')press(W/2,H/2)});addEventListener('keyup',e=>keys[e.key]=0);document.querySelector('#start').onclick=e=>{e.stopPropagation();init()};addEventListener('resize',resize);resize()})();
-</script></body></html>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>🔐 금고해제 챌린지</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+html,body{
+  height:100%;
+}
+
+body{
+  margin:0;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+
+  background:
+    radial-gradient(circle at 20% 10%,#4338ca,#10162f 45%,#020617 82%);
+
+  color:#f8fafc;
+
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+button{
+  font:inherit;
+  touch-action:manipulation;
+}
+
+.app{
+  width:min(96vw,740px);
+  height:min(96vh,870px);
+
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+
+  padding:4px;
+}
+
+
+/* ========================================
+   상단
+======================================== */
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:10px;
+}
+
+.tag{
+  color:#67e8f9;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.2em;
+}
+
+h1{
+  margin:2px 0;
+  font-size:clamp(26px,5vw,39px);
+}
+
+.hud{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.pill{
+  min-width:65px;
+  padding:7px 9px;
+
+  text-align:center;
+
+  border:1px solid #ffffff20;
+  border-radius:14px;
+
+  background:#111936dd;
+
+  backdrop-filter:blur(5px);
+}
+
+.pill small{
+  display:block;
+  color:#94a3b8;
+  font-size:8px;
+}
+
+.pill b{
+  font-size:18px;
+}
+
+
+/* ========================================
+   진행도
+======================================== */
+
+.progress-wrap{
+  height:8px;
+  overflow:hidden;
+
+  border-radius:99px;
+
+  background:#ffffff14;
+}
+
+.progress{
+  height:100%;
+  width:0%;
+
+  background:
+    linear-gradient(
+      90deg,
+      #22d3ee,
+      #8b5cf6,
+      #f472b6
+    );
+
+  transition:.25s;
+}
+
+
+/* ========================================
+   게임 화면
+======================================== */
+
+.game{
+  position:relative;
+
+  flex:1;
+  min-height:400px;
+
+  overflow:hidden;
+
+  border:1px solid #ffffff22;
+  border-radius:25px;
+
+  background:
+    radial-gradient(circle at 50% 40%,#1e2d65,#081226 70%);
+
+  box-shadow:
+    0 25px 70px #0009,
+    inset 0 1px #ffffff15;
+
+  touch-action:manipulation;
+}
+
+
+/* 배경 장식 */
+
+.grid-bg{
+  position:absolute;
+  inset:0;
+
+  opacity:.17;
+
+  background-image:
+    linear-gradient(#67e8f91a 1px,transparent 1px),
+    linear-gradient(90deg,#67e8f91a 1px,transparent 1px);
+
+  background-size:32px 32px;
+}
+
+.light{
+  position:absolute;
+
+  width:240px;
+  height:240px;
+
+  left:50%;
+  top:48%;
+
+  transform:translate(-50%,-50%);
+
+  border-radius:50%;
+
+  background:#22d3ee10;
+
+  filter:blur(16px);
+}
+
+
+/* ========================================
+   상태 바
+======================================== */
+
+.status-row{
+  position:absolute;
+
+  left:50%;
+  top:15px;
+
+  transform:translateX(-50%);
+
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  justify-content:center;
+
+  width:95%;
+
+  z-index:3;
+}
+
+.status-badge{
+  padding:7px 11px;
+
+  border:1px solid #ffffff18;
+  border-radius:999px;
+
+  background:#070d20db;
+
+  font-size:11px;
+  font-weight:900;
+
+  white-space:nowrap;
+}
+
+
+/* ========================================
+   금고
+======================================== */
+
+.safe{
+  position:absolute;
+
+  left:50%;
+  top:52%;
+
+  width:min(68vw,360px);
+  aspect-ratio:1;
+
+  transform:translate(-50%,-50%);
+
+  border:
+    clamp(9px,2vw,15px)
+    solid #475569;
+
+  border-radius:32px;
+
+  background:
+    radial-gradient(circle,#1e293b,#0f172a 67%);
+
+  box-shadow:
+    0 24px 55px #000b,
+    inset 0 0 0 5px #94a3b822,
+    inset 0 0 45px #000b;
+}
+
+.safe::before{
+  content:"";
+
+  position:absolute;
+  inset:12px;
+
+  border:2px solid #ffffff12;
+  border-radius:20px;
+
+  pointer-events:none;
+}
+
+
+/* ========================================
+   다이얼
+======================================== */
+
+.dial{
+  position:absolute;
+
+  left:50%;
+  top:50%;
+
+  width:66%;
+  aspect-ratio:1;
+
+  transform:translate(-50%,-50%);
+
+  border:10px solid #64748b;
+  border-radius:50%;
+
+  background:
+    radial-gradient(circle,#273449 0 23%,#111827 24% 58%,#020617 59%);
+
+  box-shadow:
+    inset 0 0 25px #000,
+    0 10px 30px #0008;
+
+  transition:.08s;
+}
+
+.dial-ring{
+  position:absolute;
+  inset:5%;
+
+  border-radius:50%;
+
+  border:2px dashed #94a3b855;
+}
+
+
+/* 다이얼 숫자 */
+
+.dial-number{
+  position:absolute;
+
+  left:50%;
+  top:50%;
+
+  transform:translate(-50%,-50%);
+
+  font-size:clamp(48px,13vw,82px);
+  font-family:monospace;
+  font-weight:1000;
+
+  color:#f8fafc;
+
+  text-shadow:
+    0 0 15px #22d3ee88,
+    0 4px 8px #000;
+}
+
+
+/* 위쪽 포인터 */
+
+.pointer{
+  position:absolute;
+
+  left:50%;
+  top:3%;
+
+  transform:translateX(-50%);
+
+  width:0;
+  height:0;
+
+  border-left:13px solid transparent;
+  border-right:13px solid transparent;
+  border-top:25px solid #fde047;
+
+  filter:drop-shadow(0 2px 5px #000);
+}
+
+
+/* 다이얼 표시점 */
+
+.tick{
+  position:absolute;
+
+  left:50%;
+  top:50%;
+
+  width:3px;
+  height:9px;
+
+  background:#94a3b8;
+
+  transform-origin:50% 118px;
+
+  opacity:.55;
+}
+
+
+/* ========================================
+   목표 번호
+======================================== */
+
+.target-panel{
+  position:absolute;
+
+  left:50%;
+  bottom:15px;
+
+  transform:translateX(-50%);
+
+  width:min(90%,460px);
+
+  padding:10px;
+
+  border:1px solid #ffffff18;
+  border-radius:16px;
+
+  background:#070d20e5;
+
+  text-align:center;
+
+  z-index:3;
+}
+
+.target-title{
+  margin-bottom:7px;
+
+  color:#94a3b8;
+
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+
+.target-list{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  flex-wrap:wrap;
+}
+
+.code-num{
+  min-width:43px;
+  height:43px;
+
+  display:grid;
+  place-items:center;
+
+  border-radius:11px;
+
+  background:#1e293b;
+
+  border:1px solid #ffffff1b;
+
+  font-family:monospace;
+  font-weight:1000;
+  font-size:19px;
+
+  color:#94a3b8;
+}
+
+.code-num.current{
+  color:#08111d;
+
+  background:
+    linear-gradient(
+      135deg,
+      #67e8f9,
+      #fde047
+    );
+
+  transform:scale(1.08);
+
+  box-shadow:
+    0 0 18px #67e8f966;
+}
+
+.code-num.done{
+  color:#052e16;
+  background:#86efac;
+}
+
+
+/* ========================================
+   판정 메시지
+======================================== */
+
+.judge{
+  position:absolute;
+
+  left:50%;
+  top:21%;
+
+  transform:translate(-50%,-50%) scale(.5);
+
+  z-index:5;
+
+  opacity:0;
+
+  font-size:clamp(25px,6vw,44px);
+  font-weight:1000;
+
+  text-align:center;
+
+  text-shadow:
+    0 4px 10px #000,
+    0 0 20px currentColor;
+
+  pointer-events:none;
+}
+
+.judge.show{
+  animation:judgePop .75s ease;
+}
+
+@keyframes judgePop{
+  0%{
+    opacity:0;
+    transform:translate(-50%,-50%) scale(.4);
+  }
+
+  35%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.15);
+  }
+
+  100%{
+    opacity:0;
+    transform:translate(-50%,-70%) scale(1);
+  }
+}
+
+
+/* ========================================
+   경보
+======================================== */
+
+.alert{
+  position:absolute;
+  inset:0;
+
+  pointer-events:none;
+
+  opacity:0;
+
+  background:#ef444428;
+
+  z-index:2;
+}
+
+.alert.flash{
+  animation:alertFlash .45s ease;
+}
+
+@keyframes alertFlash{
+  50%{opacity:1}
+}
+
+
+/* ========================================
+   콤보
+======================================== */
+
+.combo{
+  position:absolute;
+
+  top:85px;
+  left:50%;
+
+  transform:translateX(-50%);
+
+  color:#fde047;
+
+  font-size:20px;
+  font-weight:1000;
+
+  text-shadow:0 3px 8px #000;
+
+  z-index:4;
+}
+
+
+/* ========================================
+   버튼
+======================================== */
+
+.action{
+  position:absolute;
+
+  z-index:4;
+
+  right:14px;
+  bottom:95px;
+
+  min-width:92px;
+  min-height:48px;
+
+  border:0;
+  border-radius:15px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #67e8f9,
+      #a7f3d0
+    );
+
+  color:#06121e;
+
+  font-weight:1000;
+
+  box-shadow:0 8px 20px #0005;
+
+  cursor:pointer;
+}
+
+.hint{
+  position:absolute;
+
+  z-index:4;
+
+  left:14px;
+  bottom:95px;
+
+  min-width:88px;
+  min-height:48px;
+
+  border:1px solid #ffffff20;
+  border-radius:15px;
+
+  background:#172554e6;
+
+  color:#fff;
+
+  font-weight:900;
+
+  cursor:pointer;
+}
+
+
+/* ========================================
+   오버레이
+======================================== */
+
+.overlay{
+  position:absolute;
+  inset:0;
+
+  z-index:20;
+
+  display:grid;
+  place-items:center;
+
+  padding:18px;
+
+  background:#030712e9;
+
+  backdrop-filter:blur(6px);
+}
+
+.overlay.hide{
+  display:none;
+}
+
+.card{
+  width:min(100%,430px);
+
+  padding:25px 22px;
+
+  text-align:center;
+
+  border:1px solid #ffffff22;
+  border-radius:24px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #111936,
+      #10152a
+    );
+
+  box-shadow:0 25px 65px #000a;
+}
+
+.ico{
+  font-size:58px;
+}
+
+.card h2{
+  margin:8px;
+  font-size:29px;
+}
+
+.card p{
+  margin:0 0 17px;
+
+  color:#bdc8d9;
+
+  line-height:1.7;
+  font-size:14px;
+
+  word-break:keep-all;
+}
+
+
+/* 난이도 */
+
+.mode-row{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+
+  margin:14px 0;
+}
+
+.mode{
+  min-height:47px;
+
+  border:1px solid #ffffff20;
+  border-radius:11px;
+
+  background:#ffffff0d;
+
+  color:#fff;
+
+  font-weight:900;
+
+  cursor:pointer;
+}
+
+.mode.active{
+  color:#07111f;
+
+  background:
+    linear-gradient(
+      135deg,
+      #67e8f9,
+      #fde047
+    );
+}
+
+.start{
+  width:100%;
+
+  min-height:51px;
+
+  border:0;
+  border-radius:14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #67e8f9,
+      #a7f3d0
+    );
+
+  color:#07111f;
+
+  font-size:15px;
+  font-weight:1000;
+
+  cursor:pointer;
+}
+
+
+/* ========================================
+   기록
+======================================== */
+
+.records{
+  display:flex;
+  justify-content:center;
+
+  gap:14px;
+
+  flex-wrap:wrap;
+
+  color:#a9b7cc;
+
+  font-size:11px;
+}
+
+.records b{
+  color:#fff;
+}
+
+.tip{
+  text-align:center;
+
+  color:#a9b7cc;
+
+  font-size:11px;
+}
+
+
+/* ========================================
+   파티클
+======================================== */
+
+.particle{
+  position:absolute;
+
+  z-index:15;
+
+  pointer-events:none;
+
+  font-size:23px;
+
+  animation:particleFly .9s ease forwards;
+}
+
+@keyframes particleFly{
+  to{
+    transform:
+      translate(var(--x),var(--y))
+      rotate(360deg);
+
+    opacity:0;
+  }
+}
+
+
+/* ========================================
+   모바일
+======================================== */
+
+@media(max-width:560px){
+
+  .app{
+    width:100%;
+    height:100%;
+    padding:7px;
+  }
+
+  .game{
+    border-radius:18px;
+  }
+
+  .pill{
+    min-width:56px;
+    padding:5px;
+  }
+
+  .pill b{
+    font-size:16px;
+  }
+
+  .safe{
+    width:min(76vw,330px);
+  }
+
+  .mode-row{
+    grid-template-columns:1fr;
+  }
+
+  .target-panel{
+    bottom:8px;
+  }
+
+  .action,
+  .hint{
+    bottom:84px;
+  }
+}
+
+@media(max-height:680px){
+
+  .records,
+  .tip{
+    display:none;
+  }
+
+  .game{
+    min-height:330px;
+  }
+
+  .safe{
+    width:min(57vh,300px);
+  }
+}
+
+</style>
+</head>
+
+
+<body>
+
+<main class="app">
+
+<header class="top">
+
+  <div>
+    <div class="tag">SECRET VAULT CHALLENGE</div>
+    <h1>🔐 금고해제</h1>
+  </div>
+
+  <div class="hud">
+
+    <div class="pill">
+      <small>금고</small>
+      <b id="stage">1</b>
+    </div>
+
+    <div class="pill">
+      <small>점수</small>
+      <b id="score">0</b>
+    </div>
+
+    <div class="pill">
+      <small>목숨</small>
+      <b id="life">❤️❤️❤️</b>
+    </div>
+
+    <div class="pill">
+      <small>최고</small>
+      <b id="best">0</b>
+    </div>
+
+  </div>
+
+</header>
+
+
+<div class="progress-wrap">
+  <div class="progress" id="progress"></div>
+</div>
+
+
+<section class="game" id="game">
+
+  <div class="grid-bg"></div>
+  <div class="light"></div>
+
+  <div class="status-row">
+
+    <div class="status-badge">
+      ⏱ <span id="time">20.0</span>초
+    </div>
+
+    <div class="status-badge">
+      ⚙️ 속도 <span id="speedText">NORMAL</span>
+    </div>
+
+  </div>
+
+
+  <div class="combo" id="combo"></div>
+
+
+  <div class="safe">
+
+    <div class="pointer"></div>
+
+    <div class="dial" id="dial">
+      <div class="dial-ring"></div>
+      <div class="dial-number" id="number">00</div>
+    </div>
+
+  </div>
+
+
+  <button class="hint" id="hint">
+    💡 힌트
+  </button>
+
+  <button class="action" id="stop">
+    🔐 멈춰!
+  </button>
+
+
+  <div class="target-panel">
+
+    <div class="target-title">
+      이번 금고 비밀번호
+    </div>
+
+    <div class="target-list" id="targetList"></div>
+
+  </div>
+
+
+  <div class="judge" id="judge">
+    PERFECT!
+  </div>
+
+
+  <div class="alert" id="alert"></div>
+
+
+  <div class="overlay" id="over">
+
+    <div class="card">
+
+      <div class="ico" id="ico">🔐</div>
+
+      <h2 id="title">
+        비밀 금고를 해제하세요!
+      </h2>
+
+      <p id="desc">
+        다이얼 숫자가 목표 번호 근처에 왔을 때 멈추세요.<br>
+        여러 개의 비밀번호를 순서대로 맞히면 금고가 열립니다.<br>
+        정확하게 멈출수록 더 높은 점수를 얻어요!
+      </p>
+
+
+      <div class="mode-row">
+
+        <button
+          class="mode"
+          data-mode="easy">
+          🙂 쉬움
+        </button>
+
+        <button
+          class="mode active"
+          data-mode="normal">
+          🔥 보통
+        </button>
+
+        <button
+          class="mode"
+          data-mode="hard">
+          ⚡ 어려움
+        </button>
+
+      </div>
+
+
+      <button class="start" id="start">
+        🔓 금고 해제 시작
+      </button>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<div class="records">
+
+  <span>
+    🏆 최고 점수
+    <b id="bestScore">0</b>
+  </span>
+
+  <span>
+    🔥 최고 콤보
+    <b id="bestCombo">0</b>
+  </span>
+
+  <span>
+    🔓 최고 금고
+    <b id="bestStage">0</b>
+  </span>
+
+</div>
+
+
+<div class="tip">
+  화면 터치 · 클릭 · SPACE로 다이얼 정지 · 목표 번호를 순서대로 맞히세요
+</div>
+
+</main>
+
+
+<script>
+(() => {
+
+const $ =
+  selector =>
+    document.querySelector(selector);
+
+
+const game =
+  $('#game');
+
+const over =
+  $('#over');
+
+const dial =
+  $('#dial');
+
+const numberEl =
+  $('#number');
+
+const targetList =
+  $('#targetList');
+
+const judge =
+  $('#judge');
+
+const alertEl =
+  $('#alert');
+
+const scoreEl =
+  $('#score');
+
+const stageEl =
+  $('#stage');
+
+const lifeEl =
+  $('#life');
+
+const timeEl =
+  $('#time');
+
+const comboEl =
+  $('#combo');
+
+const progressEl =
+  $('#progress');
+
+const speedText =
+  $('#speedText');
+
+
+/* ========================================
+   게임 상태
+======================================== */
+
+let running = false;
+
+let stage = 1;
+
+let score = 0;
+
+let lives = 3;
+
+let combo = 0;
+
+let maxCombo = 0;
+
+let difficulty = 'normal';
+
+let targets = [];
+
+let targetIndex = 0;
+
+let dialValue = 0;
+
+let dialDirection = 1;
+
+let speed = 30;
+
+let timeLeft = 20;
+
+let lastTime = 0;
+
+let animationId = null;
+
+let inputLocked = false;
+
+let hintUsed = false;
+
+
+/* ========================================
+   난이도 설정
+======================================== */
+
+const difficultyData = {
+
+  easy:{
+    speed:22,
+    tolerancePerfect:3,
+    toleranceGreat:7,
+    toleranceGood:12,
+    time:25
+  },
+
+  normal:{
+    speed:34,
+    tolerancePerfect:2,
+    toleranceGreat:5,
+    toleranceGood:9,
+    time:20
+  },
+
+  hard:{
+    speed:48,
+    tolerancePerfect:1,
+    toleranceGreat:3,
+    toleranceGood:6,
+    time:16
+  }
+
+};
+
+
+/* ========================================
+   기록
+======================================== */
+
+function readRecord(key){
+
+  try{
+
+    return Number(
+      localStorage.getItem(key) || 0
+    );
+
+  }catch(e){
+
+    return 0;
+  }
+}
+
+
+function saveRecords(){
+
+  try{
+
+    if(
+      score >
+      readRecord('vaultBestScore')
+    ){
+
+      localStorage.setItem(
+        'vaultBestScore',
+        score
+      );
+    }
+
+
+    if(
+      maxCombo >
+      readRecord('vaultBestCombo')
+    ){
+
+      localStorage.setItem(
+        'vaultBestCombo',
+        maxCombo
+      );
+    }
+
+
+    if(
+      stage >
+      readRecord('vaultBestStage')
+    ){
+
+      localStorage.setItem(
+        'vaultBestStage',
+        stage
+      );
+    }
+
+  }catch(e){}
+
+  loadRecords();
+}
+
+
+function loadRecords(){
+
+  const best =
+    readRecord(
+      'vaultBestScore'
+    );
+
+  $('#best').textContent =
+    best;
+
+  $('#bestScore').textContent =
+    best;
+
+  $('#bestCombo').textContent =
+    readRecord(
+      'vaultBestCombo'
+    );
+
+  $('#bestStage').textContent =
+    readRecord(
+      'vaultBestStage'
+    );
+}
+
+
+/* ========================================
+   난이도 버튼
+======================================== */
+
+document
+  .querySelectorAll('.mode')
+  .forEach(button => {
+
+    button.addEventListener(
+      'click',
+      () => {
+
+        difficulty =
+          button.dataset.mode;
+
+        document
+          .querySelectorAll('.mode')
+          .forEach(
+            b =>
+              b.classList.remove(
+                'active'
+              )
+          );
+
+        button.classList.add(
+          'active'
+        );
+      }
+    );
+  });
+
+
+/* ========================================
+   난수
+======================================== */
+
+function randomInt(min,max){
+
+  return Math.floor(
+    Math.random() *
+    (max-min+1)
+  ) + min;
+}
+
+
+/* ========================================
+   새 비밀번호 생성
+======================================== */
+
+function makeTargets(){
+
+  /*
+    금고 단계가 올라갈수록
+    비밀번호 개수가 늘어난다.
+  */
+
+  const count =
+    Math.min(
+      5,
+      2 +
+      Math.floor(
+        (stage+1)/2
+      )
+    );
+
+  targets = [];
+
+  while(
+    targets.length <
+    count
+  ){
+
+    const n =
+      randomInt(0,99);
+
+    /*
+      너무 비슷한 숫자가 연속 등장하지 않도록.
+    */
+    if(
+      targets.length === 0 ||
+      Math.abs(
+        targets[
+          targets.length-1
+        ] -
+        n
+      ) > 10
+    ){
+
+      targets.push(n);
+    }
+  }
+
+
+  targetIndex = 0;
+
+  hintUsed = false;
+
+  renderTargets();
+}
+
+
+/* ========================================
+   목표 숫자 표시
+======================================== */
+
+function renderTargets(){
+
+  targetList.innerHTML =
+    targets
+      .map(
+        (n,index) => {
+
+          let cls =
+            'code-num';
+
+          if(
+            index <
+            targetIndex
+          ){
+
+            cls += ' done';
+
+          }else if(
+            index ===
+            targetIndex
+          ){
+
+            cls += ' current';
+          }
+
+          return `
+            <div class="${cls}">
+              ${
+                index <= targetIndex
+                  ? String(n)
+                      .padStart(2,'0')
+                  : '??'
+              }
+            </div>
+          `;
+        }
+      )
+      .join('');
+}
+
+
+/* ========================================
+   시작
+======================================== */
+
+function startGame(){
+
+  cancelAnimationFrame(
+    animationId
+  );
+
+  stage = 1;
+  score = 0;
+  lives = 3;
+  combo = 0;
+  maxCombo = 0;
+
+  scoreEl.textContent =
+    score;
+
+  comboEl.textContent =
+    '';
+
+  over.classList.add(
+    'hide'
+  );
+
+  startStage();
+}
+
+
+/* ========================================
+   스테이지 시작
+======================================== */
+
+function startStage(){
+
+  running = true;
+
+  inputLocked = false;
+
+  const cfg =
+    difficultyData[
+      difficulty
+    ];
+
+  speed =
+    cfg.speed +
+    (stage-1) * 4;
+
+  timeLeft =
+    Math.max(
+      9,
+      cfg.time -
+      (stage-1) * .7
+    );
+
+  dialValue =
+    randomInt(0,99);
+
+  dialDirection =
+    Math.random() < .5
+      ? 1
+      : -1;
+
+
+  stageEl.textContent =
+    stage;
+
+  updateLife();
+
+  makeTargets();
+
+  updateSpeedText();
+
+  lastTime =
+    performance.now();
+
+  progressEl.style.width =
+    '0%';
+
+  animationId =
+    requestAnimationFrame(
+      loop
+    );
+}
+
+
+/* ========================================
+   속도 표시
+======================================== */
+
+function updateSpeedText(){
+
+  if(speed < 32){
+
+    speedText.textContent =
+      'SLOW';
+
+  }else if(speed < 50){
+
+    speedText.textContent =
+      'NORMAL';
+
+  }else if(speed < 70){
+
+    speedText.textContent =
+      'FAST';
+
+  }else{
+
+    speedText.textContent =
+      'CRAZY';
+  }
+}
+
+
+/* ========================================
+   게임 루프
+======================================== */
+
+function loop(now){
+
+  if(!running){
+    return;
+  }
+
+  const dt =
+    Math.min(
+      .04,
+      (now-lastTime)/1000
+    );
+
+  lastTime = now;
+
+
+  /*
+    스테이지가 올라가면
+    아주 약한 속도 변화도 발생.
+  */
+  const pulse =
+    stage >= 3
+      ? Math.sin(now/650) *
+        stage *
+        .4
+      : 0;
+
+
+  dialValue +=
+    dialDirection *
+    (
+      speed +
+      pulse
+    ) *
+    dt;
+
+
+  /*
+    0~99 범위 반복
+  */
+  while(dialValue < 0){
+    dialValue += 100;
+  }
+
+  while(dialValue >= 100){
+    dialValue -= 100;
+  }
+
+
+  timeLeft -= dt;
+
+
+  if(timeLeft <= 0){
+
+    timeLeft = 0;
+
+    failAttempt(
+      '⏰ 시간 초과!'
+    );
+  }
+
+
+  timeEl.textContent =
+    timeLeft.toFixed(1);
+
+
+  numberEl.textContent =
+    Math.floor(
+      dialValue
+    )
+    .toString()
+    .padStart(2,'0');
+
+
+  /*
+    다이얼 시각 회전
+  */
+  dial.style.transform =
+    `translate(-50%,-50%)
+     rotate(${dialValue*3.6}deg)`;
+
+
+  /*
+    숫자는 반대로 회전해
+    읽기 쉽게 유지.
+  */
+  numberEl.style.transform =
+    `translate(-50%,-50%)
+     rotate(${-dialValue*3.6}deg)`;
+
+
+  const progress =
+    targetIndex /
+    targets.length *
+    100;
+
+  progressEl.style.width =
+    progress + '%';
+
+
+  animationId =
+    requestAnimationFrame(
+      loop
+    );
+}
+
+
+/* ========================================
+   원형 숫자 거리
+======================================== */
+
+function numberDistance(a,b){
+
+  const diff =
+    Math.abs(a-b);
+
+  return Math.min(
+    diff,
+    100-diff
+  );
+}
+
+
+/* ========================================
+   다이얼 멈추기
+======================================== */
+
+function stopDial(){
+
+  if(
+    !running ||
+    inputLocked
+  ){
+    return;
+  }
+
+
+  inputLocked = true;
+
+
+  const value =
+    Math.round(
+      dialValue
+    ) % 100;
+
+  const target =
+    targets[
+      targetIndex
+    ];
+
+  const dist =
+    numberDistance(
+      value,
+      target
+    );
+
+
+  const cfg =
+    difficultyData[
+      difficulty
+    ];
+
+
+  let points = 0;
+
+  let text = '';
+
+  let success = false;
+
+
+  if(
+    dist <=
+    cfg.tolerancePerfect
+  ){
+
+    points = 500;
+
+    text =
+      '💎 PERFECT!';
+
+    success = true;
+
+  }else if(
+    dist <=
+    cfg.toleranceGreat
+  ){
+
+    points = 300;
+
+    text =
+      '🔥 GREAT!';
+
+    success = true;
+
+  }else if(
+    dist <=
+    cfg.toleranceGood
+  ){
+
+    points = 150;
+
+    text =
+      '👍 GOOD!';
+
+    success = true;
+
+  }
+
+
+  if(success){
+
+    combo++;
+
+    maxCombo =
+      Math.max(
+        maxCombo,
+        combo
+      );
+
+
+    /*
+      연속 성공 보너스
+    */
+    const comboBonus =
+      combo >= 2
+        ? combo * 20
+        : 0;
+
+    score +=
+      points +
+      comboBonus;
+
+
+    scoreEl.textContent =
+      score;
+
+
+    comboEl.textContent =
+      combo >= 2
+        ? `🔥 ${combo} COMBO`
+        : '';
+
+
+    targetIndex++;
+
+    showJudge(
+      text +
+      (
+        comboBonus
+          ? ` +${comboBonus}`
+          : ''
+      )
+    );
+
+
+    particles(
+      dist <=
+      cfg.tolerancePerfect
+        ? ['💎','✨','⭐']
+        : ['✨','🔓']
+    );
+
+
+    renderTargets();
+
+
+    /*
+      현재 스테이지 비밀번호 전부 성공
+    */
+    if(
+      targetIndex >=
+      targets.length
+    ){
+
+      setTimeout(
+        stageClear,
+        550
+      );
+
+      return;
+    }
+
+
+    /*
+      다음 비밀번호에서는
+      다이얼 방향이나 속도가 바뀔 수 있다.
+    */
+    setTimeout(
+      () => {
+
+        dialDirection *=
+          Math.random() < .4
+            ? -1
+            : 1;
+
+        speed +=
+          randomInt(-3,5);
+
+        updateSpeedText();
+
+        inputLocked = false;
+
+      },
+      480
+    );
+
+  }else{
+
+    failAttempt(
+      `🚨 실패! 목표 ${String(target).padStart(2,'0')} · 정지 ${String(value).padStart(2,'0')}`
+    );
+  }
+}
+
+
+/* ========================================
+   실패
+======================================== */
+
+function failAttempt(message){
+
+  if(!running){
+    return;
+  }
+
+
+  lives--;
+
+  combo = 0;
+
+  comboEl.textContent =
+    '';
+
+  updateLife();
+
+  showJudge(message);
+
+  flashAlert();
+
+
+  if(lives <= 0){
+
+    running = false;
+
+    cancelAnimationFrame(
+      animationId
+    );
+
+    setTimeout(
+      finishGame,
+      700
+    );
+
+    return;
+  }
+
+
+  /*
+    실패해도 같은 번호를
+    다시 도전하게 한다.
+  */
+
+  timeLeft =
+    Math.max(
+      timeLeft,
+      7
+    );
+
+
+  setTimeout(
+    () => {
+
+      inputLocked = false;
+
+    },
+    650
+  );
+}
+
+
+/* ========================================
+   목숨
+======================================== */
+
+function updateLife(){
+
+  lifeEl.textContent =
+    '❤️'.repeat(
+      Math.max(0,lives)
+    ) +
+    '🖤'.repeat(
+      Math.max(0,3-lives)
+    );
+}
+
+
+/* ========================================
+   스테이지 성공
+======================================== */
+
+function stageClear(){
+
+  running = false;
+
+  cancelAnimationFrame(
+    animationId
+  );
+
+
+  /*
+    남은 시간 보너스
+  */
+  const timeBonus =
+    Math.round(
+      timeLeft * 25
+    );
+
+
+  score +=
+    1000 +
+    timeBonus;
+
+
+  scoreEl.textContent =
+    score;
+
+
+  showJudge(
+    `🔓 금고 ${stage} OPEN!`
+  );
+
+
+  particles(
+    ['💰','💎','⭐','✨']
+  );
+
+
+  saveRecords();
+
+
+  stage++;
+
+
+  setTimeout(
+    () => {
+
+      /*
+        6단계 이후에는
+        게임 클리어.
+      */
+      if(stage > 6){
+
+        finishGame(
+          true
+        );
+
+      }else{
+
+        startStage();
+      }
+
+    },
+    1100
+  );
+}
+
+
+/* ========================================
+   힌트
+======================================== */
+
+function showHint(){
+
+  if(
+    !running ||
+    inputLocked
+  ){
+    return;
+  }
+
+
+  const target =
+    targets[
+      targetIndex
+    ];
+
+
+  if(!hintUsed){
+
+    hintUsed = true;
+
+    showJudge(
+      `💡 목표는 ${String(target).padStart(2,'0')} 근처!`
+    );
+
+  }else{
+
+    const current =
+      Math.floor(
+        dialValue
+      );
+
+    const diff =
+      numberDistance(
+        current,
+        target
+      );
+
+
+    if(diff <= 10){
+
+      showJudge(
+        '💡 거의 다 왔어요!'
+      );
+
+    }else{
+
+      showJudge(
+        '💡 조금 더 기다려보세요.'
+      );
+    }
+  }
+}
+
+
+/* ========================================
+   판정
+======================================== */
+
+function showJudge(text){
+
+  judge.textContent =
+    text;
+
+  judge.classList.remove(
+    'show'
+  );
+
+  void judge.offsetWidth;
+
+  judge.classList.add(
+    'show'
+  );
+}
+
+
+/* ========================================
+   경보
+======================================== */
+
+function flashAlert(){
+
+  alertEl.classList.remove(
+    'flash'
+  );
+
+  void alertEl.offsetWidth;
+
+  alertEl.classList.add(
+    'flash'
+  );
+}
+
+
+/* ========================================
+   파티클
+======================================== */
+
+function particles(icons){
+
+  for(
+    let i=0;
+    i<14;
+    i++
+  ){
+
+    const p =
+      document.createElement(
+        'span'
+      );
+
+    p.className =
+      'particle';
+
+    p.textContent =
+      icons[
+        Math.floor(
+          Math.random() *
+          icons.length
+        )
+      ];
+
+    p.style.left =
+      '50%';
+
+    p.style.top =
+      '47%';
+
+
+    p.style.setProperty(
+      '--x',
+      (
+        Math.random()*270 -
+        135
+      ) + 'px'
+    );
+
+    p.style.setProperty(
+      '--y',
+      (
+        Math.random()*250 -
+        160
+      ) + 'px'
+    );
+
+
+    game.appendChild(p);
+
+
+    setTimeout(
+      ()=>p.remove(),
+      1000
+    );
+  }
+}
+
+
+/* ========================================
+   게임 종료
+======================================== */
+
+function finishGame(clear=false){
+
+  running = false;
+
+  cancelAnimationFrame(
+    animationId
+  );
+
+  saveRecords();
+
+
+  let icon;
+  let title;
+  let description;
+
+
+  if(clear){
+
+    icon =
+      '👑';
+
+    title =
+      '금고 마스터!';
+
+    description =
+      `모든 비밀 금고를 열었습니다!<br>
+       최종 점수 <b>${score}점</b><br>
+       최대 ${maxCombo}콤보`;
+
+  }else if(stage >= 5){
+
+    icon =
+      '🏆';
+
+    title =
+      '전설의 금고털이... 아니, 해제 전문가!';
+
+    description =
+      `${stage}번째 금고까지 도달했습니다.<br>
+       최종 점수 <b>${score}점</b><br>
+       조금만 더 가면 모든 금고를 열 수 있어요!`;
+
+  }else if(stage >= 3){
+
+    icon =
+      '🔓';
+
+    title =
+      '금고 해제 요원!';
+
+    description =
+      `${stage}번째 금고에서 경보가 울렸습니다.<br>
+       최종 점수 <b>${score}점</b><br>
+       숫자가 목표에 가까워지는 순간을 노려보세요.`;
+
+  }else{
+
+    icon =
+      '🚨';
+
+    title =
+      '경보 발생!';
+
+    description =
+      `최종 점수 <b>${score}점</b><br>
+       목표 숫자에 가까워졌을 때 멈추면 성공합니다.<br>
+       힌트도 활용해보세요!`;
+  }
+
+
+  $('#ico').textContent =
+    icon;
+
+  $('#title').textContent =
+    title;
+
+  $('#desc').innerHTML =
+    description;
+
+  $('#start').textContent =
+    '🔄 다시 도전';
+
+  over.classList.remove(
+    'hide'
+  );
+}
+
+
+/* ========================================
+   입력
+======================================== */
+
+$('#stop')
+  .addEventListener(
+    'click',
+    stopDial
+  );
+
+
+$('#hint')
+  .addEventListener(
+    'click',
+    showHint
+  );
+
+
+$('#start')
+  .addEventListener(
+    'click',
+    startGame
+  );
+
+
+/*
+  게임 화면 터치/클릭으로도
+  다이얼을 멈출 수 있다.
+
+  단 버튼을 누른 경우 중복 입력 방지.
+*/
+
+game.addEventListener(
+  'pointerdown',
+  event => {
+
+    if(
+      event.target.closest(
+        'button'
+      )
+    ){
+      return;
+    }
+
+    stopDial();
+  }
+);
+
+
+/*
+  PC 키보드
+*/
+
+window.addEventListener(
+  'keydown',
+  event => {
+
+    if(
+      event.code ===
+      'Space'
+    ){
+
+      event.preventDefault();
+
+      stopDial();
+    }
+
+    if(
+      event.key.toLowerCase() ===
+      'h'
+    ){
+
+      showHint();
+    }
+  }
+);
+
+
+/* ========================================
+   초기화
+======================================== */
+
+loadRecords();
+
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1554 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>👨‍🍳 알고리즘 셰프 챌린지</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 15% 10%,#ffedd5,transparent 30%),
+    radial-gradient(circle at 85% 15%,#fde68a88,transparent 26%),
+    linear-gradient(145deg,#fff7ed,#ffedd5);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:#432818;
+}
+
+button{
+  font:inherit;
+  min-height:44px;
+  border:0;
+  border-radius:13px;
+  font-weight:800;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+
+.app{
+  width:min(1000px,100%);
+  margin:auto;
+  padding:16px;
+}
+
+.top,
+.panel{
+  background:#fff;
+  border:2px solid #fed7aa;
+  border-radius:22px;
+  box-shadow:0 12px 30px #9a341215;
+}
+
+.top{
+  padding:16px;
+  text-align:center;
+}
+
+.top h1{
+  margin:0;
+  font-size:clamp(28px,5vw,42px);
+}
+
+.concept{
+  margin:5px 0 12px;
+  color:#9a3412;
+  font-weight:800;
+}
+
+.hud{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.pill{
+  padding:7px 13px;
+  background:#ffedd5;
+  border-radius:99px;
+  font-weight:800;
+}
+
+.progress{
+  height:8px;
+  margin-top:12px;
+  border-radius:99px;
+  overflow:hidden;
+  background:#fed7aa;
+}
+
+.progress-bar{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#fb923c,#facc15,#22c55e);
+  transition:.3s;
+}
+
+.game{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-top:16px;
+}
+
+.panel{
+  padding:16px;
+}
+
+.panel h2{
+  margin-top:0;
+}
+
+.order-card{
+  padding:12px;
+  border-radius:17px;
+  background:linear-gradient(135deg,#fff7ed,#ffedd5);
+}
+
+.order-title{
+  font-size:12px;
+  color:#9a3412;
+  font-weight:1000;
+  letter-spacing:.08em;
+}
+
+.order{
+  margin:8px 0 3px;
+  font-size:1.1rem;
+  text-align:center;
+  font-weight:900;
+}
+
+.mission{
+  font-size:12px;
+  color:#7c2d12;
+}
+
+.plate{
+  min-height:125px;
+  margin:13px 0;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:center;
+  gap:5px;
+  font-size:42px;
+  background:#fff7ed;
+  border:2px dashed #fdba74;
+  border-radius:18px;
+  transition:.3s;
+}
+
+.plate.success{
+  animation:plateSuccess .6s;
+}
+
+@keyframes plateSuccess{
+  50%{
+    transform:scale(1.08);
+    background:#dcfce7;
+  }
+}
+
+.plate.fail{
+  animation:shake .35s;
+}
+
+@keyframes shake{
+  25%{transform:translateX(-10px)}
+  75%{transform:translateX(10px)}
+}
+
+.buttons,
+.actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+.buttons button{
+  padding:9px 12px;
+  background:#fb923c;
+  color:#321;
+  box-shadow:0 4px 9px #9a341220;
+}
+
+.buttons button:hover{
+  filter:brightness(1.05);
+}
+
+.buttons button.trap{
+  background:#d1d5db;
+}
+
+.queue{
+  list-style:none;
+  padding:0;
+  margin:10px 0;
+  display:grid;
+  gap:7px;
+  max-height:300px;
+  overflow:auto;
+}
+
+.queue li{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:8px;
+  background:#fff7ed;
+  border-radius:12px;
+  transition:.2s;
+}
+
+.queue li.active{
+  outline:4px solid #facc15;
+  background:#fef3c7;
+  transform:scale(1.02);
+}
+
+.queue li.done{
+  background:#dcfce7;
+}
+
+.queue span{
+  flex:1;
+}
+
+.mini{
+  min-width:42px;
+  background:#fed7aa;
+  padding:7px;
+}
+
+.run{
+  background:#22c55e;
+  color:#fff;
+  padding:0 18px;
+}
+
+.reset{
+  background:#e2e8f0;
+}
+
+.hint{
+  background:#fde68a;
+}
+
+.sound{
+  background:#ddd6fe;
+}
+
+.msg{
+  min-height:58px;
+  text-align:center;
+  font-weight:900;
+  padding:12px;
+  line-height:1.5;
+}
+
+.combo{
+  min-height:28px;
+  color:#ea580c;
+  font-size:20px;
+  font-weight:1000;
+  text-align:center;
+}
+
+.timer{
+  margin-top:8px;
+  height:9px;
+  border-radius:99px;
+  background:#e5e7eb;
+  overflow:hidden;
+}
+
+.timer-bar{
+  height:100%;
+  width:100%;
+  background:linear-gradient(90deg,#22c55e,#facc15,#ef4444);
+}
+
+.stars-pop{
+  min-height:35px;
+  text-align:center;
+  font-size:28px;
+}
+
+.result{
+  display:none;
+  margin-top:10px;
+  padding:12px;
+  border-radius:15px;
+  background:#f0fdf4;
+  text-align:center;
+}
+
+.result.show{
+  display:block;
+}
+
+.chef{
+  text-align:center;
+  font-size:42px;
+  min-height:50px;
+}
+
+@media(max-width:680px){
+  .game{
+    grid-template-columns:1fr;
+  }
+
+  .app{
+    padding:9px;
+  }
+
+  .plate{
+    min-height:90px;
+  }
+
+  .top{
+    padding:12px;
+  }
+
+  .queue{
+    max-height:230px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<main class="app">
+
+<header class="top">
+
+  <h1>👨‍🍳 알고리즘 셰프</h1>
+
+  <p class="concept">
+    오늘의 코딩 개념: 명령의 순서가 바뀌면 결과도 달라져요!
+  </p>
+
+  <div class="hud">
+    <span class="pill">스테이지 <b id="lv">1</b>/10</span>
+    <span class="pill">별 <b id="stars">0</b> ⭐</span>
+    <span class="pill">점수 <b id="score">0</b></span>
+    <span class="pill">콤보 <b id="comboScore">0</b></span>
+  </div>
+
+  <div class="progress">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+</header>
+
+
+<section class="game">
+
+  <!-- 왼쪽 -->
+  <div class="panel">
+
+    <h2>📋 오늘의 주문</h2>
+
+    <div class="order-card">
+      <div class="order-title" id="stageName">ORDER 1</div>
+      <div class="order" id="order"></div>
+      <div class="mission" id="mission"></div>
+    </div>
+
+    <div class="chef" id="chef">👨‍🍳</div>
+
+    <div class="plate" id="plate">
+      🍽️
+    </div>
+
+    <div class="timer">
+      <div class="timer-bar" id="timerBar"></div>
+    </div>
+
+    <h3>🥕 요리 명령</h3>
+
+    <div class="buttons" id="buttons"></div>
+
+  </div>
+
+
+  <!-- 오른쪽 -->
+  <div class="panel">
+
+    <h2>🧱 나의 알고리즘</h2>
+
+    <ol class="queue" id="queue"></ol>
+
+    <div class="actions">
+      <button class="run" id="run">▶ 요리 실행</button>
+      <button class="hint" id="hint">💡 힌트</button>
+      <button class="reset" id="clear">🗑 모두 지우기</button>
+      <button class="sound" id="sound">🔊 소리 ON</button>
+    </div>
+
+    <div class="combo" id="combo"></div>
+
+    <div class="msg" id="msg">
+      명령을 눌러 순서대로 담아 보세요.
+    </div>
+
+    <div class="stars-pop" id="starsPop"></div>
+
+    <div class="result" id="result">
+      <b id="resultText"></b>
+    </div>
+
+  </div>
+
+</section>
+
+</main>
+
+
+<script>
+const $ = s => document.querySelector(s);
+
+
+/* =========================================================
+   스테이지
+========================================================= */
+
+const stages = [
+
+  {
+    name:'ORDER 1 · 치즈 샌드위치',
+    order:'빵 → 치즈 → 빵',
+    recipe:['🍞','🧀','🍞'],
+    mission:'가장 기본적인 순차 실행을 익혀보세요.',
+    time:35
+  },
+
+  {
+    name:'ORDER 2 · 오렌지 주스',
+    order:'컵 → 주스 → 빨대',
+    recipe:['🥤','🧃','🥢'],
+    mission:'컵을 준비하기 전에 주스를 부으면 안 돼요!',
+    time:32
+  },
+
+  {
+    name:'ORDER 3 · 야채 샌드위치',
+    order:'접시 → 빵 → 상추 → 치즈 → 빵',
+    recipe:['🍽️','🍞','🥬','🧀','🍞'],
+    mission:'명령이 길어져도 처음부터 차근차근!',
+    time:30
+  },
+
+  {
+    name:'ORDER 4 · 달걀 덮밥',
+    order:'그릇 → 밥 → 달걀 → 소스',
+    recipe:['🥣','🍚','🍳','🥫'],
+    mission:'요리 순서를 정확히 기억하세요.',
+    time:28
+  },
+
+  {
+    name:'ORDER 5 · 체리 주스',
+    order:'컵 → 얼음 → 주스 → 체리 → 빨대',
+    recipe:['🥤','🧊','🧃','🍒','🥢'],
+    mission:'5개의 명령을 정확한 순서로 실행하세요.',
+    time:26
+  },
+
+  {
+    name:'ORDER 6 · 햄버거',
+    order:'빵 → 상추 → 고기 → 치즈 → 빵',
+    recipe:['🍞','🥬','🥩','🧀','🍞'],
+    mission:'손님이 기다리고 있어요. 빠르고 정확하게!',
+    time:24
+  },
+
+  {
+    name:'ORDER 7 · 과일 디저트',
+    order:'접시 → 딸기 → 바나나 → 포도 → 체리',
+    recipe:['🍽️','🍓','🍌','🍇','🍒'],
+    mission:'비슷한 과일 명령 사이에서 순서를 구분하세요.',
+    time:23
+  },
+
+  {
+    name:'ORDER 8 · 특별 피자',
+    order:'접시 → 도우 → 소스 → 치즈 → 토마토 → 오븐',
+    recipe:['🍽️','🫓','🥫','🧀','🍅','🔥'],
+    mission:'긴 알고리즘도 작은 단계로 나누면 쉬워요.',
+    time:22
+  },
+
+  {
+    name:'ORDER 9 · 셰프 스페셜',
+    order:'그릇 → 밥 → 고기 → 달걀 → 소스 → 파',
+    recipe:['🥣','🍚','🥩','🍳','🥫','🌿'],
+    mission:'잘못된 재료 함정을 피하세요!',
+    time:21
+  },
+
+  {
+    name:'FINAL ORDER · 왕실 만찬',
+    order:'접시 → 빵 → 상추 → 고기 → 치즈 → 토마토 → 빵',
+    recipe:['🍽️','🍞','🥬','🥩','🧀','🍅','🍞'],
+    mission:'최종 미션! 최고의 알고리즘 셰프에 도전하세요.',
+    time:20
+  }
+
+];
+
+
+const names = {
+  '🍞':'빵 놓기',
+  '🧀':'치즈 놓기',
+  '🥤':'컵 준비',
+  '🧃':'주스 붓기',
+  '🥢':'빨대 꽂기',
+  '🍽️':'접시 준비',
+  '🥬':'상추 놓기',
+  '🥣':'그릇 준비',
+  '🍚':'밥 담기',
+  '🍳':'달걀 올리기',
+  '🥫':'소스 뿌리기',
+  '🧊':'얼음 넣기',
+  '🍒':'체리 올리기',
+  '🥩':'고기 올리기',
+  '🍓':'딸기 놓기',
+  '🍌':'바나나 놓기',
+  '🍇':'포도 놓기',
+  '🫓':'도우 준비',
+  '🍅':'토마토 놓기',
+  '🔥':'오븐 굽기',
+  '🌿':'파 뿌리기',
+
+  /* 함정 재료 */
+  '🍋':'레몬 넣기',
+  '🌶️':'고추 넣기',
+  '🍫':'초콜릿 넣기',
+  '🧅':'양파 넣기'
+};
+
+
+let lv = 0;
+
+let code = [];
+
+let stars = 0;
+
+let score = 0;
+
+let combo = 0;
+
+let maxCombo = 0;
+
+let running = false;
+
+let soundOn = true;
+
+let audioCtx = null;
+
+let timeLeft = 0;
+
+let timer = null;
+
+
+/* =========================================================
+   효과음
+========================================================= */
+
+function tone(freq,duration=.1,type='sine'){
+
+  if(!soundOn){
+    return;
+  }
+
+  try{
+
+    if(!audioCtx){
+
+      audioCtx = new (
+        window.AudioContext ||
+        window.webkitAudioContext
+      )();
+    }
+
+    if(audioCtx.state === 'suspended'){
+      audioCtx.resume();
+    }
+
+    const oscillator =
+      audioCtx.createOscillator();
+
+    const gain =
+      audioCtx.createGain();
+
+    oscillator.type =
+      type;
+
+    oscillator.frequency.value =
+      freq;
+
+    gain.gain.setValueAtTime(
+      .06,
+      audioCtx.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      .001,
+      audioCtx.currentTime + duration
+    );
+
+    oscillator.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    oscillator.start();
+
+    oscillator.stop(
+      audioCtx.currentTime + duration
+    );
+
+  }catch(e){}
+}
+
+
+function soundAdd(){
+  tone(450,.06);
+}
+
+
+function soundExecute(){
+  tone(330,.05,'triangle');
+}
+
+
+function soundSuccess(){
+
+  tone(520,.09);
+
+  setTimeout(
+    ()=>tone(700,.09),
+    90
+  );
+
+  setTimeout(
+    ()=>tone(900,.13),
+    180
+  );
+}
+
+
+function soundWrong(){
+  tone(150,.2,'sawtooth');
+}
+
+
+/* =========================================================
+   배열 섞기
+========================================================= */
+
+function shuffle(array){
+
+  const arr =
+    [...array];
+
+  for(
+    let i=arr.length-1;
+    i>0;
+    i--
+  ){
+
+    const j =
+      Math.floor(
+        Math.random() *
+        (i+1)
+      );
+
+    [
+      arr[i],
+      arr[j]
+    ] = [
+      arr[j],
+      arr[i]
+    ];
+  }
+
+  return arr;
+}
+
+
+/* =========================================================
+   스테이지 불러오기
+========================================================= */
+
+function load(){
+
+  clearInterval(timer);
+
+  code = [];
+
+  running = false;
+
+  const stage =
+    stages[lv];
+
+
+  $('#lv').textContent =
+    lv+1;
+
+  $('#stageName').textContent =
+    stage.name;
+
+  $('#order').textContent =
+    stage.order;
+
+  $('#mission').textContent =
+    stage.mission;
+
+  $('#plate').textContent =
+    '🍽️';
+
+  $('#plate').className =
+    'plate';
+
+  $('#chef').textContent =
+    '👨‍🍳';
+
+  $('#msg').textContent =
+    '명령을 눌러 순서대로 알고리즘을 만들어 보세요.';
+
+  $('#starsPop').textContent =
+    '';
+
+  $('#result').classList.remove(
+    'show'
+  );
+
+
+  /* 진행도 */
+
+  $('#progressBar').style.width =
+    (
+      lv /
+      stages.length *
+      100
+    ) + '%';
+
+
+  /*
+    정답 재료에 함정 3개 추가
+  */
+
+  const correct =
+    [...new Set(stage.recipe)];
+
+  const traps =
+    Object.keys(names)
+      .filter(
+        item =>
+          !correct.includes(item)
+      );
+
+  const extra =
+    shuffle(traps)
+      .slice(0,3);
+
+
+  const choices =
+    shuffle(
+      [...correct,...extra]
+    );
+
+
+  $('#buttons').innerHTML =
+    choices
+      .map(
+        item => {
+
+          const trap =
+            !stage.recipe.includes(
+              item
+            );
+
+          return `
+            <button
+              class="${trap?'trap':''}"
+              data-x="${item}">
+              ${item} ${names[item]}
+            </button>
+          `;
+        }
+      )
+      .join('');
+
+
+  render();
+
+  startTimer();
+}
+
+
+/* =========================================================
+   타이머
+========================================================= */
+
+function startTimer(){
+
+  clearInterval(timer);
+
+  timeLeft =
+    stages[lv].time;
+
+  updateTimer();
+
+
+  timer =
+    setInterval(
+      ()=>{
+
+        if(running){
+          return;
+        }
+
+        timeLeft -= .1;
+
+        updateTimer();
+
+        if(timeLeft <= 0){
+
+          clearInterval(timer);
+
+          timeLeft = 0;
+
+          $('#msg').textContent =
+            '⏰ 시간이 끝났어요! 주문을 다시 확인해 보세요.';
+
+          $('#chef').textContent =
+            '😵‍💫';
+
+          soundWrong();
+        }
+
+      },
+      100
+    );
+}
+
+
+function updateTimer(){
+
+  const max =
+    stages[lv].time;
+
+  const percent =
+    Math.max(
+      0,
+      timeLeft/max*100
+    );
+
+  $('#timerBar').style.width =
+    percent+'%';
+}
+
+
+/* =========================================================
+   명령 목록 표시
+========================================================= */
+
+function render(active=-1,done=-1){
+
+  if(!code.length){
+
+    $('#queue').innerHTML =
+      '<li>👆 요리 명령을 눌러 추가하세요.</li>';
+
+    return;
+  }
+
+
+  $('#queue').innerHTML =
+    code
+      .map(
+        (item,index)=>{
+
+          let cls = '';
+
+          if(index === active){
+            cls = 'active';
+          }
+
+          if(index < done){
+            cls = 'done';
+          }
+
+          return `
+            <li class="${cls}">
+              <b>${index+1}.</b>
+
+              <span>
+                ${item} ${names[item]}
+              </span>
+
+              <button
+                class="mini"
+                data-up="${index}"
+                aria-label="위로">
+                ↑
+              </button>
+
+              <button
+                class="mini"
+                data-down="${index}"
+                aria-label="아래로">
+                ↓
+              </button>
+
+              <button
+                class="mini"
+                data-del="${index}"
+                aria-label="삭제">
+                ×
+              </button>
+
+            </li>
+          `;
+        }
+      )
+      .join('');
+}
+
+
+/* =========================================================
+   명령 추가
+========================================================= */
+
+$('#buttons').addEventListener(
+  'click',
+  event=>{
+
+    const item =
+      event.target.dataset.x;
+
+    if(
+      !item ||
+      running ||
+      timeLeft <= 0
+    ){
+      return;
+    }
+
+
+    /*
+      최대 명령 수 제한
+    */
+
+    if(
+      code.length >=
+      stages[lv].recipe.length + 3
+    ){
+
+      $('#msg').textContent =
+        '⚠️ 명령이 너무 많아요. 필요 없는 명령을 지워보세요.';
+
+      return;
+    }
+
+
+    code.push(item);
+
+    soundAdd();
+
+    $('#msg').textContent =
+      `${item} ${names[item]} 명령을 추가했습니다.`;
+
+    render();
+  }
+);
+
+
+/* =========================================================
+   순서 변경 / 삭제
+========================================================= */
+
+$('#queue').addEventListener(
+  'click',
+  event=>{
+
+    if(running){
+      return;
+    }
+
+
+    if(
+      event.target.dataset.del !==
+      undefined
+    ){
+
+      const i =
+        Number(
+          event.target.dataset.del
+        );
+
+      code.splice(i,1);
+
+      render();
+
+      return;
+    }
+
+
+    if(
+      event.target.dataset.up !==
+      undefined
+    ){
+
+      const i =
+        Number(
+          event.target.dataset.up
+        );
+
+      if(i > 0){
+
+        [
+          code[i-1],
+          code[i]
+        ] = [
+          code[i],
+          code[i-1]
+        ];
+      }
+
+      render();
+
+      return;
+    }
+
+
+    if(
+      event.target.dataset.down !==
+      undefined
+    ){
+
+      const i =
+        Number(
+          event.target.dataset.down
+        );
+
+      if(
+        i <
+        code.length-1
+      ){
+
+        [
+          code[i],
+          code[i+1]
+        ] = [
+          code[i+1],
+          code[i]
+        ];
+      }
+
+      render();
+    }
+  }
+);
+
+
+/* =========================================================
+   전체 지우기
+========================================================= */
+
+$('#clear').addEventListener(
+  'click',
+  ()=>{
+
+    if(running){
+      return;
+    }
+
+    code = [];
+
+    $('#plate').textContent =
+      '🍽️';
+
+    $('#msg').textContent =
+      '알고리즘을 다시 만들어 보세요.';
+
+    render();
+  }
+);
+
+
+/* =========================================================
+   힌트
+========================================================= */
+
+$('#hint').addEventListener(
+  'click',
+  ()=>{
+
+    if(running){
+      return;
+    }
+
+    const recipe =
+      stages[lv].recipe;
+
+
+    let wrong = -1;
+
+
+    for(
+      let i=0;
+      i<code.length;
+      i++
+    ){
+
+      if(
+        code[i] !==
+        recipe[i]
+      ){
+
+        wrong = i;
+
+        break;
+      }
+    }
+
+
+    if(wrong >= 0){
+
+      $('#msg').textContent =
+        `💡 ${wrong+1}번째 명령부터 주문 순서와 달라요.`;
+
+    }else if(
+      code.length <
+      recipe.length
+    ){
+
+      $('#msg').textContent =
+        `💡 ${code.length+1}번째 명령이 아직 필요해요.`;
+
+    }else{
+
+      $('#msg').textContent =
+        '💡 주문표와 만든 알고리즘을 처음부터 하나씩 비교해 보세요.';
+    }
+
+    tone(580,.08);
+  }
+);
+
+
+/* =========================================================
+   요리 실행
+========================================================= */
+
+$('#run').addEventListener(
+  'click',
+  async()=>{
+
+    if(
+      running ||
+      !code.length ||
+      timeLeft <= 0
+    ){
+      return;
+    }
+
+
+    running = true;
+
+    clearInterval(timer);
+
+    $('#plate').textContent =
+      '';
+
+    $('#chef').textContent =
+      '👨‍🍳💨';
+
+    $('#msg').textContent =
+      '컴퓨터가 알고리즘을 위에서 아래로 실행합니다!';
+
+
+    /*
+      한 명령씩 실행
+    */
+
+    for(
+      let i=0;
+      i<code.length;
+      i++
+    ){
+
+      render(i,i);
+
+      soundExecute();
+
+      $('#plate').textContent +=
+        code[i];
+
+      await new Promise(
+        resolve =>
+          setTimeout(
+            resolve,
+            430
+          )
+      );
+    }
+
+
+    render(-1,code.length);
+
+
+    const correct =
+      JSON.stringify(code) ===
+      JSON.stringify(
+        stages[lv].recipe
+      );
+
+
+    if(correct){
+
+      success();
+
+    }else{
+
+      fail();
+    }
+
+
+    running = false;
+  }
+);
+
+
+/* =========================================================
+   성공
+========================================================= */
+
+function success(){
+
+  combo++;
+
+  maxCombo =
+    Math.max(
+      maxCombo,
+      combo
+    );
+
+
+  const recipeLength =
+    stages[lv].recipe.length;
+
+
+  let earnedStars = 1;
+
+
+  /*
+    정확한 명령 수이므로 기본 2개,
+    시간까지 빠르면 3개.
+  */
+
+  if(
+    code.length ===
+    recipeLength
+  ){
+
+    earnedStars = 2;
+  }
+
+
+  if(
+    code.length === recipeLength &&
+    timeLeft >
+    stages[lv].time*.35
+  ){
+
+    earnedStars = 3;
+  }
+
+
+  stars += earnedStars;
+
+
+  const timeBonus =
+    Math.round(
+      Math.max(
+        0,
+        timeLeft
+      ) * 5
+    );
+
+
+  const comboBonus =
+    combo >= 2
+      ? combo*30
+      : 0;
+
+
+  const gained =
+    200 +
+    timeBonus +
+    comboBonus;
+
+
+  score += gained;
+
+
+  $('#stars').textContent =
+    stars;
+
+  $('#score').textContent =
+    score;
+
+  $('#comboScore').textContent =
+    combo;
+
+
+  $('#combo').textContent =
+    combo >= 2
+      ? `🔥 ${combo} 주문 연속 성공!`
+      : '';
+
+
+  $('#starsPop').textContent =
+    '⭐'.repeat(
+      earnedStars
+    );
+
+
+  $('#plate').classList.add(
+    'success'
+  );
+
+  $('#chef').textContent =
+    '👨‍🍳✨';
+
+
+  $('#msg').textContent =
+    `🎉 주문 성공! +${gained}점`;
+
+
+  $('#resultText').textContent =
+    `${earnedStars}개의 별을 획득했습니다!`;
+
+
+  $('#result').classList.add(
+    'show'
+  );
+
+
+  soundSuccess();
+
+
+  save();
+
+
+  if(
+    lv <
+    stages.length-1
+  ){
+
+    setTimeout(
+      ()=>{
+
+        lv++;
+
+        load();
+
+      },
+      1400
+    );
+
+  }else{
+
+    $('#progressBar').style.width =
+      '100%';
+
+
+    $('#chef').textContent =
+      '🏆👨‍🍳';
+
+
+    $('#msg').textContent =
+      `🏆 모든 주문 완성! 최종 점수 ${score}점!`;
+
+
+    $('#resultText').textContent =
+      `최고의 알고리즘 셰프! 총 ${stars}개의 별을 모았습니다.`;
+  }
+}
+
+
+/* =========================================================
+   실패
+========================================================= */
+
+function fail(){
+
+  combo = 0;
+
+  $('#comboScore').textContent =
+    0;
+
+  $('#combo').textContent =
+    '';
+
+  $('#plate').classList.add(
+    'fail'
+  );
+
+  $('#chef').textContent =
+    '🤔';
+
+
+  const recipe =
+    stages[lv].recipe;
+
+
+  let wrongIndex = -1;
+
+
+  for(
+    let i=0;
+    i<
+    Math.max(
+      code.length,
+      recipe.length
+    );
+    i++
+  ){
+
+    if(
+      code[i] !==
+      recipe[i]
+    ){
+
+      wrongIndex = i;
+
+      break;
+    }
+  }
+
+
+  if(
+    code.length <
+    recipe.length
+  ){
+
+    $('#msg').textContent =
+      `🤔 명령이 부족해요. 주문에는 ${recipe.length}단계가 필요합니다.`;
+
+  }else if(
+    code.length >
+    recipe.length
+  ){
+
+    $('#msg').textContent =
+      '🤔 필요 없는 명령이 들어갔어요. 알고리즘을 더 간단하게 만들어 보세요.';
+
+  }else{
+
+    $('#msg').textContent =
+      `🤔 ${wrongIndex+1}번째 명령의 순서를 다시 확인해 보세요.`;
+  }
+
+
+  soundWrong();
+
+
+  /*
+    실패하면 코드를 지우지 않음.
+    학생이 디버깅할 수 있도록 그대로 유지.
+  */
+
+  setTimeout(
+    ()=>{
+
+      $('#plate').className =
+        'plate';
+
+      startTimer();
+
+    },
+    800
+  );
+}
+
+
+/* =========================================================
+   저장
+========================================================= */
+
+function save(){
+
+  try{
+
+    const best =
+      Number(
+        localStorage.getItem(
+          'algorithmChefBest'
+        ) || 0
+      );
+
+
+    if(score > best){
+
+      localStorage.setItem(
+        'algorithmChefBest',
+        score
+      );
+    }
+
+
+    localStorage.setItem(
+      'algorithmChefStars',
+      stars
+    );
+
+  }catch(e){}
+}
+
+
+/* =========================================================
+   소리 ON/OFF
+========================================================= */
+
+$('#sound').addEventListener(
+  'click',
+  ()=>{
+
+    soundOn =
+      !soundOn;
+
+
+    $('#sound').textContent =
+      soundOn
+        ? '🔊 소리 ON'
+        : '🔇 소리 OFF';
+
+
+    if(soundOn){
+      tone(700,.08);
+    }
+  }
+);
+
+
+/* =========================================================
+   시작
+========================================================= */
+
+load();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1314 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>📦 IF 택배 센터 챌린지</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 20% 10%,#dbeafe,transparent 30%),
+    radial-gradient(circle at 80% 15%,#dcfce7,transparent 28%),
+    linear-gradient(#e0f2fe,#f0fdf4);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:#123;
+}
+
+button,select{
+  font:inherit;
+}
+
+button{
+  touch-action:manipulation;
+}
+
+.app{
+  max-width:980px;
+  margin:auto;
+  padding:14px;
+  text-align:center;
+}
+
+h1{
+  margin:4px 0;
+  font-size:clamp(28px,5vw,42px);
+}
+
+.concept{
+  margin:4px 0 12px;
+  color:#0369a1;
+  font-weight:800;
+}
+
+.hud{
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+.hud b{
+  min-width:95px;
+  background:#fff;
+  padding:8px 13px;
+  border-radius:999px;
+  box-shadow:0 6px 18px #0369a115;
+}
+
+.factory{
+  margin-top:14px;
+  padding:16px;
+  border-radius:24px;
+  background:#fff;
+  box-shadow:0 15px 40px #0369a120;
+}
+
+.stage-title{
+  font-size:20px;
+  font-weight:1000;
+  margin-bottom:8px;
+}
+
+.mission{
+  padding:10px 12px;
+  border-radius:14px;
+  background:#eff6ff;
+  color:#1d4ed8;
+  font-weight:800;
+  margin-bottom:10px;
+}
+
+.rule{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+  padding:12px;
+  background:#fef3c7;
+  border-radius:16px;
+  font-weight:900;
+}
+
+.rule select{
+  min-height:44px;
+  border:2px solid #f59e0b55;
+  border-radius:10px;
+  padding:6px 10px;
+  background:#fff;
+  font-weight:900;
+}
+
+.rule .logic{
+  color:#7c3aed;
+}
+
+.belt{
+  min-height:170px;
+  margin:14px 0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  overflow:hidden;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #334155 0 38px,
+      #475569 38px 76px
+    );
+  border-radius:18px;
+  box-shadow:inset 0 0 20px #0003;
+}
+
+.belt::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:12px;
+  height:5px;
+  background:#94a3b8;
+}
+
+.box{
+  position:relative;
+  z-index:2;
+  width:120px;
+  padding:13px;
+  border-radius:16px;
+  background:#f59e0b;
+  font-size:46px;
+  color:#111;
+  transition:.4s;
+  box-shadow:0 10px 24px #0003;
+}
+
+.box small{
+  display:block;
+  font-size:13px;
+  margin-top:5px;
+}
+
+.box.bonus{
+  outline:5px solid #fde047;
+  animation:bonusGlow .7s infinite alternate;
+}
+
+@keyframes bonusGlow{
+  to{box-shadow:0 0 26px #facc15}
+}
+
+.bins{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+.bin{
+  min-width:145px;
+  min-height:64px;
+  border:0;
+  border-radius:16px;
+  background:#bae6fd;
+  font-weight:1000;
+  cursor:pointer;
+  box-shadow:0 6px 15px #0369a118;
+}
+
+.bin[data-d="A"]{
+  background:linear-gradient(135deg,#bae6fd,#93c5fd);
+}
+
+.bin[data-d="B"]{
+  background:linear-gradient(135deg,#bbf7d0,#86efac);
+}
+
+.bin:active{
+  transform:scale(.96);
+}
+
+.actions{
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.actions button{
+  min-height:46px;
+  border:0;
+  border-radius:13px;
+  padding:9px 14px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.auto{
+  background:#22c55e;
+  color:#052e16;
+}
+
+.hint{
+  background:#fde68a;
+}
+
+.sound{
+  background:#e2e8f0;
+}
+
+.mode{
+  background:#ddd6fe;
+}
+
+.msg{
+  min-height:52px;
+  padding:12px;
+  font-weight:900;
+  font-size:16px;
+}
+
+.combo{
+  min-height:28px;
+  color:#ea580c;
+  font-size:20px;
+  font-weight:1000;
+}
+
+.progress{
+  height:9px;
+  margin-top:12px;
+  border-radius:99px;
+  overflow:hidden;
+  background:#e2e8f0;
+}
+
+.progress>div{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#38bdf8,#22c55e,#facc15);
+  transition:.3s;
+}
+
+.good{
+  animation:right .5s;
+}
+
+@keyframes right{
+  50%{
+    transform:translateX(90px) rotate(8deg)
+  }
+}
+
+.bad{
+  animation:shake .35s;
+}
+
+@keyframes shake{
+  25%{transform:translateX(-10px)}
+  75%{transform:translateX(10px)}
+}
+
+.correct-flash{
+  animation:correctFlash .45s;
+}
+
+@keyframes correctFlash{
+  50%{background:#dcfce7}
+}
+
+.wrong-flash{
+  animation:wrongFlash .45s;
+}
+
+@keyframes wrongFlash{
+  50%{background:#fee2e2}
+}
+
+.result{
+  margin-top:12px;
+  padding:12px;
+  border-radius:14px;
+  background:#f8fafc;
+  display:none;
+}
+
+.result.show{
+  display:block;
+}
+
+.stars{
+  font-size:30px;
+}
+
+@media(max-width:560px){
+  .app{padding:8px}
+  .factory{padding:10px}
+  .bin{min-width:120px}
+  .rule{font-size:13px}
+  .box{width:108px}
+}
+</style>
+</head>
+
+<body>
+
+<main class="app">
+
+<h1>📦 IF 택배 센터</h1>
+
+<p class="concept">
+오늘의 코딩 개념: 조건이 참인지 확인하고, 결과에 따라 다른 행동을 실행해요.
+</p>
+
+<div class="hud">
+  <b>단계 <span id="lv">1</span>/8</b>
+  <b>점수 <span id="score">0</span></b>
+  <b>콤보 <span id="comboScore">0</span></b>
+  <b>남은 상자 <span id="left">8</span></b>
+</div>
+
+<section class="factory" id="factory">
+
+  <div class="stage-title" id="stageTitle">
+    STAGE 1 · 색상 분류
+  </div>
+
+  <div class="mission" id="mission">
+    파란 상자를 A 통로로 보내 보세요.
+  </div>
+
+  <div class="rule">
+
+    <span>IF</span>
+
+    <select id="field">
+      <option value="color">색상</option>
+      <option value="icon">그림</option>
+      <option value="size">크기</option>
+    </select>
+
+    <span>이(가)</span>
+
+    <select id="value"></select>
+
+    <span class="logic" id="logicWrap" hidden>
+      AND
+    </span>
+
+    <select id="field2" hidden>
+      <option value="color">색상</option>
+      <option value="icon">그림</option>
+      <option value="size">크기</option>
+    </select>
+
+    <select id="value2" hidden></select>
+
+    <span>이면 →</span>
+
+    <select id="dest">
+      <option value="A">A 통로</option>
+      <option value="B">B 통로</option>
+    </select>
+
+  </div>
+
+
+  <div class="belt">
+    <div class="box" id="box"></div>
+  </div>
+
+
+  <div class="bins">
+
+    <button class="bin" data-d="A">
+      ⬅️ A 통로
+    </button>
+
+    <button class="bin" data-d="B">
+      B 통로 ➡️
+    </button>
+
+  </div>
+
+
+  <div class="actions">
+
+    <button class="auto" id="auto">
+      ▶ IF 자동 실행
+    </button>
+
+    <button class="hint" id="hint">
+      💡 힌트
+    </button>
+
+    <button class="mode" id="mode">
+      🎮 직접 판단 모드
+    </button>
+
+    <button class="sound" id="sound">
+      🔊 소리 ON
+    </button>
+
+  </div>
+
+
+  <div class="combo" id="combo"></div>
+
+  <div class="msg" id="msg">
+    조건을 만든 뒤 상자를 알맞은 통로로 보내 보세요.
+  </div>
+
+  <div class="progress">
+    <div id="progressBar"></div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="stars" id="stars"></div>
+    <b id="resultText"></b>
+  </div>
+
+</section>
+
+</main>
+
+
+<script>
+const $ = s => document.querySelector(s);
+
+
+/* -----------------------------------------
+   기본 데이터
+----------------------------------------- */
+
+const vals = {
+  color:['빨강','파랑'],
+  icon:['별','달'],
+  size:['큰','작은']
+};
+
+
+const stages = [
+  {
+    title:'STAGE 1 · 색상 분류',
+    mission:'파란 상자를 A 통로로 보내 보세요.',
+    field:'color',
+    value:'파랑',
+    dest:'A',
+    count:7
+  },
+  {
+    title:'STAGE 2 · 그림 분류',
+    mission:'별 그림 상자를 B 통로로 보내 보세요.',
+    field:'icon',
+    value:'별',
+    dest:'B',
+    count:8
+  },
+  {
+    title:'STAGE 3 · 크기 분류',
+    mission:'큰 상자를 A 통로로 보내 보세요.',
+    field:'size',
+    value:'큰',
+    dest:'A',
+    count:8
+  },
+  {
+    title:'STAGE 4 · 조건 바꾸기',
+    mission:'빨간 상자는 B 통로! 조건을 보고 정확히 분류하세요.',
+    field:'color',
+    value:'빨강',
+    dest:'B',
+    count:9
+  },
+  {
+    title:'STAGE 5 · 빠른 분류',
+    mission:'달 그림 상자를 A 통로로 보내세요. 콤보에 도전!',
+    field:'icon',
+    value:'달',
+    dest:'A',
+    count:10
+  },
+  {
+    title:'STAGE 6 · AND 조건',
+    mission:'파랑 AND 별인 상자만 A 통로로 보내세요.',
+    field:'color',
+    value:'파랑',
+    field2:'icon',
+    value2:'별',
+    dest:'A',
+    count:10,
+    and:true
+  },
+  {
+    title:'STAGE 7 · 복합 조건',
+    mission:'큰 AND 빨간 상자만 B 통로로 보내세요.',
+    field:'size',
+    value:'큰',
+    field2:'color',
+    value2:'빨강',
+    dest:'B',
+    count:11,
+    and:true
+  },
+  {
+    title:'STAGE 8 · 최종 자동화 미션',
+    mission:'조건을 정확히 설정하고 빠르게 모든 상자를 분류하세요!',
+    field:'icon',
+    value:'별',
+    field2:'size',
+    value2:'작은',
+    dest:'A',
+    count:12,
+    and:true
+  }
+];
+
+
+let lv = 0;
+let score = 0;
+let left = 0;
+let total = 0;
+
+let combo = 0;
+let maxCombo = 0;
+
+let current = null;
+
+let directMode = true;
+let soundOn = true;
+
+let audioCtx = null;
+
+
+/* -----------------------------------------
+   효과음
+----------------------------------------- */
+
+function tone(freq,duration=.1,type='sine'){
+
+  if(!soundOn) return;
+
+  try{
+
+    if(!audioCtx){
+      audioCtx = new (
+        window.AudioContext ||
+        window.webkitAudioContext
+      )();
+    }
+
+    if(audioCtx.state === 'suspended'){
+      audioCtx.resume();
+    }
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = type;
+    osc.frequency.value = freq;
+
+    gain.gain.setValueAtTime(
+      .06,
+      audioCtx.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      .001,
+      audioCtx.currentTime + duration
+    );
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+
+  }catch(e){}
+}
+
+
+function soundCorrect(){
+
+  tone(620,.08);
+
+  setTimeout(()=>{
+    tone(820,.1);
+  },80);
+}
+
+
+function soundWrong(){
+
+  tone(150,.16,'sawtooth');
+}
+
+
+function soundStageClear(){
+
+  tone(520,.08);
+
+  setTimeout(()=>tone(700,.08),90);
+
+  setTimeout(()=>tone(920,.13),180);
+}
+
+
+/* -----------------------------------------
+   선택값 갱신
+----------------------------------------- */
+
+function fillValues(fieldSelector,valueSelector){
+
+  const field =
+    $(fieldSelector).value;
+
+  $(valueSelector).innerHTML =
+    vals[field]
+      .map(v=>`<option>${v}</option>`)
+      .join('');
+}
+
+
+function options(){
+
+  fillValues('#field','#value');
+}
+
+
+function options2(){
+
+  fillValues('#field2','#value2');
+}
+
+
+/* -----------------------------------------
+   현재 상자 생성
+----------------------------------------- */
+
+function nextBox(){
+
+  if(left <= 0){
+
+    stageClear();
+
+    return;
+  }
+
+
+  const color =
+    Math.random() < .5
+      ? '빨강'
+      : '파랑';
+
+  const icon =
+    Math.random() < .5
+      ? '별'
+      : '달';
+
+  const size =
+    Math.random() < .5
+      ? '큰'
+      : '작은';
+
+
+  const bonus =
+    Math.random() < .12;
+
+
+  current = {
+    color,
+    icon,
+    size,
+    bonus
+  };
+
+
+  const box =
+    $('#box');
+
+  box.className =
+    'box' +
+    (bonus ? ' bonus' : '');
+
+
+  box.style.background =
+    color === '빨강'
+      ? '#fb7185'
+      : '#60a5fa';
+
+
+  box.style.transform =
+    `scale(${size === '큰' ? 1.08 : .84})`;
+
+
+  box.innerHTML =
+    `
+    ${icon === '별' ? '⭐' : '🌙'}
+    <small>
+      ${color} · ${size} · ${icon}
+      ${bonus ? '<br>✨ 보너스 상자' : ''}
+    </small>
+    `;
+
+
+  $('#left').textContent =
+    left;
+
+
+  updateProgress();
+}
+
+
+/* -----------------------------------------
+   IF 조건 검사
+----------------------------------------- */
+
+function isTrue(){
+
+  const first =
+    current[
+      $('#field').value
+    ] ===
+    $('#value').value;
+
+
+  if(!stages[lv].and){
+
+    return first;
+  }
+
+
+  const second =
+    current[
+      $('#field2').value
+    ] ===
+    $('#value2').value;
+
+
+  return first && second;
+}
+
+
+/* -----------------------------------------
+   예상 통로
+----------------------------------------- */
+
+function expected(){
+
+  const truth =
+    isTrue();
+
+  const selectedDest =
+    $('#dest').value;
+
+
+  return truth
+    ? selectedDest
+    : (
+        selectedDest === 'A'
+          ? 'B'
+          : 'A'
+      );
+}
+
+
+/* -----------------------------------------
+   분류
+----------------------------------------- */
+
+function sortBox(dest){
+
+  if(!current){
+    return;
+  }
+
+
+  const correct =
+    expected();
+
+
+  const ok =
+    dest === correct;
+
+
+  const box =
+    $('#box');
+
+
+  box.classList.remove(
+    'good',
+    'bad'
+  );
+
+
+  if(ok){
+
+    box.classList.add(
+      'good'
+    );
+
+
+    combo++;
+
+    maxCombo =
+      Math.max(
+        maxCombo,
+        combo
+      );
+
+
+    let gain =
+      10 +
+      Math.min(
+        combo*2,
+        20
+      );
+
+
+    if(current.bonus){
+
+      gain *= 2;
+    }
+
+
+    score += gain;
+
+    left--;
+
+
+    $('#score').textContent =
+      score;
+
+    $('#left').textContent =
+      left;
+
+    $('#comboScore').textContent =
+      combo;
+
+
+    $('#combo').textContent =
+      combo >= 2
+        ? `🔥 ${combo} COMBO!`
+        : '';
+
+
+    $('#msg').textContent =
+      current.bonus
+        ? `✨ 보너스 분류 성공! +${gain}점`
+        : `✅ 조건 판단 성공! +${gain}점`;
+
+
+    $('#factory')
+      .classList
+      .add('correct-flash');
+
+
+    setTimeout(
+      ()=>{
+        $('#factory')
+          .classList
+          .remove('correct-flash');
+      },
+      450
+    );
+
+
+    soundCorrect();
+
+
+    current = null;
+
+
+    setTimeout(
+      nextBox,
+      430
+    );
+
+  }else{
+
+    combo = 0;
+
+    $('#comboScore').textContent =
+      0;
+
+    $('#combo').textContent =
+      '';
+
+
+    box.classList.add(
+      'bad'
+    );
+
+
+    $('#msg').textContent =
+      `❌ 오분류! IF 조건이 ${
+        isTrue()
+          ? '참'
+          : '거짓'
+      }인지 다시 확인하세요.`;
+
+
+    $('#factory')
+      .classList
+      .add('wrong-flash');
+
+
+    setTimeout(
+      ()=>{
+        $('#factory')
+          .classList
+          .remove('wrong-flash');
+      },
+      450
+    );
+
+
+    soundWrong();
+  }
+}
+
+
+/* -----------------------------------------
+   스테이지 시작
+----------------------------------------- */
+
+function startStage(){
+
+  const stage =
+    stages[lv];
+
+
+  left =
+    stage.count;
+
+  total =
+    stage.count;
+
+
+  $('#lv').textContent =
+    lv+1;
+
+
+  $('#stageTitle').textContent =
+    stage.title;
+
+
+  $('#mission').textContent =
+    stage.mission;
+
+
+  $('#field').value =
+    stage.field;
+
+  options();
+
+  $('#value').value =
+    stage.value;
+
+
+  $('#dest').value =
+    stage.dest;
+
+
+  const andMode =
+    !!stage.and;
+
+
+  $('#logicWrap').hidden =
+    !andMode;
+
+  $('#field2').hidden =
+    !andMode;
+
+  $('#value2').hidden =
+    !andMode;
+
+
+  if(andMode){
+
+    $('#field2').value =
+      stage.field2;
+
+    options2();
+
+    $('#value2').value =
+      stage.value2;
+  }
+
+
+  $('#msg').textContent =
+    andMode
+      ? '두 조건이 모두 참인지 확인해 보세요.'
+      : '조건이 참이면 선택한 통로, 거짓이면 반대 통로로 보내요.';
+
+
+  $('#result')
+    .classList
+    .remove('show');
+
+
+  nextBox();
+}
+
+
+/* -----------------------------------------
+   스테이지 클리어
+----------------------------------------- */
+
+function stageClear(){
+
+  soundStageClear();
+
+
+  const stars =
+    maxCombo >= 8
+      ? '⭐⭐⭐'
+      :
+    maxCombo >= 4
+      ? '⭐⭐'
+      : '⭐';
+
+
+  $('#stars').textContent =
+    stars;
+
+
+  $('#resultText').textContent =
+    `${lv+1}단계 성공! 최대 ${maxCombo}콤보`;
+
+
+  $('#result')
+    .classList
+    .add('show');
+
+
+  $('#msg').textContent =
+    '🎉 모든 상자를 정확하게 분류했어요!';
+
+
+  try{
+
+    const best =
+      Number(
+        localStorage.getItem(
+          'ifCenterScore'
+        ) || 0
+      );
+
+    if(score > best){
+
+      localStorage.setItem(
+        'ifCenterScore',
+        score
+      );
+    }
+
+  }catch(e){}
+
+
+  if(lv < stages.length-1){
+
+    setTimeout(
+      ()=>{
+        lv++;
+        combo = 0;
+        maxCombo = 0;
+        $('#comboScore').textContent = 0;
+        startStage();
+      },
+      1300
+    );
+
+  }else{
+
+    $('#msg').textContent =
+      `🏆 모든 단계 완료! 최종 점수 ${score}점`;
+
+    $('#mission').textContent =
+      '조건문 자동화 미션을 모두 완료했습니다!';
+  }
+}
+
+
+/* -----------------------------------------
+   진행도
+----------------------------------------- */
+
+function updateProgress(){
+
+  const done =
+    total-left;
+
+  const percent =
+    total
+      ? done/total*100
+      : 0;
+
+  $('#progressBar').style.width =
+    percent+'%';
+}
+
+
+/* -----------------------------------------
+   힌트
+----------------------------------------- */
+
+function showHint(){
+
+  if(!current){
+    return;
+  }
+
+
+  const field1 =
+    $('#field').value;
+
+  const val1 =
+    $('#value').value;
+
+
+  const label1 =
+    field1 === 'color'
+      ? '색상'
+      :
+    field1 === 'icon'
+      ? '그림'
+      : '크기';
+
+
+  if(stages[lv].and){
+
+    const field2 =
+      $('#field2').value;
+
+    const val2 =
+      $('#value2').value;
+
+
+    const label2 =
+      field2 === 'color'
+        ? '색상'
+        :
+      field2 === 'icon'
+        ? '그림'
+        : '크기';
+
+
+    $('#msg').textContent =
+      `💡 ${label1}이 '${val1}'이고, 동시에 ${label2}이 '${val2}'인지 확인하세요.`;
+
+  }else{
+
+    $('#msg').textContent =
+      `💡 이 상자의 ${label1}을 '${val1}'과 비교해 보세요.`;
+  }
+
+
+  tone(500,.08);
+}
+
+
+/* -----------------------------------------
+   직접 판단 / 자동 실행 모드
+----------------------------------------- */
+
+function toggleMode(){
+
+  directMode =
+    !directMode;
+
+
+  $('#mode').textContent =
+    directMode
+      ? '🎮 직접 판단 모드'
+      : '🤖 자동 실행 모드';
+
+
+  $('#msg').textContent =
+    directMode
+      ? '직접 A/B 통로를 선택해 보세요.'
+      : 'IF 자동 실행 버튼으로 조건 결과를 확인해 보세요.';
+}
+
+
+/* -----------------------------------------
+   이벤트
+----------------------------------------- */
+
+$('#field')
+  .addEventListener(
+    'change',
+    options
+  );
+
+
+$('#field2')
+  .addEventListener(
+    'change',
+    options2
+  );
+
+
+document
+  .querySelectorAll('.bin')
+  .forEach(button=>{
+
+    button.addEventListener(
+      'click',
+      ()=>{
+
+        if(directMode){
+
+          sortBox(
+            button.dataset.d
+          );
+
+        }else{
+
+          $('#msg').textContent =
+            '🤖 자동 실행 모드에서는 IF 자동 실행 버튼을 눌러 보세요.';
+        }
+      }
+    );
+  });
+
+
+$('#auto')
+  .addEventListener(
+    'click',
+    ()=>{
+
+      if(!current){
+        return;
+      }
+
+
+      const result =
+        expected();
+
+
+      $('#msg').textContent =
+        `🤖 IF 판단 결과: ${result} 통로로 이동합니다.`;
+
+
+      setTimeout(
+        ()=>sortBox(result),
+        350
+      );
+    }
+  );
+
+
+$('#hint')
+  .addEventListener(
+    'click',
+    showHint
+  );
+
+
+$('#mode')
+  .addEventListener(
+    'click',
+    toggleMode
+  );
+
+
+$('#sound')
+  .addEventListener(
+    'click',
+    ()=>{
+
+      soundOn =
+        !soundOn;
+
+
+      $('#sound').textContent =
+        soundOn
+          ? '🔊 소리 ON'
+          : '🔇 소리 OFF';
+
+
+      if(soundOn){
+        tone(700,.08);
+      }
+    }
+  );
+
+
+/* -----------------------------------------
+   시작
+----------------------------------------- */
+
+startStage();
+</script>
+
+</body>
+</html>

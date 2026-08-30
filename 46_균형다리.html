@@ -1,8 +1,2066 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>⚖️ 균형 다리</title><style>
-*{box-sizing:border-box}html,body{height:100%}body{margin:0;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 20% 10%,#be185d,#3b163c 50%,#160716);color:#fff;font-family:system-ui,"Noto Sans KR",sans-serif;user-select:none}.app{width:min(94vw,700px);height:min(95vh,840px);display:flex;flex-direction:column;gap:11px}.top{display:flex;justify-content:space-between;align-items:end}.tag{font-size:10px;letter-spacing:.2em;color:#f9a8d4;font-weight:900}h1{margin:2px 0;font-size:clamp(26px,5vw,38px)}.stats{display:flex;gap:7px}.stat{min-width:70px;padding:8px;text-align:center;border:1px solid #ffffff24;border-radius:14px;background:#481535cc}.stat small{display:block;color:#fbcfe8;font-size:9px}.stat b{font-size:20px}.game{position:relative;flex:1;min-height:400px;overflow:hidden;border:1px solid #ffffff24;border-radius:25px;background:#210e27;box-shadow:0 25px 70px #0009;touch-action:none}canvas{display:block;width:100%;height:100%}.pad{position:absolute;inset:auto 15px 15px;z-index:3;display:flex;justify-content:space-between}.pad button{width:82px;height:53px;padding:0;border:1px solid #ffffff42;border-radius:12px;color:#fff;background:#4b1740b9;font-size:24px;touch-action:none}.overlay{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding:20px;background:#190817e8}.overlay.hide{display:none}.card{max-width:390px;padding:28px 24px;text-align:center;border:1px solid #ffffff24;border-radius:23px;background:#481535}.ico{font-size:55px}.card h2{margin:8px;font-size:28px}.card p{color:#fce7f3;font-size:14px;line-height:1.7}.card>button{width:100%;padding:14px;border:0;border-radius:13px;background:linear-gradient(135deg,#f9a8d4,#fcd34d);color:#4a102f;font-weight:900;font-size:15px;cursor:pointer}.tip{text-align:center;color:#fbcfe8;font-size:12px}@media(max-width:520px){.app{width:100%;height:100%;padding:9px}.game{border-radius:20px}}
-</style></head><body><main class="app"><header class="top"><div><div class="tag">BALANCE BRIDGE</div><h1>⚖️ 균형 다리</h1></div><div class="stats"><div class="stat"><small>버틴 시간</small><b id="time">0</b></div><div class="stat"><small>최고</small><b id="best">0</b></div></div></header><section class="game" id="game"><canvas id="canvas"></canvas><div class="pad"><button data-k="left">◀</button><button data-k="right">▶</button></div><div class="overlay" id="over"><div class="card"><div class="ico" id="ico">⚖️</div><h2 id="title">화물의 균형을 지키세요</h2><p id="desc">바람과 화물 때문에 다리가 계속 기울어집니다.<br>기울어지는 반대쪽 버튼을 눌러 균형을 잡으세요.<br>시간이 지날수록 상자가 추가되고 바람이 강해집니다.</p><button id="start">균형 잡기</button></div></div></section><div class="tip">← → 또는 화면 버튼 · 중앙 게이지를 유지하세요</div></main><script>
-(()=>{const C=document.querySelector('#canvas'),X=C.getContext('2d'),G=document.querySelector('#game'),O=document.querySelector('#over'),TE=document.querySelector('#time'),BE=document.querySelector('#best');let W,H,D=1,on=false,last=0,elapsed=0,angle=0,av=0,wind=0,nextWind=0,boxes=[],keys={left:false,right:false},best=Number(localStorage.balanceBest||0);BE.textContent=best;
-function resize(){const r=G.getBoundingClientRect();D=Math.min(2,devicePixelRatio||1);W=r.width;H=r.height;C.width=W*D;C.height=H*D;X.setTransform(D,0,0,D,0,0);draw()}function start(){elapsed=0;angle=0;av=0;wind=0;nextWind=1;boxes=[{p:-.15,c:'#fb7185'}];TE.textContent=0;on=true;O.classList.add('hide');last=performance.now();requestAnimationFrame(loop)}
-function update(dt){elapsed+=dt;TE.textContent=elapsed.toFixed(1);if(elapsed>nextWind){nextWind=elapsed+1.3+Math.random()*1.7;wind=(Math.random()-.5)*(0.32+elapsed*.012)}if(boxes.length<5&&elapsed>boxes.length*8)boxes.push({p:(Math.random()-.5)*.75,c:['#fbbf24','#67e8f9','#a7f3d0','#c4b5fd'][boxes.length-1]});const load=boxes.reduce((s,b)=>s+b.p*.32,0),control=(keys.right?1:0)-(keys.left?1:0);av+=(Math.sin(angle)*1.7+load+wind-control*.9)*dt;av*=Math.pow(.42,dt);angle+=av*dt;angle=Math.max(-1.25,Math.min(1.25,angle));if(Math.abs(angle)>.72)finish()}
-function draw(){X.clearRect(0,0,W,H);let g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,'#321439');g.addColorStop(1,'#18091c');X.fillStyle=g;X.fillRect(0,0,W,H);X.fillStyle='#ffffff0c';for(let i=0;i<30;i++){X.beginPath();X.arc(i*83%W,i*47%H,2,0,7);X.fill()}const cx=W/2,cy=H*.58,len=W*.72;X.save();X.translate(cx,cy);X.fillStyle='#94a3b8';X.beginPath();X.moveTo(-22,72);X.lineTo(0,5);X.lineTo(22,72);X.fill();X.rotate(angle);X.shadowColor='#000';X.shadowBlur=15;X.fillStyle='#f8fafc';X.beginPath();X.roundRect(-len/2,-10,len,20,8);X.fill();for(const b of boxes){const bx=b.p*len*.76;X.fillStyle=b.c;X.beginPath();X.roundRect(bx-25,-58,50,48,8);X.fill();X.fillStyle='#ffffff50';X.fillRect(bx-18,-51,36,5)}X.restore();const gx=W*.18,gy=45,gw=W*.64;X.fillStyle='#ffffff18';X.beginPath();X.roundRect(gx,gy,gw,15,8);X.fill();X.fillStyle=Math.abs(angle)<.3?'#4ade80':Math.abs(angle)<.55?'#facc15':'#fb7185';X.fillRect(W/2-3+angle/(.72)*gw/2,gy-7,6,29);X.strokeStyle='#ffffff50';X.strokeRect(W/2-gw*.18,gy,gw*.36,15)}
-function finish(){if(!on)return;on=false;if(elapsed>best){best=Number(elapsed.toFixed(1));BE.textContent=best;localStorage.balanceBest=best}document.querySelector('#ico').textContent=elapsed>20?'🏆':'📦';document.querySelector('#title').textContent=`${elapsed.toFixed(1)}초 버텼어요!`;document.querySelector('#desc').innerHTML='게이지가 기울어지는 반대 방향을 짧게 눌러보세요.<br>오래 누르면 관성 때문에 반대로 넘어갈 수 있어요.';document.querySelector('#start').textContent='다시 균형 잡기';setTimeout(()=>O.classList.remove('hide'),400)}function loop(t){if(!on)return;const dt=Math.min(.03,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}addEventListener('keydown',e=>{if(e.key==='ArrowLeft')keys.left=true;if(e.key==='ArrowRight')keys.right=true});addEventListener('keyup',e=>{if(e.key==='ArrowLeft')keys.left=false;if(e.key==='ArrowRight')keys.right=false});document.querySelectorAll('.pad button').forEach(b=>{const k=b.dataset.k;b.onpointerdown=e=>{keys[k]=true;b.setPointerCapture(e.pointerId)};b.onpointerup=b.onpointercancel=()=>keys[k]=false});document.querySelector('#start').onclick=start;addEventListener('resize',resize);resize()})();</script></body></html>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>⚖️ 균형 다리 챌린지</title>
+
+<style>
+*{box-sizing:border-box}
+
+:root{
+  --pink:#f472b6;
+  --yellow:#fde047;
+  --green:#4ade80;
+  --red:#fb7185;
+  --bg:#18091c;
+}
+
+html,body{
+  height:100%;
+}
+
+body{
+  margin:0;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 20% 10%,#be185d,#3b163c 48%,#160716);
+  color:#fff;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+button{
+  font:inherit;
+  touch-action:manipulation;
+}
+
+.app{
+  width:min(96vw,760px);
+  height:min(96vh,900px);
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+  padding:4px;
+}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:10px;
+}
+
+.tag{
+  font-size:10px;
+  letter-spacing:.18em;
+  color:#f9a8d4;
+  font-weight:900;
+}
+
+h1{
+  margin:2px 0;
+  font-size:clamp(26px,5vw,40px);
+}
+
+.stats{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.stat{
+  min-width:64px;
+  padding:6px 8px;
+  text-align:center;
+  border:1px solid #ffffff24;
+  border-radius:13px;
+  background:#481535cc;
+}
+
+.stat small{
+  display:block;
+  color:#fbcfe8;
+  font-size:8px;
+}
+
+.stat b{
+  font-size:17px;
+}
+
+.progress{
+  height:8px;
+  overflow:hidden;
+  border-radius:99px;
+  background:#ffffff18;
+}
+
+.progress-bar{
+  width:0%;
+  height:100%;
+  background:linear-gradient(90deg,#f9a8d4,#fde047,#4ade80);
+  transition:.25s;
+}
+
+.game{
+  position:relative;
+  flex:1;
+  min-height:420px;
+  overflow:hidden;
+  border:1px solid #ffffff24;
+  border-radius:25px;
+  background:#210e27;
+  box-shadow:0 25px 70px #0009;
+  touch-action:none;
+}
+
+canvas{
+  display:block;
+  width:100%;
+  height:100%;
+}
+
+/* =========================
+   상단 안내
+========================= */
+
+.mission{
+  position:absolute;
+  left:50%;
+  top:12px;
+  transform:translateX(-50%);
+  z-index:4;
+  width:min(90%,520px);
+  padding:8px 11px;
+  border-radius:13px;
+  text-align:center;
+  background:#190817d9;
+  border:1px solid #ffffff20;
+  font-size:11px;
+  font-weight:900;
+  color:#fce7f3;
+}
+
+.wind-box{
+  position:absolute;
+  top:62px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:4;
+  padding:7px 12px;
+  border-radius:999px;
+  background:#0f172ad8;
+  font-size:12px;
+  font-weight:1000;
+  color:#e0f2fe;
+}
+
+.wind-box.strong{
+  color:#fde047;
+  animation:pulse .45s infinite alternate;
+}
+
+@keyframes pulse{
+  to{transform:translateX(-50%) scale(1.07)}
+}
+
+/* =========================
+   균형 표시
+========================= */
+
+.balance-text{
+  position:absolute;
+  top:102px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:4;
+  font-weight:1000;
+  color:#86efac;
+  text-shadow:0 2px 6px #000;
+}
+
+.combo{
+  position:absolute;
+  top:132px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:4;
+  color:#fde047;
+  font-size:20px;
+  font-weight:1000;
+  text-shadow:0 3px 8px #000;
+}
+
+/* =========================
+   모바일 버튼
+========================= */
+
+.pad{
+  position:absolute;
+  left:14px;
+  right:14px;
+  bottom:14px;
+  z-index:5;
+  display:flex;
+  justify-content:space-between;
+}
+
+.pad button{
+  width:100px;
+  height:58px;
+  border:1px solid #ffffff42;
+  border-radius:15px;
+  color:#fff;
+  background:#4b1740d8;
+  font-size:26px;
+  font-weight:1000;
+  box-shadow:0 8px 18px #0005;
+}
+
+.pad button.active{
+  background:#be185d;
+  transform:scale(.96);
+}
+
+/* =========================
+   판정
+========================= */
+
+.judge{
+  position:absolute;
+  left:50%;
+  top:43%;
+  transform:translate(-50%,-50%) scale(.5);
+  z-index:7;
+  opacity:0;
+  pointer-events:none;
+  font-size:clamp(28px,7vw,50px);
+  font-weight:1000;
+  text-align:center;
+  text-shadow:0 4px 10px #000;
+}
+
+.judge.show{
+  animation:judgePop .7s ease;
+}
+
+@keyframes judgePop{
+  0%{
+    opacity:0;
+    transform:translate(-50%,-50%) scale(.4);
+  }
+  35%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.1);
+  }
+  100%{
+    opacity:0;
+    transform:translate(-50%,-70%) scale(1);
+  }
+}
+
+/* =========================
+   오버레이
+========================= */
+
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:20;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  background:#190817ec;
+  backdrop-filter:blur(6px);
+}
+
+.overlay.hide{
+  display:none;
+}
+
+.card{
+  width:min(100%,430px);
+  padding:24px 21px;
+  text-align:center;
+  border:1px solid #ffffff24;
+  border-radius:23px;
+  background:linear-gradient(145deg,#481535,#2a1029);
+  box-shadow:0 20px 60px #0008;
+}
+
+.ico{
+  font-size:57px;
+}
+
+.card h2{
+  margin:7px;
+  font-size:29px;
+}
+
+.card p{
+  color:#fce7f3;
+  font-size:14px;
+  line-height:1.7;
+}
+
+.lesson{
+  margin:12px 0;
+  padding:10px;
+  border-radius:13px;
+  background:#ffffff0d;
+  text-align:left;
+  color:#fbcfe8;
+  font-size:11px;
+  line-height:1.6;
+}
+
+.mode-row{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+  margin:13px 0;
+}
+
+.mode{
+  min-height:45px;
+  border:1px solid #ffffff25;
+  border-radius:11px;
+  background:#ffffff10;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.mode.active{
+  background:#fde047;
+  color:#4a102f;
+}
+
+.primary{
+  width:100%;
+  min-height:50px;
+  border:0;
+  border-radius:13px;
+  background:linear-gradient(135deg,#f9a8d4,#fcd34d);
+  color:#4a102f;
+  font-weight:1000;
+  cursor:pointer;
+}
+
+.controls{
+  display:flex;
+  justify-content:center;
+  gap:7px;
+}
+
+.controls button{
+  min-height:42px;
+  border:1px solid #ffffff20;
+  border-radius:11px;
+  padding:7px 13px;
+  background:#481535;
+  color:white;
+  font-weight:900;
+}
+
+.tip{
+  text-align:center;
+  color:#fbcfe8;
+  font-size:11px;
+}
+
+.particle{
+  position:absolute;
+  z-index:15;
+  pointer-events:none;
+  font-size:23px;
+  animation:fly .9s ease forwards;
+}
+
+@keyframes fly{
+  to{
+    transform:translate(var(--x),var(--y)) rotate(360deg);
+    opacity:0;
+  }
+}
+
+@media(max-width:560px){
+
+  .app{
+    width:100%;
+    height:100%;
+    padding:6px;
+  }
+
+  .game{
+    border-radius:18px;
+  }
+
+  .stat{
+    min-width:56px;
+    padding:5px;
+  }
+
+  .stat b{
+    font-size:15px;
+  }
+
+  .pad button{
+    width:90px;
+    height:55px;
+  }
+
+  .mode-row{
+    grid-template-columns:1fr;
+  }
+
+  .mission{
+    top:8px;
+  }
+
+  .wind-box{
+    top:58px;
+  }
+}
+
+@media(max-height:680px){
+  .tip{display:none}
+  .game{min-height:340px}
+}
+</style>
+</head>
+
+<body>
+
+<main class="app">
+
+<header class="top">
+
+  <div>
+    <div class="tag">BALANCE CONTROL LAB</div>
+    <h1>⚖️ 균형 다리</h1>
+  </div>
+
+  <div class="stats">
+
+    <div class="stat">
+      <small>단계</small>
+      <b id="level">1</b>
+    </div>
+
+    <div class="stat">
+      <small>시간</small>
+      <b id="time">0.0</b>
+    </div>
+
+    <div class="stat">
+      <small>콤보</small>
+      <b id="comboScore">0</b>
+    </div>
+
+    <div class="stat">
+      <small>최고</small>
+      <b id="best">0</b>
+    </div>
+
+  </div>
+
+</header>
+
+<div class="progress">
+  <div class="progress-bar" id="progressBar"></div>
+</div>
+
+<section class="game" id="game">
+
+  <canvas id="canvas"></canvas>
+
+  <div class="mission" id="mission">
+    다리가 기울어지는 반대 방향으로 짧게 눌러 균형을 잡으세요.
+  </div>
+
+  <div class="wind-box" id="windBox">
+    🌬 바람 준비 중
+  </div>
+
+  <div class="balance-text" id="balanceText">
+    ✅ 안정
+  </div>
+
+  <div class="combo" id="combo"></div>
+
+  <div class="judge" id="judge"></div>
+
+  <div class="pad">
+    <button id="leftBtn" data-k="left">◀</button>
+    <button id="rightBtn" data-k="right">▶</button>
+  </div>
+
+
+  <div class="overlay" id="over">
+
+    <div class="card">
+
+      <div class="ico" id="ico">⚖️</div>
+
+      <h2 id="title">
+        화물의 균형을 지키세요!
+      </h2>
+
+      <p id="desc">
+        다리가 왼쪽으로 기울면 오른쪽으로,<br>
+        오른쪽으로 기울면 왼쪽으로 짧게 보정하세요.<br>
+        오래 누르면 관성 때문에 반대로 넘어갈 수 있습니다.
+      </p>
+
+      <div class="lesson">
+        🧠 <b>핵심 개념</b><br><br>
+
+        ① 현재 상태를 관찰한다.<br>
+        ② 어느 방향으로 기울었는지 판단한다.<br>
+        ③ 반대 방향으로 보정한다.<br>
+        ④ 결과를 보고 다시 수정한다.<br><br>
+
+        이것을 <b>피드백 제어</b>라고 생각할 수 있어요.
+      </div>
+
+      <div class="mode-row">
+
+        <button class="mode" data-mode="easy">
+          🙂 쉬움
+        </button>
+
+        <button class="mode active" data-mode="normal">
+          🔥 보통
+        </button>
+
+        <button class="mode" data-mode="hard">
+          ⚡ 어려움
+        </button>
+
+      </div>
+
+      <button class="primary" id="start">
+        ⚖️ 균형 잡기 시작
+      </button>
+
+    </div>
+
+  </div>
+
+</section>
+
+<div class="controls">
+  <button id="soundBtn">🔊 소리 ON</button>
+  <button id="hintBtn">💡 힌트 ON</button>
+</div>
+
+<div class="tip">
+  ← → 키 또는 화면 버튼 · 기울어진 반대 방향으로 짧게 눌러주세요
+</div>
+
+</main>
+
+
+<script>
+(() => {
+
+const $ = s => document.querySelector(s);
+
+const C = $('#canvas');
+const X = C.getContext('2d');
+const G = $('#game');
+const O = $('#over');
+
+const timeEl = $('#time');
+const bestEl = $('#best');
+const levelEl = $('#level');
+const comboScoreEl = $('#comboScore');
+const comboEl = $('#combo');
+const progressBar = $('#progressBar');
+const windBox = $('#windBox');
+const balanceText = $('#balanceText');
+
+let W = 0;
+let H = 0;
+let D = 1;
+
+let playing = false;
+
+let last = 0;
+let elapsed = 0;
+
+let angle = 0;
+let velocity = 0;
+
+let wind = 0;
+let nextWind = 0;
+
+let boxes = [];
+
+let keys = {
+  left:false,
+  right:false
+};
+
+let level = 1;
+
+let combo = 0;
+let maxCombo = 0;
+
+let stableTime = 0;
+
+let difficulty = 'normal';
+
+let hintOn = true;
+
+let soundOn = true;
+let audioCtx = null;
+
+let best = 0;
+
+try{
+  best = Number(localStorage.getItem('balanceBest') || 0);
+}catch(e){}
+
+bestEl.textContent = best;
+
+
+/* ======================================================
+   난이도
+====================================================== */
+
+const settings = {
+
+  easy:{
+    wind:0.22,
+    control:1.05,
+    fail:.88,
+    boxInterval:11,
+    maxBoxes:4
+  },
+
+  normal:{
+    wind:0.34,
+    control:.92,
+    fail:.74,
+    boxInterval:8,
+    maxBoxes:5
+  },
+
+  hard:{
+    wind:0.45,
+    control:.82,
+    fail:.66,
+    boxInterval:6,
+    maxBoxes:6
+  }
+
+};
+
+
+/* ======================================================
+   효과음
+====================================================== */
+
+function activateAudio(){
+
+  if(!audioCtx){
+
+    try{
+      audioCtx = new (
+        window.AudioContext ||
+        window.webkitAudioContext
+      )();
+    }catch(e){}
+  }
+
+  if(
+    audioCtx &&
+    audioCtx.state === 'suspended'
+  ){
+    audioCtx.resume();
+  }
+}
+
+
+function tone(freq,duration=.08,type='sine'){
+
+  if(
+    !soundOn ||
+    !audioCtx
+  ){
+    return;
+  }
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = type;
+  osc.frequency.value = freq;
+
+  gain.gain.setValueAtTime(
+    .055,
+    audioCtx.currentTime
+  );
+
+  gain.gain.exponentialRampToValueAtTime(
+    .001,
+    audioCtx.currentTime + duration
+  );
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start();
+  osc.stop(audioCtx.currentTime + duration);
+}
+
+
+function soundGood(){
+
+  tone(630,.06);
+
+}
+
+
+function soundWarning(){
+
+  tone(200,.08,'square');
+
+}
+
+
+function soundFail(){
+
+  tone(120,.18,'sawtooth');
+
+}
+
+
+function soundStage(){
+
+  tone(520,.07);
+
+  setTimeout(
+    ()=>tone(700,.08),
+    80
+  );
+
+  setTimeout(
+    ()=>tone(900,.1),
+    160
+  );
+}
+
+
+/* ======================================================
+   크기
+====================================================== */
+
+function resize(){
+
+  const r = G.getBoundingClientRect();
+
+  D = Math.min(
+    2,
+    devicePixelRatio || 1
+  );
+
+  W = r.width;
+  H = r.height;
+
+  C.width = W*D;
+  C.height = H*D;
+
+  X.setTransform(
+    D,0,0,D,0,0
+  );
+
+  draw();
+}
+
+
+/* ======================================================
+   시작
+====================================================== */
+
+function start(){
+
+  activateAudio();
+
+  elapsed = 0;
+
+  angle = 0;
+  velocity = 0;
+
+  wind = 0;
+  nextWind = 1;
+
+  level = 1;
+
+  combo = 0;
+  maxCombo = 0;
+
+  stableTime = 0;
+
+  boxes = [
+    {
+      p:-.12,
+      weight:1,
+      color:'#fb7185'
+    }
+  ];
+
+  keys.left = false;
+  keys.right = false;
+
+  timeEl.textContent = '0.0';
+  levelEl.textContent = '1';
+  comboScoreEl.textContent = '0';
+  comboEl.textContent = '';
+
+  progressBar.style.width = '0%';
+
+  playing = true;
+
+  O.classList.add('hide');
+
+  last = performance.now();
+
+  requestAnimationFrame(loop);
+}
+
+
+/* ======================================================
+   업데이트
+====================================================== */
+
+function update(dt){
+
+  const cfg = settings[difficulty];
+
+  elapsed += dt;
+
+  timeEl.textContent =
+    elapsed.toFixed(1);
+
+
+  /* ---------------------------
+     단계 계산
+  --------------------------- */
+
+  const newLevel =
+    Math.min(
+      5,
+      Math.floor(elapsed/12)+1
+    );
+
+
+  if(newLevel !== level){
+
+    level = newLevel;
+
+    levelEl.textContent =
+      level;
+
+    showJudge(
+      `LEVEL ${level}`,
+      '#fde047'
+    );
+
+    soundStage();
+  }
+
+
+  progressBar.style.width =
+    (
+      Math.min(
+        1,
+        (elapsed%12)/12
+      )*100
+    ) + '%';
+
+
+  /* ---------------------------
+     바람 변경
+  --------------------------- */
+
+  if(elapsed > nextWind){
+
+    nextWind =
+      elapsed +
+      1.6 +
+      Math.random()*2;
+
+
+    const strength =
+      cfg.wind +
+      elapsed*.007;
+
+
+    wind =
+      (
+        Math.random()-.5
+      ) *
+      strength;
+
+
+    updateWindDisplay();
+  }
+
+
+  /* ---------------------------
+     화물 추가
+  --------------------------- */
+
+  const desiredBoxes =
+    Math.min(
+      cfg.maxBoxes,
+      1 +
+      Math.floor(
+        elapsed /
+        cfg.boxInterval
+      )
+    );
+
+
+  while(
+    boxes.length <
+    desiredBoxes
+  ){
+
+    addBox();
+  }
+
+
+  /* ---------------------------
+     무게 효과
+  --------------------------- */
+
+  const load =
+    boxes.reduce(
+      (sum,box)=>
+        sum +
+        box.p *
+        .28 *
+        box.weight,
+      0
+    );
+
+
+  /* ---------------------------
+     사용자 보정
+  --------------------------- */
+
+  const control =
+    (
+      keys.right ? 1 : 0
+    ) -
+    (
+      keys.left ? 1 : 0
+    );
+
+
+  /*
+    기울기 + 화물 + 바람 - 사용자 제어
+  */
+
+  velocity +=
+    (
+      Math.sin(angle)*1.65 +
+      load +
+      wind -
+      control*cfg.control
+    ) * dt;
+
+
+  /*
+    감쇠
+  */
+
+  velocity *=
+    Math.pow(
+      .40,
+      dt
+    );
+
+
+  angle +=
+    velocity*dt;
+
+
+  angle =
+    Math.max(
+      -1.3,
+      Math.min(
+        1.3,
+        angle
+      )
+    );
+
+
+  /* ---------------------------
+     안정 상태
+  --------------------------- */
+
+  const abs =
+    Math.abs(angle);
+
+
+  if(abs < .18){
+
+    stableTime += dt;
+
+    balanceText.textContent =
+      '✅ 안정';
+
+    balanceText.style.color =
+      '#86efac';
+
+
+    /*
+      3초 연속 안정 시 콤보
+    */
+
+    if(stableTime >= 3){
+
+      stableTime = 0;
+
+      combo++;
+
+      maxCombo =
+        Math.max(
+          maxCombo,
+          combo
+        );
+
+      comboScoreEl.textContent =
+        combo;
+
+      comboEl.textContent =
+        combo >= 2
+          ? `🔥 ${combo} BALANCE COMBO!`
+          : '';
+
+      showJudge(
+        'NICE BALANCE!',
+        '#86efac'
+      );
+
+      soundGood();
+    }
+
+  }else{
+
+    stableTime =
+      Math.max(
+        0,
+        stableTime-dt*.6
+      );
+
+
+    if(abs < .42){
+
+      balanceText.textContent =
+        angle < 0
+          ? '↙ 왼쪽으로 기울어요'
+          : '오른쪽으로 기울어요 ↘';
+
+      balanceText.style.color =
+        '#fde047';
+
+    }else{
+
+      balanceText.textContent =
+        angle < 0
+          ? '⚠ 왼쪽 위험!'
+          : '⚠ 오른쪽 위험!';
+
+      balanceText.style.color =
+        '#fb7185';
+
+      if(
+        Math.random() <
+        .015
+      ){
+        soundWarning();
+      }
+    }
+  }
+
+
+  /* ---------------------------
+     실패
+  --------------------------- */
+
+  if(
+    Math.abs(angle) >
+    cfg.fail
+  ){
+
+    finish();
+  }
+}
+
+
+/* ======================================================
+   화물 추가
+====================================================== */
+
+function addBox(){
+
+  const colors = [
+    '#fbbf24',
+    '#67e8f9',
+    '#a7f3d0',
+    '#c4b5fd',
+    '#fb7185'
+  ];
+
+
+  let p =
+    (
+      Math.random()-.5
+    )*.82;
+
+
+  const weight =
+    Math.random() < .25
+      ? 1.7
+      : 1;
+
+
+  boxes.push({
+    p,
+    weight,
+    color:
+      colors[
+        boxes.length %
+        colors.length
+      ]
+  });
+
+
+  showJudge(
+    weight > 1
+      ? '📦 HEAVY BOX!'
+      : '📦 NEW BOX!',
+    weight > 1
+      ? '#f97316'
+      : '#67e8f9'
+  );
+
+
+  tone(
+    weight > 1
+      ? 260
+      : 430,
+    .08
+  );
+}
+
+
+/* ======================================================
+   바람 표시
+====================================================== */
+
+function updateWindDisplay(){
+
+  const strength =
+    Math.abs(wind);
+
+
+  windBox.classList.toggle(
+    'strong',
+    strength > .18
+  );
+
+
+  if(strength < .05){
+
+    windBox.textContent =
+      '🍃 바람 거의 없음';
+
+    return;
+  }
+
+
+  const dir =
+    wind > 0
+      ? '➡️'
+      : '⬅️';
+
+
+  const word =
+    strength > .28
+      ? '강풍'
+      :
+    strength > .15
+      ? '보통'
+      : '약풍';
+
+
+  windBox.textContent =
+    `🌬 ${dir} ${word}`;
+}
+
+
+/* ======================================================
+   그리기
+====================================================== */
+
+function draw(){
+
+  X.clearRect(
+    0,0,W,H
+  );
+
+
+  /* 배경 */
+
+  const bg =
+    X.createLinearGradient(
+      0,0,0,H
+    );
+
+  bg.addColorStop(
+    0,
+    '#321439'
+  );
+
+  bg.addColorStop(
+    1,
+    '#18091c'
+  );
+
+  X.fillStyle =
+    bg;
+
+  X.fillRect(
+    0,0,W,H
+  );
+
+
+  /* 별빛 */
+
+  X.fillStyle =
+    '#ffffff14';
+
+  for(
+    let i=0;
+    i<35;
+    i++
+  ){
+
+    X.beginPath();
+
+    X.arc(
+      i*83%W,
+      i*47%H,
+      2,
+      0,
+      Math.PI*2
+    );
+
+    X.fill();
+  }
+
+
+  /*
+    바람 선
+  */
+
+  X.strokeStyle =
+    '#ffffff1c';
+
+  X.lineWidth = 2;
+
+
+  for(let i=0;i<5;i++){
+
+    const y =
+      H*.2+i*35;
+
+    const x =
+      (
+        performance.now()/15 +
+        i*120
+      ) % (W+100)-50;
+
+
+    X.beginPath();
+
+    X.moveTo(
+      x,
+      y
+    );
+
+    X.lineTo(
+      x+50,
+      y
+    );
+
+    X.stroke();
+  }
+
+
+  const cx = W/2;
+  const cy = H*.60;
+  const len = W*.72;
+
+
+  /* 지지대 */
+
+  X.fillStyle =
+    '#94a3b8';
+
+  X.beginPath();
+
+  X.moveTo(
+    cx-25,
+    cy+80
+  );
+
+  X.lineTo(
+    cx,
+    cy+5
+  );
+
+  X.lineTo(
+    cx+25,
+    cy+80
+  );
+
+  X.fill();
+
+
+  /* 다리 */
+
+  X.save();
+
+  X.translate(
+    cx,
+    cy
+  );
+
+  X.rotate(angle);
+
+  X.shadowColor =
+    '#000';
+
+  X.shadowBlur =
+    15;
+
+  X.fillStyle =
+    '#f8fafc';
+
+  X.beginPath();
+
+  X.roundRect(
+    -len/2,
+    -11,
+    len,
+    22,
+    8
+  );
+
+  X.fill();
+
+
+  /* 다리 난간 */
+
+  X.strokeStyle =
+    '#94a3b8';
+
+  X.lineWidth = 3;
+
+  X.beginPath();
+
+  X.moveTo(
+    -len/2,
+    -25
+  );
+
+  X.lineTo(
+    len/2,
+    -25
+  );
+
+  X.stroke();
+
+
+  /* 화물 */
+
+  for(
+    const box
+    of boxes
+  ){
+
+    const bx =
+      box.p *
+      len *
+      .75;
+
+
+    const size =
+      box.weight > 1
+        ? 58
+        : 48;
+
+
+    X.fillStyle =
+      box.color;
+
+
+    X.beginPath();
+
+    X.roundRect(
+      bx-size/2,
+      -size-11,
+      size,
+      size,
+      8
+    );
+
+    X.fill();
+
+
+    X.fillStyle =
+      '#ffffff55';
+
+    X.fillRect(
+      bx-size/2+7,
+      -size-4,
+      size-14,
+      5
+    );
+
+
+    if(
+      box.weight > 1
+    ){
+
+      X.font =
+        '18px sans-serif';
+
+      X.fillStyle =
+        '#fff';
+
+      X.fillText(
+        '⚠',
+        bx-9,
+        -size/2-4
+      );
+    }
+  }
+
+
+  X.restore();
+
+
+  /* =====================
+     균형 게이지
+  ===================== */
+
+  const gx =
+    W*.16;
+
+  const gy =
+    H*.16;
+
+  const gw =
+    W*.68;
+
+
+  X.fillStyle =
+    '#ffffff18';
+
+
+  X.beginPath();
+
+  X.roundRect(
+    gx,
+    gy,
+    gw,
+    16,
+    8
+  );
+
+  X.fill();
+
+
+  /*
+    안전 영역
+  */
+
+  X.fillStyle =
+    '#4ade8040';
+
+  X.fillRect(
+    W/2-gw*.18,
+    gy,
+    gw*.36,
+    16
+  );
+
+
+  /*
+    경고 영역
+  */
+
+  X.fillStyle =
+    '#facc1530';
+
+  X.fillRect(
+    W/2-gw*.36,
+    gy,
+    gw*.18,
+    16
+  );
+
+  X.fillRect(
+    W/2+gw*.18,
+    gy,
+    gw*.18,
+    16
+  );
+
+
+  /*
+    현재 위치
+  */
+
+  const cfg =
+    settings[difficulty];
+
+
+  const marker =
+    W/2 +
+    (
+      angle /
+      cfg.fail
+    ) *
+    gw/2;
+
+
+  X.fillStyle =
+    Math.abs(angle)<.18
+      ? '#4ade80'
+      :
+    Math.abs(angle)<.42
+      ? '#facc15'
+      : '#fb7185';
+
+
+  X.fillRect(
+    marker-4,
+    gy-8,
+    8,
+    32
+  );
+
+
+  /*
+    중앙선
+  */
+
+  X.strokeStyle =
+    '#ffffff80';
+
+  X.lineWidth = 2;
+
+  X.beginPath();
+
+  X.moveTo(
+    W/2,
+    gy-5
+  );
+
+  X.lineTo(
+    W/2,
+    gy+21
+  );
+
+  X.stroke();
+
+
+  /*
+    방향 힌트
+  */
+
+  if(
+    hintOn &&
+    playing
+  ){
+
+    X.font =
+      'bold 17px sans-serif';
+
+    X.textAlign =
+      'center';
+
+
+    if(angle < -.16){
+
+      X.fillStyle =
+        '#fde047';
+
+      X.fillText(
+        '오른쪽 ▶',
+        W*.77,
+        H*.30
+      );
+
+    }else if(
+      angle > .16
+    ){
+
+      X.fillStyle =
+        '#fde047';
+
+      X.fillText(
+        '◀ 왼쪽',
+        W*.23,
+        H*.30
+      );
+    }
+  }
+}
+
+
+/* ======================================================
+   종료
+====================================================== */
+
+function finish(){
+
+  if(!playing){
+    return;
+  }
+
+
+  playing = false;
+
+
+  keys.left =
+    false;
+
+  keys.right =
+    false;
+
+
+  const result =
+    Number(
+      elapsed.toFixed(1)
+    );
+
+
+  if(result > best){
+
+    best =
+      result;
+
+    bestEl.textContent =
+      best;
+
+
+    try{
+
+      localStorage.setItem(
+        'balanceBest',
+        String(best)
+      );
+
+    }catch(e){}
+  }
+
+
+  soundFail();
+
+
+  let icon;
+  let title;
+  let desc;
+
+
+  if(result >= 45){
+
+    icon = '👑';
+
+    title =
+      `${result}초! 균형의 달인!`;
+
+    desc =
+      `아주 훌륭해요!<br>
+       최대 ${maxCombo}콤보를 기록했습니다.<br>
+       상태를 관찰하고 짧게 보정하는 방법을 잘 익혔어요.`;
+
+  }else if(
+    result >= 25
+  ){
+
+    icon = '🏆';
+
+    title =
+      `${result}초 버텼어요!`;
+
+    desc =
+      `훌륭한 균형 감각이에요!<br>
+       화물 무게와 바람을 동시에 잘 조절했습니다.`;
+
+  }else if(
+    result >= 12
+  ){
+
+    icon = '⚖️';
+
+    title =
+      `${result}초 버텼어요!`;
+
+    desc =
+      `좋아요!<br>
+       버튼을 길게 누르기보다 짧게 여러 번 눌러보세요.`;
+
+  }else{
+
+    icon = '📦';
+
+    title =
+      `${result}초 버텼어요!`;
+
+    desc =
+      `게이지를 먼저 관찰하세요.<br>
+       왼쪽으로 기울면 오른쪽, 오른쪽으로 기울면 왼쪽을 눌러주세요.`;
+  }
+
+
+  $('#ico').textContent =
+    icon;
+
+  $('#title').textContent =
+    title;
+
+  $('#desc').innerHTML =
+    desc;
+
+  $('#start').textContent =
+    '🔄 다시 균형 잡기';
+
+
+  setTimeout(
+    ()=>{
+      O.classList.remove(
+        'hide'
+      );
+    },
+    450
+  );
+}
+
+
+/* ======================================================
+   판정
+====================================================== */
+
+function showJudge(text,color){
+
+  const el =
+    $('#judge');
+
+  el.textContent =
+    text;
+
+  el.style.color =
+    color;
+
+  el.classList.remove(
+    'show'
+  );
+
+  void el.offsetWidth;
+
+  el.classList.add(
+    'show'
+  );
+}
+
+
+/* ======================================================
+   루프
+====================================================== */
+
+function loop(t){
+
+  if(!playing){
+    return;
+  }
+
+
+  const dt =
+    Math.min(
+      .03,
+      (t-last)/1000
+    );
+
+
+  last = t;
+
+
+  update(dt);
+
+  draw();
+
+
+  requestAnimationFrame(
+    loop
+  );
+}
+
+
+/* ======================================================
+   키보드
+====================================================== */
+
+window.addEventListener(
+  'keydown',
+  e=>{
+
+    if(
+      e.key ===
+      'ArrowLeft'
+    ){
+
+      e.preventDefault();
+
+      keys.left =
+        true;
+    }
+
+
+    if(
+      e.key ===
+      'ArrowRight'
+    ){
+
+      e.preventDefault();
+
+      keys.right =
+        true;
+    }
+  }
+);
+
+
+window.addEventListener(
+  'keyup',
+  e=>{
+
+    if(
+      e.key ===
+      'ArrowLeft'
+    ){
+
+      keys.left =
+        false;
+    }
+
+
+    if(
+      e.key ===
+      'ArrowRight'
+    ){
+
+      keys.right =
+        false;
+    }
+  }
+);
+
+
+/* ======================================================
+   모바일 버튼
+====================================================== */
+
+document
+  .querySelectorAll(
+    '.pad button'
+  )
+  .forEach(
+    button=>{
+
+      const k =
+        button.dataset.k;
+
+
+      button.addEventListener(
+        'pointerdown',
+        e=>{
+
+          activateAudio();
+
+          keys[k] =
+            true;
+
+          button.classList.add(
+            'active'
+          );
+
+
+          try{
+            button.setPointerCapture(
+              e.pointerId
+            );
+          }catch(err){}
+        }
+      );
+
+
+      const release =
+        ()=>{
+
+          keys[k] =
+            false;
+
+          button.classList.remove(
+            'active'
+          );
+        };
+
+
+      button.addEventListener(
+        'pointerup',
+        release
+      );
+
+      button.addEventListener(
+        'pointercancel',
+        release
+      );
+
+      button.addEventListener(
+        'pointerleave',
+        release
+      );
+    }
+  );
+
+
+/* ======================================================
+   난이도
+====================================================== */
+
+document
+  .querySelectorAll(
+    '.mode'
+  )
+  .forEach(
+    button=>{
+
+      button.addEventListener(
+        'click',
+        ()=>{
+
+          difficulty =
+            button.dataset.mode;
+
+
+          document
+            .querySelectorAll(
+              '.mode'
+            )
+            .forEach(
+              b=>
+                b.classList.remove(
+                  'active'
+                )
+            );
+
+
+          button.classList.add(
+            'active'
+          );
+        }
+      );
+    }
+  );
+
+
+/* ======================================================
+   소리
+====================================================== */
+
+$('#soundBtn')
+  .addEventListener(
+    'click',
+    ()=>{
+
+      activateAudio();
+
+
+      soundOn =
+        !soundOn;
+
+
+      $('#soundBtn').textContent =
+        soundOn
+          ? '🔊 소리 ON'
+          : '🔇 소리 OFF';
+
+
+      if(soundOn){
+
+        tone(
+          700,
+          .08
+        );
+      }
+    }
+  );
+
+
+/* ======================================================
+   힌트
+====================================================== */
+
+$('#hintBtn')
+  .addEventListener(
+    'click',
+    ()=>{
+
+      hintOn =
+        !hintOn;
+
+
+      $('#hintBtn').textContent =
+        hintOn
+          ? '💡 힌트 ON'
+          : '💡 힌트 OFF';
+    }
+  );
+
+
+$('#start')
+  .addEventListener(
+    'click',
+    start
+  );
+
+
+window.addEventListener(
+  'resize',
+  resize
+);
+
+
+resize();
+
+})();
+</script>
+
+</body>
+</html>
