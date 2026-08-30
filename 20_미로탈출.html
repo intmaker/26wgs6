@@ -1,191 +1,946 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>미로 탈출</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #062c43, #0f766e, #7dd3fc);
-      color: white;
-    }
-    .game {
-      width: min(92vw, 720px);
-      background: rgba(255,255,255,0.08);
-      border-radius: 24px;
-      padding: 24px;
-      box-shadow: 0 18px 40px rgba(0,0,0,0.22);
-    }
-    .top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-    h1 { margin: 0; font-size: clamp(24px, 4vw, 34px); }
-    .badge {
-      background: rgba(255,255,255,0.12);
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-weight: 800;
-    }
-    .maze {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
-      background: rgba(15,23,42,0.85);
-      padding: 10px;
-      border-radius: 18px;
-      aspect-ratio: 1;
-      max-width: 100%;
-      margin: 0 auto;
-    }
-    .cell {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px;
-      font-weight: 900;
-      font-size: clamp(14px, 2.5vw, 24px);
-      user-select: none;
-    }
-    .wall { background: #334155; }
-    .floor { background: #dbeafe; }
-    .start { background: #5eead4; color: #022c22; }
-    .exit { background: #facc15; color: #2a2000; }
-    .player { background: #f472b6; }
-    .message {
-      text-align: center;
-      margin-top: 18px;
-      min-height: 28px;
-      font-size: 1.05rem;
-      font-weight: 700;
-    }
-    .controls {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 18px;
-      flex-wrap: wrap;
-    }
-    .controls button {
-      width: 70px;
-      height: 48px;
-      border: none;
-      border-radius: 12px;
-      font-size: 22px;
-      font-weight: 900;
-      cursor: pointer;
-      background: linear-gradient(135deg, #facc15, #f59e0b);
-      color: #111827;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no">
+<title>🧭 미로 탈출 어드벤처</title>
+
+<style>
+*{box-sizing:border-box}
+
+html,body{height:100%}
+
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+  font-family:system-ui,"Noto Sans KR",Arial,sans-serif;
+  background:
+    radial-gradient(circle at 20% 10%,#0e7490,#172554 50%,#020617);
+  color:white;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+.game{
+  width:min(95vw,720px);
+  height:min(96vh,850px);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:16px;
+  border:1px solid #ffffff25;
+  border-radius:24px;
+  background:#0f172bd9;
+  box-shadow:0 22px 60px #0009;
+}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  gap:10px;
+}
+
+.brand small{
+  display:block;
+  font-size:10px;
+  letter-spacing:.18em;
+  font-weight:900;
+  color:#67e8f9;
+}
+
+h1{
+  margin:2px 0;
+  font-size:clamp(24px,5vw,36px);
+}
+
+.stats{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.badge{
+  min-width:62px;
+  padding:7px 9px;
+  text-align:center;
+  border-radius:13px;
+  border:1px solid #ffffff20;
+  background:#111c38;
+}
+
+.badge small{
+  display:block;
+  color:#94a3b8;
+  font-size:9px;
+}
+
+.badge b{
+  font-size:17px;
+}
+
+.stage{
+  position:relative;
+  flex:1;
+  min-height:370px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  border-radius:20px;
+  background:
+    radial-gradient(circle at 50% 40%,#164e63,#07152d 70%);
+  touch-action:none;
+}
+
+.maze{
+  display:grid;
+  gap:3px;
+  width:min(96%,560px);
+  aspect-ratio:1;
+  padding:7px;
+  border:3px solid #475569;
+  border-radius:14px;
+  background:#020617;
+}
+
+.cell{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:0;
+  min-height:0;
+  border-radius:4px;
+  font-weight:900;
+  font-size:clamp(13px,4vw,28px);
+}
+
+.wall{
+  background:
+    linear-gradient(145deg,#334155,#1e293b);
+}
+
+.floor{
+  background:#dbeafe;
+}
+
+.start{
+  background:#5eead4;
+}
+
+.exit{
+  background:#fde047;
+}
+
+.player{
+  background:#f472b6;
+  box-shadow:
+    inset 0 0 12px #fff6,
+    0 0 12px #f472b6;
+}
+
+.coin{
+  background:#bfdbfe;
+}
+
+.message{
+  min-height:26px;
+  text-align:center;
+  font-size:13px;
+  font-weight:800;
+  color:#bae6fd;
+}
+
+.controls{
+  display:grid;
+  grid-template-columns:repeat(3,62px);
+  grid-template-rows:repeat(2,48px);
+  justify-content:center;
+  gap:6px;
+}
+
+.controls button{
+  border:0;
+  border-radius:12px;
+  font-size:22px;
+  font-weight:900;
+  cursor:pointer;
+  background:linear-gradient(135deg,#fde047,#f59e0b);
+  color:#111827;
+  min-height:46px;
+}
+
+.controls button:active{
+  transform:scale(.93);
+}
+
+.up{grid-column:2}
+.left{grid-column:1}
+.down{grid-column:2}
+.right{grid-column:3}
+
+.overlay{
+  position:absolute;
+  inset:0;
+  z-index:10;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:#020617e8;
+}
+
+.overlay.hide{
+  display:none;
+}
+
+.card{
+  width:min(100%,390px);
+  padding:26px 22px;
+  text-align:center;
+  border:1px solid #ffffff25;
+  border-radius:22px;
+  background:#111c38;
+}
+
+.icon{
+  font-size:54px;
+}
+
+.card h2{
+  margin:8px;
+  font-size:28px;
+}
+
+.card p{
+  color:#cbd5e1;
+  line-height:1.7;
+  font-size:14px;
+}
+
+.primary{
+  width:100%;
+  min-height:48px;
+  border:0;
+  border-radius:13px;
+  background:linear-gradient(135deg,#67e8f9,#a7f3d0);
+  color:#052e38;
+  font-weight:900;
+  font-size:15px;
+  cursor:pointer;
+}
+
+.toast{
+  position:absolute;
+  left:50%;
+  top:20%;
+  transform:translate(-50%,-50%);
+  padding:9px 16px;
+  border-radius:999px;
+  border:1px solid #ffffff33;
+  background:#0f172ae8;
+  font-weight:900;
+  opacity:0;
+  transition:.2s;
+  pointer-events:none;
+  white-space:nowrap;
+}
+
+.toast.show{
+  opacity:1;
+  top:16%;
+}
+
+.tip{
+  text-align:center;
+  font-size:11px;
+  color:#94a3b8;
+}
+
+@media(max-width:520px){
+  .game{
+    width:100%;
+    height:100%;
+    padding:8px;
+    border-radius:0;
+  }
+
+  .stage{
+    border-radius:16px;
+  }
+
+  .badge{
+    min-width:52px;
+    padding:6px;
+  }
+
+  .badge b{
+    font-size:14px;
+  }
+}
+</style>
 </head>
+
 <body>
-  <div class="game">
-    <div class="top">
-      <h1>🧭 미로 탈출</h1>
-      <div class="badge">목표: 출구</div>
-    </div>
-    <div class="maze" id="maze"></div>
-    <div class="message" id="message">화살표를 눌러 출구까지 가세요!</div>
-    <div class="controls">
-      <div></div>
-      <button data-dir="up">↑</button>
-      <div></div>
-      <button data-dir="left">←</button>
-      <button data-dir="down">↓</button>
-      <button data-dir="right">→</button>
-    </div>
+
+<main class="game">
+
+<header class="top">
+
+  <div class="brand">
+    <small>MAZE ADVENTURE</small>
+    <h1>🧭 미로 탈출</h1>
   </div>
 
-  <script>
-    const mazeData = [
-      [1,1,1,1,1,1,1],
-      [1,0,0,0,0,0,1],
-      [1,0,1,1,1,0,1],
-      [1,0,1,0,1,0,1],
-      [1,0,1,0,1,0,1],
-      [1,0,0,0,1,0,1],
-      [1,1,1,1,1,1,1],
-    ];
+  <div class="stats">
 
-    const mazeEl = document.getElementById('maze');
-    const messageEl = document.getElementById('message');
-    const playerStart = { x: 1, y: 1 };
-    const exit = { x: 5, y: 5 };
-    let player = { ...playerStart };
+    <div class="badge">
+      <small>레벨</small>
+      <b id="level">1</b>
+    </div>
 
-    function renderMaze() {
-      mazeEl.innerHTML = '';
-      for (let y = 0; y < mazeData.length; y++) {
-        for (let x = 0; x < mazeData[y].length; x++) {
-          const cell = document.createElement('div');
-          cell.classList.add('cell', mazeData[y][x] === 1 ? 'wall' : 'floor');
+    <div class="badge">
+      <small>점수</small>
+      <b id="score">0</b>
+    </div>
 
-          if (x === playerStart.x && y === playerStart.y) cell.classList.add('start');
-          if (x === exit.x && y === exit.y) cell.classList.add('exit');
-          if (x === player.x && y === player.y) cell.classList.add('player');
+    <div class="badge">
+      <small>이동</small>
+      <b id="moves">0</b>
+    </div>
 
-          if (x === player.x && y === player.y && !(x === playerStart.x && y === playerStart.y)) {
-            cell.textContent = '🧑';
-          }
-          if (x === exit.x && y === exit.y) cell.textContent = '🚪';
-          mazeEl.appendChild(cell);
-        }
+    <div class="badge">
+      <small>별</small>
+      <b id="stars">0⭐</b>
+    </div>
+
+  </div>
+
+</header>
+
+<section class="stage">
+
+  <div class="maze" id="maze"></div>
+
+  <div class="toast" id="toast">
+    ⭐ 보너스!
+  </div>
+
+  <div class="overlay" id="overlay">
+
+    <div class="card">
+
+      <div class="icon">🧭</div>
+
+      <h2 id="overlayTitle">
+        미로 탈출 어드벤처
+      </h2>
+
+      <p id="overlayText">
+        화살표 버튼을 눌러 출구 🚪까지 이동하세요.<br><br>
+
+        레벨을 클리어하면<br>
+        더 크고 새로운 미로가 자동으로 만들어집니다.<br><br>
+
+        ⭐ 별도 찾아서 높은 점수를 만들어보세요!
+      </p>
+
+      <button class="primary" id="startBtn">
+        모험 시작
+      </button>
+
+    </div>
+
+  </div>
+
+</section>
+
+<div class="message" id="message">
+  🚪 출구를 찾아보세요!
+</div>
+
+<div class="controls">
+
+  <button class="up" data-dir="up">↑</button>
+
+  <button class="left" data-dir="left">←</button>
+  <button class="down" data-dir="down">↓</button>
+  <button class="right" data-dir="right">→</button>
+
+</div>
+
+<div class="tip">
+방향키 · WASD · 버튼 · 별을 모으며 계속 다음 레벨에 도전하세요
+</div>
+
+</main>
+
+<script>
+const mazeEl =
+  document.getElementById('maze');
+
+const messageEl =
+  document.getElementById('message');
+
+const levelEl =
+  document.getElementById('level');
+
+const scoreEl =
+  document.getElementById('score');
+
+const movesEl =
+  document.getElementById('moves');
+
+const starsEl =
+  document.getElementById('stars');
+
+const overlay =
+  document.getElementById('overlay');
+
+const startBtn =
+  document.getElementById('startBtn');
+
+const toast =
+  document.getElementById('toast');
+
+let maze = [];
+
+let rows = 7;
+let cols = 7;
+
+let level = 1;
+let score = 0;
+let moves = 0;
+let stars = 0;
+
+let player = {x:1,y:1};
+let exit = {x:5,y:5};
+
+let coins = [];
+
+let playing = false;
+
+
+/* =========================
+   토스트
+========================= */
+
+function showToast(text){
+
+  toast.textContent = text;
+
+  toast.classList.remove('show');
+
+  void toast.offsetWidth;
+
+  toast.classList.add('show');
+
+  clearTimeout(showToast.timer);
+
+  showToast.timer =
+    setTimeout(()=>{
+      toast.classList.remove('show');
+    },650);
+}
+
+
+/* =========================
+   미로 자동 생성
+========================= */
+
+function generateMaze(){
+
+  /*
+    레벨이 올라갈수록
+    7 → 9 → 11 → 13까지 커짐
+  */
+
+  const size =
+    Math.min(
+      13,
+      7 + Math.floor((level-1)/2)*2
+    );
+
+  rows = size;
+  cols = size;
+
+  maze =
+    Array.from(
+      {length:rows},
+      ()=>Array(cols).fill(1)
+    );
+
+  /*
+    DFS 미로 생성
+  */
+
+  const stack = [];
+
+  const start = {
+    x:1,
+    y:1
+  };
+
+  maze[start.y][start.x] = 0;
+
+  stack.push(start);
+
+  const directions = [
+    [0,-2],
+    [0,2],
+    [-2,0],
+    [2,0]
+  ];
+
+  while(stack.length){
+
+    const current =
+      stack[stack.length-1];
+
+    const options = [];
+
+    for(const [dx,dy] of directions){
+
+      const nx =
+        current.x + dx;
+
+      const ny =
+        current.y + dy;
+
+      if(
+        nx>0 &&
+        ny>0 &&
+        nx<cols-1 &&
+        ny<rows-1 &&
+        maze[ny][nx]===1
+      ){
+
+        options.push({
+          x:nx,
+          y:ny,
+          dx,
+          dy
+        });
       }
     }
 
-    function move(dir) {
-      const dx = { left: -1, right: 1, up: 0, down: 0 }[dir];
-      const dy = { left: 0, right: 0, up: -1, down: 1 }[dir];
-      const nx = player.x + dx;
-      const ny = player.y + dy;
+    if(options.length){
 
-      if (mazeData[ny]?.[nx] === 0) {
-        player.x = nx;
-        player.y = ny;
-        if (player.x === exit.x && player.y === exit.y) {
-          messageEl.textContent = '탈출 성공! 미로를 빠져나왔어요!';
-          renderMaze();
-          setTimeout(() => {
-            player = { ...playerStart };
-            messageEl.textContent = '새 미로 출발! 다시 출구까지 가세요.';
-            renderMaze();
-          }, 1400);
-          return;
-        }
-        messageEl.textContent = '좋아요! 계속 진행해보세요!';
-      } else {
-        messageEl.textContent = '벽이 있어요! 다른 방향을 선택하세요.';
-      }
-      renderMaze();
+      const next =
+        options[
+          Math.floor(
+            Math.random()*options.length
+          )
+        ];
+
+      maze[
+        current.y + next.dy/2
+      ][
+        current.x + next.dx/2
+      ] = 0;
+
+      maze[next.y][next.x] = 0;
+
+      stack.push({
+        x:next.x,
+        y:next.y
+      });
+
+    }else{
+
+      stack.pop();
     }
+  }
 
-    document.querySelectorAll('[data-dir]').forEach(button => {
-      button.addEventListener('click', () => move(button.dataset.dir));
-    });
+  player = {
+    x:1,
+    y:1
+  };
 
-    document.addEventListener('keydown', (event) => {
-      const map = {
-        ArrowLeft: 'left',
-        ArrowRight: 'right',
-        ArrowUp: 'up',
-        ArrowDown: 'down'
-      };
-      if (map[event.key]) move(map[event.key]);
+  exit = {
+    x:cols-2,
+    y:rows-2
+  };
+
+  maze[exit.y][exit.x] = 0;
+
+  createCoins();
+}
+
+
+/* =========================
+   별 배치
+========================= */
+
+function createCoins(){
+
+  coins = [];
+
+  const count =
+    Math.min(
+      5,
+      2 + Math.floor(level/3)
+    );
+
+  const floors = [];
+
+  for(let y=1;y<rows-1;y++){
+
+    for(let x=1;x<cols-1;x++){
+
+      if(
+        maze[y][x]===0 &&
+        !(x===player.x && y===player.y) &&
+        !(x===exit.x && y===exit.y)
+      ){
+
+        floors.push({x,y});
+      }
+    }
+  }
+
+  floors.sort(
+    ()=>Math.random()-.5
+  );
+
+  for(let i=0;i<count && i<floors.length;i++){
+
+    coins.push({
+      ...floors[i],
+      got:false
     });
+  }
+}
+
+
+/* =========================
+   렌더링
+========================= */
+
+function renderMaze(){
+
+  mazeEl.innerHTML = '';
+
+  mazeEl.style.gridTemplateColumns =
+    `repeat(${cols},1fr)`;
+
+  for(let y=0;y<rows;y++){
+
+    for(let x=0;x<cols;x++){
+
+      const cell =
+        document.createElement('div');
+
+      cell.className =
+        'cell ' +
+        (
+          maze[y][x]===1
+            ?'wall'
+            :'floor'
+        );
+
+      const coin =
+        coins.find(
+          c=>
+            c.x===x &&
+            c.y===y &&
+            !c.got
+        );
+
+      if(
+        x===1 &&
+        y===1
+      ){
+        cell.classList.add('start');
+      }
+
+      if(
+        x===exit.x &&
+        y===exit.y
+      ){
+
+        cell.classList.add('exit');
+        cell.textContent='🚪';
+      }
+
+      if(coin){
+
+        cell.classList.add('coin');
+        cell.textContent='⭐';
+      }
+
+      if(
+        x===player.x &&
+        y===player.y
+      ){
+
+        cell.classList.add('player');
+
+        cell.textContent='🧑';
+      }
+
+      mazeEl.appendChild(cell);
+    }
+  }
+}
+
+
+/* =========================
+   HUD
+========================= */
+
+function updateHud(){
+
+  levelEl.textContent =
+    level;
+
+  scoreEl.textContent =
+    score;
+
+  movesEl.textContent =
+    moves;
+
+  starsEl.textContent =
+    stars+'⭐';
+}
+
+
+/* =========================
+   게임 시작
+========================= */
+
+function startGame(){
+
+  level=1;
+  score=0;
+  moves=0;
+  stars=0;
+
+  playing=true;
+
+  generateMaze();
+
+  updateHud();
+
+  renderMaze();
+
+  overlay.classList.add('hide');
+
+  messageEl.textContent =
+    '🧭 출구 🚪를 찾아보세요!';
+}
+
+
+/* =========================
+   이동
+========================= */
+
+function move(dir){
+
+  if(!playing)return;
+
+  const dx = {
+    left:-1,
+    right:1,
+    up:0,
+    down:0
+  }[dir];
+
+  const dy = {
+    left:0,
+    right:0,
+    up:-1,
+    down:1
+  }[dir];
+
+  const nx =
+    player.x + dx;
+
+  const ny =
+    player.y + dy;
+
+  /*
+    벽
+  */
+
+  if(
+    !maze[ny] ||
+    maze[ny][nx]!==0
+  ){
+
+    messageEl.textContent =
+      '🧱 벽이에요! 다른 길을 찾아봐요.';
+
+    return;
+  }
+
+  player.x = nx;
+  player.y = ny;
+
+  moves++;
+
+  /*
+    별 획득
+  */
+
+  const coin =
+    coins.find(
+      c=>
+        !c.got &&
+        c.x===player.x &&
+        c.y===player.y
+    );
+
+  if(coin){
+
+    coin.got=true;
+
+    stars++;
+
+    score+=20;
+
+    showToast('⭐ 별 발견 +20');
+
+    messageEl.textContent =
+      '⭐ 별을 찾았어요!';
+  }
+
+  /*
+    출구
+  */
+
+  if(
+    player.x===exit.x &&
+    player.y===exit.y
+  ){
+
+    completeLevel();
+    return;
+  }
+
+  updateHud();
+
+  renderMaze();
+}
+
+
+/* =========================
+   레벨 성공
+========================= */
+
+function completeLevel(){
+
+  /*
+    기본 성공 점수
+  */
+
+  const bonus =
+    100 + level*20;
+
+  score += bonus;
+
+  showToast(
+    `🎉 LEVEL ${level} CLEAR!`
+  );
+
+  messageEl.textContent =
+    `🎉 레벨 ${level} 탈출 성공!`;
+
+  updateHud();
+  renderMaze();
+
+  setTimeout(()=>{
+
+    level++;
+
+    moves=0;
+
+    generateMaze();
+
+    updateHud();
 
     renderMaze();
-  </script>
+
+    messageEl.textContent =
+      `🚀 LEVEL ${level}! 더 큰 미로에 도전하세요.`;
+
+  },900);
+}
+
+
+/* =========================
+   버튼
+========================= */
+
+document
+.querySelectorAll('[data-dir]')
+.forEach(button=>{
+
+  button.addEventListener(
+    'click',
+    ()=>move(
+      button.dataset.dir
+    )
+  );
+});
+
+
+/* =========================
+   키보드
+========================= */
+
+document.addEventListener(
+  'keydown',
+  event=>{
+
+    const map={
+
+      ArrowLeft:'left',
+      ArrowRight:'right',
+      ArrowUp:'up',
+      ArrowDown:'down',
+
+      a:'left',
+      d:'right',
+      w:'up',
+      s:'down',
+
+      A:'left',
+      D:'right',
+      W:'up',
+      S:'down'
+    };
+
+    if(map[event.key]){
+
+      event.preventDefault();
+
+      move(
+        map[event.key]
+      );
+    }
+  }
+);
+
+
+/* =========================
+   시작
+========================= */
+
+startBtn.addEventListener(
+  'click',
+  startGame
+);
+
+generateMaze();
+updateHud();
+renderMaze();
+
+</script>
+
 </body>
 </html>
