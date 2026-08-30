@@ -1,15 +1,1745 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>조건문 신호등 도시</title><style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(#69d4ff,#d9f8ff 55%,#b9e481 55%);font-family:Arial,"Noto Sans KR",sans-serif;color:#17304a;user-select:none;overflow-x:hidden}.app{width:min(980px,100%);margin:auto;padding:10px}.hud{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}.stat{background:#ffffffd9;border-radius:13px;padding:8px;text-align:center;font-size:11px;box-shadow:0 3px 9px #25608028}.stat b{display:block;font-size:18px;color:#1676c5}.city{margin-top:10px;border:3px solid #fff;border-radius:22px;overflow:hidden;background:#fff;box-shadow:0 14px 35px #245d7555}.top{padding:10px 15px;background:#fff;display:flex;align-items:center;justify-content:space-between}.top h1{font-size:clamp(20px,5vw,31px);margin:0}.scene{height:280px;position:relative;overflow:hidden;background:linear-gradient(#72d7ff 0 56%,#8b919b 56% 88%,#5eb952 88%)}.sun{position:absolute;right:7%;top:15px;font-size:42px}.buildings{position:absolute;left:0;right:0;bottom:44%;height:120px;background:linear-gradient(90deg,#ffab76 0 18%,transparent 18% 22%,#69b4e8 22% 42%,transparent 42% 47%,#ffd261 47% 70%,transparent 70% 75%,#ef87a2 75%);clip-path:polygon(0 25%,12% 25%,12% 0,18% 0,18% 35%,30% 35%,30% 12%,42% 12%,42% 40%,55% 40%,55% 5%,68% 5%,68% 32%,80% 32%,80% 15%,95% 15%,95% 35%,100% 35%,100% 100%,0 100%)}.road{position:absolute;left:0;right:0;bottom:12%;height:78px;border-block:5px solid white;background:repeating-linear-gradient(90deg,transparent 0 45px,#fff 45px 78px,transparent 78px 123px);background-size:123px 6px;background-repeat:repeat-x;background-position:center}.car{position:absolute;left:12%;bottom:21%;font-size:58px;filter:drop-shadow(0 7px 3px #0004);transition:transform .7s,left .7s}.car.go{left:72%}.car.stop{animation:brake .5s}.car.turn{animation:turn .8s}.car.charge{animation:charge 1s}@keyframes brake{35%{transform:translateX(35px) rotate(-6deg)}}@keyframes turn{50%{transform:translate(80px,-25px) rotate(-18deg)}}@keyframes charge{50%{filter:drop-shadow(0 0 18px #fff000);transform:scale(1.12)}}.event{position:absolute;right:13%;bottom:42%;font-size:65px;animation:pop .4s}@keyframes pop{from{transform:scale(0) rotate(20deg)}}.cloud{position:absolute;font-size:35px;animation:cloud 12s linear infinite}@keyframes cloud{from{left:-10%}to{left:110%}}.decision{padding:11px}.condition{text-align:center;background:#e9f6ff;border-left:7px solid #2b8ce1;border-radius:12px;padding:10px;font-weight:900;font-size:clamp(16px,4vw,22px);min-height:49px}.timerline{height:6px;background:#dce8ef;margin:8px 0;border-radius:6px;overflow:hidden}.timerline i{display:block;height:100%;width:100%;background:#2dd49b}.answers{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}button{min-height:50px;border:0;border-radius:13px;background:#2d91e4;color:white;font-weight:900;font-size:16px;cursor:pointer;touch-action:manipulation}button:active{transform:scale(.96)}.msg{text-align:center;height:30px;padding:7px;font-weight:bold}.lesson{text-align:center;color:#607789;font-size:13px}.overlay{position:fixed;inset:0;background:#166392eF;display:grid;place-items:center;padding:18px;z-index:9}.card{width:min(470px,100%);background:white;border-radius:25px;padding:26px;text-align:center;border:5px solid #ffcc47}.card h1{font-size:clamp(28px,8vw,42px);margin:0}.card p{line-height:1.6}.card button{width:100%;background:#19b887}.hidden{display:none}@media(max-width:600px){.app{padding:6px}.stat{padding:5px 1px;font-size:10px}.stat b{font-size:15px}.scene{height:230px}.answers{grid-template-columns:1fr}.car{font-size:48px}.event{font-size:55px;bottom:45%}}
-</style></head><body><main class="app"><div class="hud"><div class="stat">레벨<b id="level">1</b></div><div class="stat">점수<b id="score">0</b></div><div class="stat">콤보<b id="combo">0</b></div><div class="stat">시간<b id="time">100</b></div><div class="stat">최고<b id="best">0</b></div></div><section class="city"><div class="top"><h1>🚦 조건문 신호등 도시</h1><span>AI DRIVE</span></div><div class="scene"><span class="cloud">☁️</span><span class="sun">☀️</span><div class="buildings"></div><div class="road"></div><div id="event" class="event"></div><div id="car" class="car">🚙</div></div><div class="decision"><div id="condition" class="condition"></div><div class="timerline"><i id="think"></i></div><div id="answers" class="answers"></div><div id="msg" class="msg"></div><p class="lesson">조건문은 상황에 따라 다른 명령을 실행해요.</p></div></section></main><div id="start" class="overlay"><div class="card"><h1>🚦 조건문 신호등 도시</h1><p>도시를 달리며 나타나는 상황을 보고<br><b>IF 조건에 맞는 행동</b>을 빠르게 선택하세요!</p><button id="startBtn">🚙 드라이브 시작</button></div></div><div id="end" class="overlay hidden"><div class="card"><h1>🏁 운행 완료!</h1><p id="result"></p><button id="again">다시 달리기</button></div></div><script>
-const $=s=>document.querySelector(s),cases=[
-{e:'🟢',q:'IF 신호등 = 초록 → ?',a:'직진한다',o:['직진한다','멈춘다','경적을 울린다'],m:'go'},
-{e:'🔴',q:'IF 신호등 = 빨강 → ?',a:'멈춘다',o:['직진한다','멈춘다','점프한다'],m:'stop'},
-{e:'🚶',q:'IF 보행자 있음 → ?',a:'멈춘다',o:['속도를 높인다','멈춘다','불을 끈다'],m:'stop'},
-{e:'🚧',q:'IF 앞에 장애물 → ?',a:'방향을 바꾼다',o:['방향을 바꾼다','그대로 간다','잠든다'],m:'turn'},
-{e:'🌧️',q:'IF 비 = ON → ?',a:'와이퍼를 켠다',o:['와이퍼를 켠다','창문을 연다','후진한다'],m:'charge'},
-{e:'🔋15%',q:'IF 배터리 < 20% → ?',a:'충전소로 간다',o:['더 빨리 달린다','충전소로 간다','경적을 울린다'],m:'charge'}];
-let score=0,combo=0,maxCombo=0,level=1,time=100,success=0,tries=0,timer,current,startAt,busy=false;
-function next(){busy=false;let pool=time>70?cases.slice(0,2):time>40?cases.slice(0,4):cases;current=pool[Math.floor(Math.random()*pool.length)];$('#event').textContent=current.e;$('#condition').textContent=(time<35&&current.e==='🟢')?'IF 신호등 = 초록 AND 보행자 없음 → ?':current.q;$('#answers').innerHTML='';current.o.slice().sort(()=>Math.random()-.5).forEach(v=>{let b=document.createElement('button');b.textContent=v;b.onclick=()=>choose(v);$('#answers').append(b)});$('#msg').textContent='상황을 판단하세요!';$('#think').style.transition='none';$('#think').style.width='100%';requestAnimationFrame(()=>{requestAnimationFrame(()=>{$('#think').style.transition='width 6s linear';$('#think').style.width='0'})});startAt=Date.now();let car=$('#car');car.className='car';car.style.left='12%'}
-function choose(v){if(busy)return;busy=true;tries++;let ok=v===current.a,car=$('#car');car.classList.add(current.m);if(ok){success++;combo++;maxCombo=Math.max(maxCombo,combo);let fast=Math.max(0,Math.round((5000-(Date.now()-startAt))/400)),add=15+fast+Math.min(combo,10);score+=add;$('#msg').textContent=(combo==5?'⚡ 5 COMBO! ':'')+'정확한 판단! +'+add}else{combo=0;car.classList.add('stop');$('#msg').textContent='💥 다시 생각해봐요! 정답: '+current.a}level=Math.floor(success/3)+1;update();setTimeout(next,900)}
-function update(){$('#level').textContent=level;$('#score').textContent=score;$('#combo').textContent=combo;$('#time').textContent=time;$('#best').textContent=Math.max(score,+(localStorage.ifCityBest||0))}function start(){score=combo=maxCombo=success=tries=0;level=1;time=100;$('#start').classList.add('hidden');$('#end').classList.add('hidden');next();update();clearInterval(timer);timer=setInterval(()=>{time--;update();if(time<=0)finish()},1000)}function finish(){clearInterval(timer);busy=true;let best=Math.max(score,+(localStorage.ifCityBest||0));localStorage.ifCityBest=best;$('#result').innerHTML=`최종 점수 <b>${score}</b><br>성공 ${success}회 · 최고 콤보 ${maxCombo}<br>정확도 ${tries?Math.round(success/tries*100):0}% · 레벨 ${level}<br>최고기록 <b>${best}</b>`;$('#end').classList.remove('hidden')}$('#startBtn').onclick=start;$('#again').onclick=start;update();
-</script></body></html>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>🚦 조건문 신호등 도시</title>
+
+<style>
+*{box-sizing:border-box}
+
+html,body{
+  height:100%;
+}
+
+body{
+  margin:0;
+  min-height:100%;
+  overflow:hidden;
+  background:
+    linear-gradient(#69d4ff,#d9f8ff 55%,#b9e481 55%);
+  font-family:system-ui,"Noto Sans KR",Arial,sans-serif;
+  color:#17304a;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+.app{
+  width:min(980px,100%);
+  height:100%;
+  margin:auto;
+  padding:8px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+/* HUD */
+
+.hud{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:6px;
+}
+
+.stat{
+  background:#ffffffdf;
+  border:1px solid #ffffff;
+  border-radius:13px;
+  padding:7px 4px;
+  text-align:center;
+  font-size:10px;
+  box-shadow:0 3px 9px #25608028;
+}
+
+.stat small{
+  display:block;
+  color:#607789;
+}
+
+.stat b{
+  display:block;
+  margin-top:2px;
+  font-size:17px;
+  color:#1676c5;
+}
+
+/* 메인 */
+
+.city{
+  position:relative;
+  flex:1;
+  min-height:0;
+  overflow:hidden;
+  border:3px solid #fff;
+  border-radius:22px;
+  background:#fff;
+  box-shadow:0 14px 35px #245d7555;
+  display:flex;
+  flex-direction:column;
+}
+
+.top{
+  padding:8px 13px;
+  background:white;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.top h1{
+  font-size:clamp(19px,4.5vw,30px);
+  margin:0;
+}
+
+.modeTag{
+  padding:5px 9px;
+  border-radius:999px;
+  background:#e0f2fe;
+  color:#0369a1;
+  font-weight:900;
+  font-size:10px;
+}
+
+/* 도시 */
+
+.scene{
+  height:260px;
+  flex-shrink:0;
+  position:relative;
+  overflow:hidden;
+  background:
+    linear-gradient(
+      #72d7ff 0 55%,
+      #8b919b 55% 88%,
+      #5eb952 88%
+    );
+}
+
+.sun{
+  position:absolute;
+  right:7%;
+  top:12px;
+  font-size:39px;
+}
+
+.cloud{
+  position:absolute;
+  top:16px;
+  font-size:33px;
+  animation:cloud 12s linear infinite;
+}
+
+.cloud.two{
+  top:55px;
+  animation-duration:17s;
+  animation-delay:-6s;
+  opacity:.7;
+}
+
+@keyframes cloud{
+  from{left:-12%}
+  to{left:110%}
+}
+
+.buildings{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:44%;
+  height:115px;
+  background:
+    linear-gradient(
+      90deg,
+      #ffab76 0 18%,
+      transparent 18% 22%,
+      #69b4e8 22% 42%,
+      transparent 42% 47%,
+      #ffd261 47% 70%,
+      transparent 70% 75%,
+      #ef87a2 75%
+    );
+
+  clip-path:polygon(
+    0 25%,12% 25%,12% 0,18% 0,18% 35%,
+    30% 35%,30% 12%,42% 12%,42% 40%,
+    55% 40%,55% 5%,68% 5%,68% 32%,
+    80% 32%,80% 15%,95% 15%,95% 35%,
+    100% 35%,100% 100%,0 100%
+  );
+}
+
+.road{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:12%;
+  height:78px;
+  border-block:5px solid white;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 45px,
+      #fff 45px 78px,
+      transparent 78px 123px
+    );
+
+  background-size:123px 6px;
+  background-repeat:repeat-x;
+  background-position:center;
+}
+
+.crosswalk{
+  position:absolute;
+  right:14%;
+  bottom:12%;
+  width:90px;
+  height:78px;
+  opacity:0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #fff 0 9px,
+      transparent 9px 18px
+    );
+}
+
+.crosswalk.show{
+  opacity:.8;
+}
+
+/* 자동차 */
+
+.car{
+  position:absolute;
+  left:11%;
+  bottom:21%;
+  font-size:56px;
+  filter:drop-shadow(0 7px 3px #0004);
+  transition:left .7s,transform .7s;
+  z-index:4;
+}
+
+.car.go{
+  animation:drive .85s;
+}
+
+@keyframes drive{
+  0%{left:11%}
+  60%{left:63%}
+  100%{left:11%}
+}
+
+.car.stop{
+  animation:brake .6s;
+}
+
+@keyframes brake{
+  35%{
+    transform:translateX(36px) rotate(-6deg);
+  }
+}
+
+.car.turn{
+  animation:turn .85s;
+}
+
+@keyframes turn{
+  50%{
+    transform:
+      translate(85px,-28px)
+      rotate(-20deg);
+  }
+}
+
+.car.charge{
+  animation:charge .9s;
+}
+
+@keyframes charge{
+  50%{
+    filter:
+      drop-shadow(0 0 20px #fff000);
+    transform:scale(1.15);
+  }
+}
+
+.car.wiper{
+  animation:wiperCar .65s;
+}
+
+@keyframes wiperCar{
+  50%{
+    filter:
+      drop-shadow(0 0 12px #38bdf8);
+  }
+}
+
+/* 이벤트 */
+
+.event{
+  position:absolute;
+  right:14%;
+  bottom:42%;
+  font-size:clamp(45px,9vw,67px);
+  z-index:3;
+}
+
+.event.pop{
+  animation:pop .4s;
+}
+
+@keyframes pop{
+  from{
+    transform:scale(0) rotate(20deg);
+  }
+}
+
+.extraEvent{
+  position:absolute;
+  right:27%;
+  bottom:43%;
+  font-size:42px;
+  z-index:3;
+}
+
+/* 코드 패널 */
+
+.decision{
+  flex:1;
+  min-height:0;
+  padding:9px 11px 7px;
+  display:flex;
+  flex-direction:column;
+}
+
+.levelLesson{
+  text-align:center;
+  font-size:11px;
+  font-weight:900;
+  color:#64748b;
+  margin-bottom:5px;
+}
+
+.condition{
+  text-align:center;
+  background:#e9f6ff;
+  border-left:7px solid #2b8ce1;
+  border-radius:12px;
+  padding:9px;
+  font-weight:900;
+  font-size:clamp(15px,3.8vw,21px);
+  min-height:48px;
+}
+
+.codeKey{
+  color:#7c3aed;
+}
+
+.codeAnd{
+  color:#dc2626;
+}
+
+.codeElse{
+  color:#ea580c;
+}
+
+/* 생각 시간 */
+
+.timerline{
+  height:6px;
+  background:#dce8ef;
+  margin:7px 0;
+  border-radius:6px;
+  overflow:hidden;
+}
+
+.timerline i{
+  display:block;
+  height:100%;
+  width:100%;
+  background:#2dd49b;
+}
+
+/* 답 */
+
+.answers{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+}
+
+button{
+  min-height:49px;
+  border:0;
+  border-radius:13px;
+  padding:8px;
+  background:#2d91e4;
+  color:white;
+  font-weight:900;
+  font-size:15px;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+
+button:active{
+  transform:scale(.96);
+}
+
+button.correct{
+  background:#16a34a;
+}
+
+button.wrong{
+  background:#ef4444;
+}
+
+/* 피드백 */
+
+.msg{
+  text-align:center;
+  min-height:31px;
+  padding:6px 4px 2px;
+  font-weight:900;
+  font-size:13px;
+}
+
+.explain{
+  min-height:27px;
+  padding:4px 8px;
+  border-radius:9px;
+  background:#f1f5f9;
+  color:#475569;
+  text-align:center;
+  font-size:11px;
+  font-weight:700;
+}
+
+.lesson{
+  margin:5px 0 0;
+  text-align:center;
+  color:#607789;
+  font-size:11px;
+}
+
+/* 콤보 */
+
+.comboPop{
+  position:absolute;
+  left:50%;
+  top:35%;
+  z-index:7;
+  transform:translate(-50%,-50%);
+  font-size:34px;
+  font-weight:1000;
+  color:#facc15;
+  text-shadow:
+    0 2px #78350f,
+    0 0 20px #fff;
+  opacity:0;
+  pointer-events:none;
+}
+
+.comboPop.show{
+  animation:comboPop .8s;
+}
+
+@keyframes comboPop{
+  0%{
+    opacity:0;
+    transform:
+      translate(-50%,-50%)
+      scale(.5);
+  }
+
+  30%{
+    opacity:1;
+    transform:
+      translate(-50%,-50%)
+      scale(1.15);
+  }
+
+  100%{
+    opacity:0;
+    transform:
+      translate(-50%,-90%)
+      scale(1);
+  }
+}
+
+/* 오버레이 */
+
+.overlay{
+  position:fixed;
+  inset:0;
+  background:#166392ef;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  z-index:20;
+}
+
+.overlay.hidden{
+  display:none;
+}
+
+.card{
+  width:min(470px,100%);
+  max-height:92vh;
+  overflow:auto;
+  background:white;
+  border-radius:25px;
+  padding:25px;
+  text-align:center;
+  border:5px solid #ffcc47;
+  box-shadow:0 20px 60px #0006;
+}
+
+.card .icon{
+  font-size:55px;
+}
+
+.card h1{
+  font-size:clamp(27px,8vw,40px);
+  margin:3px 0 10px;
+}
+
+.card p{
+  line-height:1.65;
+}
+
+.card button{
+  width:100%;
+  background:#19b887;
+  margin-top:6px;
+}
+
+.learning{
+  display:grid;
+  gap:6px;
+  margin:12px 0;
+  text-align:left;
+}
+
+.learning div{
+  padding:8px 10px;
+  border-radius:10px;
+  background:#f1f5f9;
+  font-size:13px;
+}
+
+/* 모바일 */
+
+@media(max-width:600px){
+
+  .app{
+    padding:5px;
+  }
+
+  .stat{
+    padding:4px 1px;
+    font-size:9px;
+  }
+
+  .stat b{
+    font-size:14px;
+  }
+
+  .top{
+    padding:7px 9px;
+  }
+
+  .scene{
+    height:220px;
+  }
+
+  .answers{
+    grid-template-columns:1fr;
+    gap:5px;
+  }
+
+  button{
+    min-height:43px;
+    font-size:14px;
+  }
+
+  .car{
+    font-size:46px;
+  }
+
+  .event{
+    font-size:50px;
+    bottom:45%;
+  }
+
+  .extraEvent{
+    font-size:32px;
+  }
+
+  .condition{
+    padding:7px;
+  }
+
+  .lesson{
+    display:none;
+  }
+}
+
+@media(max-height:700px){
+  .scene{
+    height:190px;
+  }
+
+  .top h1{
+    font-size:20px;
+  }
+
+  .condition{
+    min-height:42px;
+    padding:6px;
+  }
+
+  button{
+    min-height:40px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<main class="app">
+
+<div class="hud">
+
+  <div class="stat">
+    <small>LEVEL</small>
+    <b id="level">1</b>
+  </div>
+
+  <div class="stat">
+    <small>SCORE</small>
+    <b id="score">0</b>
+  </div>
+
+  <div class="stat">
+    <small>COMBO</small>
+    <b id="combo">0</b>
+  </div>
+
+  <div class="stat">
+    <small>TIME</small>
+    <b id="time">100</b>
+  </div>
+
+  <div class="stat">
+    <small>BEST</small>
+    <b id="best">0</b>
+  </div>
+
+</div>
+
+<section class="city">
+
+  <div class="top">
+    <h1>🚦 조건문 신호등 도시</h1>
+    <span class="modeTag" id="modeTag">IF 배우기</span>
+  </div>
+
+  <div class="scene">
+
+    <span class="cloud">☁️</span>
+    <span class="cloud two">☁️</span>
+    <span class="sun">☀️</span>
+
+    <div class="buildings"></div>
+
+    <div class="road"></div>
+
+    <div
+      id="crosswalk"
+      class="crosswalk">
+    </div>
+
+    <div
+      id="extraEvent"
+      class="extraEvent">
+    </div>
+
+    <div
+      id="event"
+      class="event">
+    </div>
+
+    <div
+      id="car"
+      class="car">
+      🚙
+    </div>
+
+    <div
+      id="comboPop"
+      class="comboPop">
+    </div>
+
+  </div>
+
+  <div class="decision">
+
+    <div
+      id="levelLesson"
+      class="levelLesson">
+      LEVEL 1 · IF 조건 알아보기
+    </div>
+
+    <div
+      id="condition"
+      class="condition">
+    </div>
+
+    <div class="timerline">
+      <i id="think"></i>
+    </div>
+
+    <div
+      id="answers"
+      class="answers">
+    </div>
+
+    <div
+      id="msg"
+      class="msg">
+    </div>
+
+    <div
+      id="explain"
+      class="explain">
+      상황을 보고 알맞은 행동을 선택하세요.
+    </div>
+
+    <p class="lesson">
+      💡 조건문은 조건이 맞을 때 정해진 명령을 실행합니다.
+    </p>
+
+  </div>
+
+</section>
+
+</main>
+
+<!-- 시작 -->
+
+<div id="start" class="overlay">
+
+  <div class="card">
+
+    <div class="icon">🚦🚙</div>
+
+    <h1>조건문 신호등 도시</h1>
+
+    <p>
+      자율주행 자동차의 AI가 되어<br>
+      도시에서 만나는 상황을 판단하세요.
+    </p>
+
+    <div class="learning">
+
+      <div>
+        🟢 <b>IF</b> 초록불 → 직진
+      </div>
+
+      <div>
+        🔴 <b>IF</b> 빨간불 → 정지
+      </div>
+
+      <div>
+        🚶 <b>IF</b> 보행자가 있다 → 정지
+      </div>
+
+      <div>
+        🧠 높은 레벨에서는
+        <b>AND · ELSE</b>도 등장합니다.
+      </div>
+
+    </div>
+
+    <p>
+      100초 동안 최대한 많은 상황을
+      정확하게 판단해보세요!
+    </p>
+
+    <button id="startBtn">
+      🚙 드라이브 시작
+    </button>
+
+  </div>
+
+</div>
+
+<!-- 종료 -->
+
+<div
+  id="end"
+  class="overlay hidden">
+
+  <div class="card">
+
+    <div class="icon">🏁</div>
+
+    <h1>운행 완료!</h1>
+
+    <p id="result"></p>
+
+    <button id="again">
+      다시 달리기
+    </button>
+
+  </div>
+
+</div>
+
+<script>
+const $ =
+  selector =>
+    document.querySelector(selector);
+
+
+/* ============================
+   문제 데이터
+============================ */
+
+const basicCases = [
+
+  {
+    e:'🟢',
+    extra:'',
+    q:'IF 신호등 = 초록 → ?',
+    answer:'직진한다',
+    options:[
+      '직진한다',
+      '멈춘다',
+      '후진한다'
+    ],
+    motion:'go',
+    explanation:
+      '초록불이면 차가 안전하게 직진할 수 있어요.'
+  },
+
+  {
+    e:'🔴',
+    extra:'',
+    q:'IF 신호등 = 빨강 → ?',
+    answer:'멈춘다',
+    options:[
+      '직진한다',
+      '멈춘다',
+      '속도를 높인다'
+    ],
+    motion:'stop',
+    explanation:
+      '빨간불은 정지 조건이에요. 조건이 참이면 멈춥니다.'
+  },
+
+  {
+    e:'🚶',
+    extra:'',
+    q:'IF 보행자 있음 → ?',
+    answer:'멈춘다',
+    options:[
+      '멈춘다',
+      '속도를 높인다',
+      '경적만 울린다'
+    ],
+    motion:'stop',
+    explanation:
+      '보행자가 있으면 안전을 위해 자동차가 멈춰야 해요.'
+  },
+
+  {
+    e:'🚧',
+    extra:'',
+    q:'IF 앞에 장애물 있음 → ?',
+    answer:'방향을 바꾼다',
+    options:[
+      '그대로 간다',
+      '방향을 바꾼다',
+      '속도를 높인다'
+    ],
+    motion:'turn',
+    explanation:
+      '장애물이 있으면 다른 길을 선택하도록 명령할 수 있어요.'
+  },
+
+  {
+    e:'🌧️',
+    extra:'',
+    q:'IF 비 = ON → ?',
+    answer:'와이퍼를 켠다',
+    options:[
+      '와이퍼를 켠다',
+      '창문을 연다',
+      '전조등을 끈다'
+    ],
+    motion:'wiper',
+    explanation:
+      '비가 오는 조건이 참이면 와이퍼를 작동시켜요.'
+  },
+
+  {
+    e:'🔋',
+    extra:'15%',
+    q:'IF 배터리 < 20% → ?',
+    answer:'충전소로 간다',
+    options:[
+      '충전소로 간다',
+      '더 빨리 달린다',
+      '배터리를 무시한다'
+    ],
+    motion:'charge',
+    explanation:
+      '배터리가 20%보다 적으면 충전이 필요한 상태예요.'
+  }
+
+];
+
+
+/* AND 복합 조건 */
+
+const andCases = [
+
+  {
+    e:'🟢',
+    extra:'🚶',
+    q:'IF 초록불 AND 보행자 있음 → ?',
+    answer:'멈춘다',
+    options:[
+      '멈춘다',
+      '직진한다',
+      '속도를 높인다'
+    ],
+    motion:'stop',
+    explanation:
+      '초록불이어도 보행자가 있으면 안전을 위해 멈춰야 해요.'
+  },
+
+  {
+    e:'🟢',
+    extra:'✅',
+    q:'IF 초록불 AND 보행자 없음 → ?',
+    answer:'직진한다',
+    options:[
+      '직진한다',
+      '멈춘다',
+      '후진한다'
+    ],
+    motion:'go',
+    explanation:
+      '두 조건이 모두 맞으면 직진할 수 있어요. 이것이 AND 조건이에요.'
+  },
+
+  {
+    e:'🔋',
+    extra:'80%',
+    q:'IF 배터리 > 50% AND 길이 안전함 → ?',
+    answer:'계속 달린다',
+    options:[
+      '충전한다',
+      '계속 달린다',
+      '차에서 내린다'
+    ],
+    motion:'go',
+    explanation:
+      '배터리가 충분하고 길도 안전하므로 계속 달릴 수 있어요.'
+  },
+
+  {
+    e:'🌧️',
+    extra:'🌙',
+    q:'IF 비가 옴 AND 밤임 → ?',
+    answer:'와이퍼와 전조등을 켠다',
+    options:[
+      '와이퍼와 전조등을 켠다',
+      '모든 불을 끈다',
+      '창문을 연다'
+    ],
+    motion:'wiper',
+    explanation:
+      '비와 밤이라는 두 조건을 모두 고려해야 해요.'
+  }
+
+];
+
+
+/* ELSE 개념 */
+
+const elseCases = [
+
+  {
+    e:'🟢',
+    extra:'',
+    q:'IF 빨간불이면 멈춤, ELSE → ?',
+    answer:'계속 간다',
+    options:[
+      '계속 간다',
+      '항상 멈춘다',
+      '후진한다'
+    ],
+    motion:'go',
+    explanation:
+      '조건이 거짓일 때 실행하는 명령을 ELSE라고 해요.'
+  },
+
+  {
+    e:'🔋',
+    extra:'75%',
+    q:'IF 배터리 < 20% 충전, ELSE → ?',
+    answer:'계속 주행한다',
+    options:[
+      '계속 주행한다',
+      '충전소로 간다',
+      '차를 끈다'
+    ],
+    motion:'go',
+    explanation:
+      '배터리가 충분하므로 IF 조건은 거짓이고 ELSE가 실행돼요.'
+  },
+
+  {
+    e:'☀️',
+    extra:'',
+    q:'IF 비가 오면 와이퍼 ON, ELSE → ?',
+    answer:'와이퍼를 끈다',
+    options:[
+      '와이퍼를 끈다',
+      '계속 켠다',
+      '후진한다'
+    ],
+    motion:'go',
+    explanation:
+      '비가 오지 않으므로 ELSE 명령이 실행됩니다.'
+  }
+
+];
+
+
+/* ============================
+   상태
+============================ */
+
+let score = 0;
+let combo = 0;
+let maxCombo = 0;
+
+let level = 1;
+let time = 100;
+
+let success = 0;
+let tries = 0;
+
+let timer = null;
+let nextTimer = null;
+
+let current = null;
+let startAt = 0;
+
+let busy = true;
+let gameRunning = false;
+
+
+/* ============================
+   최고점수
+============================ */
+
+function getBest(){
+
+  try{
+    return Number(
+      localStorage.getItem(
+        'ifCityBestV2'
+      )
+    ) || 0;
+  }
+  catch{
+    return 0;
+  }
+}
+
+function saveBest(value){
+
+  try{
+    localStorage.setItem(
+      'ifCityBestV2',
+      value
+    );
+  }
+  catch{}
+}
+
+
+/* ============================
+   배열 섞기
+============================ */
+
+function shuffle(array){
+
+  const result = [...array];
+
+  for(
+    let i=result.length-1;
+    i>0;
+    i--
+  ){
+
+    const j =
+      Math.floor(
+        Math.random()*(i+1)
+      );
+
+    [
+      result[i],
+      result[j]
+    ] = [
+      result[j],
+      result[i]
+    ];
+  }
+
+  return result;
+}
+
+
+/* ============================
+   레벨
+============================ */
+
+function calculateLevel(){
+
+  if(success >= 18){
+    return 4;
+  }
+
+  if(success >= 11){
+    return 3;
+  }
+
+  if(success >= 5){
+    return 2;
+  }
+
+  return 1;
+}
+
+function levelName(){
+
+  if(level===1){
+    return 'IF 조건 알아보기';
+  }
+
+  if(level===2){
+    return '여러 조건 판단하기';
+  }
+
+  if(level===3){
+    return 'AND 복합 조건';
+  }
+
+  return 'IF · ELSE 마스터';
+}
+
+
+/* ============================
+   문제 고르기
+============================ */
+
+function getQuestionPool(){
+
+  if(level===1){
+    return basicCases.slice(0,4);
+  }
+
+  if(level===2){
+    return basicCases;
+  }
+
+  if(level===3){
+    return [
+      ...basicCases,
+      ...andCases
+    ];
+  }
+
+  return [
+    ...basicCases,
+    ...andCases,
+    ...elseCases
+  ];
+}
+
+
+/* ============================
+   문제 출력
+============================ */
+
+function nextQuestion(){
+
+  if(
+    !gameRunning ||
+    time<=0
+  ){
+    return;
+  }
+
+  clearTimeout(nextTimer);
+
+  busy=false;
+
+  level =
+    calculateLevel();
+
+  const pool =
+    getQuestionPool();
+
+  current =
+    pool[
+      Math.floor(
+        Math.random()*pool.length
+      )
+    ];
+
+  $('#level').textContent =
+    level;
+
+  $('#modeTag').textContent =
+    levelName();
+
+  $('#levelLesson').textContent =
+    `LEVEL ${level} · ${levelName()}`;
+
+  /* 이벤트 */
+
+  const eventEl =
+    $('#event');
+
+  eventEl.textContent =
+    current.e;
+
+  eventEl.classList.remove('pop');
+
+  void eventEl.offsetWidth;
+
+  eventEl.classList.add('pop');
+
+  $('#extraEvent').textContent =
+    current.extra || '';
+
+  $('#crosswalk')
+    .classList.toggle(
+      'show',
+      current.e==='🚶' ||
+      current.extra==='🚶'
+    );
+
+  /* 조건문 강조 */
+
+  let question =
+    current.q
+      .replace(
+        /IF/g,
+        '<span class="codeKey">IF</span>'
+      )
+      .replace(
+        /AND/g,
+        '<span class="codeAnd">AND</span>'
+      )
+      .replace(
+        /ELSE/g,
+        '<span class="codeElse">ELSE</span>'
+      );
+
+  $('#condition').innerHTML =
+    question;
+
+  /* 답 */
+
+  const answers =
+    $('#answers');
+
+  answers.innerHTML='';
+
+  const shuffled =
+    shuffle(
+      current.options
+    );
+
+  shuffled.forEach(value=>{
+
+    const button =
+      document.createElement(
+        'button'
+      );
+
+    button.textContent =
+      value;
+
+    button.addEventListener(
+      'click',
+      ()=>{
+        choose(
+          value,
+          button
+        );
+      }
+    );
+
+    answers.appendChild(
+      button
+    );
+  });
+
+  $('#msg').textContent =
+    '🤔 조건을 보고 행동을 선택하세요!';
+
+  $('#explain').textContent =
+    'IF는 "만약 ~라면"이라는 뜻이에요.';
+
+  /* 자동차 초기화 */
+
+  const car =
+    $('#car');
+
+  car.className='car';
+
+  /* 문제 타이머 */
+
+  const think =
+    $('#think');
+
+  think.style.transition='none';
+  think.style.width='100%';
+
+  requestAnimationFrame(()=>{
+
+    requestAnimationFrame(()=>{
+
+      think.style.transition =
+        'width 7s linear';
+
+      think.style.width='0';
+
+    });
+
+  });
+
+  startAt =
+    performance.now();
+}
+
+
+/* ============================
+   선택
+============================ */
+
+function choose(
+  value,
+  selectedButton
+){
+
+  if(
+    busy ||
+    !gameRunning
+  ){
+    return;
+  }
+
+  busy=true;
+  tries++;
+
+  const buttons =
+    [
+      ...document.querySelectorAll(
+        '#answers button'
+      )
+    ];
+
+  const correct =
+    value===current.answer;
+
+  buttons.forEach(button=>{
+
+    button.disabled=true;
+
+    if(
+      button.textContent===
+      current.answer
+    ){
+      button.classList.add(
+        'correct'
+      );
+    }
+
+  });
+
+  const car =
+    $('#car');
+
+  car.className='car';
+
+  if(correct){
+
+    selectedButton
+      .classList.add(
+        'correct'
+      );
+
+    success++;
+    combo++;
+
+    maxCombo =
+      Math.max(
+        maxCombo,
+        combo
+      );
+
+    const elapsed =
+      performance.now() -
+      startAt;
+
+    const speedBonus =
+      Math.max(
+        0,
+        Math.round(
+          (5500-elapsed)/600
+        )
+      );
+
+    const comboBonus =
+      Math.min(
+        12,
+        combo
+      );
+
+    const gained =
+      15 +
+      speedBonus +
+      comboBonus;
+
+    score += gained;
+
+    $('#msg').textContent =
+      `✅ 정확한 판단! +${gained}`;
+
+    $('#explain').textContent =
+      current.explanation;
+
+    car.classList.add(
+      current.motion
+    );
+
+    if(
+      combo===5 ||
+      combo===10 ||
+      combo===15
+    ){
+
+      comboEffect(
+        `🔥 ${combo} COMBO!`
+      );
+
+      score +=
+        combo===5
+          ?20
+          :combo===10
+            ?40
+            :60;
+    }
+
+  }
+  else{
+
+    combo=0;
+
+    selectedButton
+      .classList.add(
+        'wrong'
+      );
+
+    score =
+      Math.max(
+        0,
+        score-5
+      );
+
+    $('#msg').textContent =
+      `💡 정답은 "${current.answer}"`;
+
+    $('#explain').textContent =
+      current.explanation;
+
+    car.classList.add(
+      'stop'
+    );
+  }
+
+  level =
+    calculateLevel();
+
+  update();
+
+  nextTimer =
+    setTimeout(
+      nextQuestion,
+      correct?950:1500
+    );
+}
+
+
+/* ============================
+   콤보 효과
+============================ */
+
+function comboEffect(text){
+
+  const el =
+    $('#comboPop');
+
+  el.textContent=text;
+
+  el.classList.remove(
+    'show'
+  );
+
+  void el.offsetWidth;
+
+  el.classList.add(
+    'show'
+  );
+}
+
+
+/* ============================
+   HUD
+============================ */
+
+function update(){
+
+  $('#level').textContent =
+    level;
+
+  $('#score').textContent =
+    score;
+
+  $('#combo').textContent =
+    combo;
+
+  $('#time').textContent =
+    time;
+
+  $('#best').textContent =
+    Math.max(
+      score,
+      getBest()
+    );
+}
+
+
+/* ============================
+   게임 시작
+============================ */
+
+function startGame(){
+
+  clearInterval(timer);
+  clearTimeout(nextTimer);
+
+  score=0;
+  combo=0;
+  maxCombo=0;
+
+  level=1;
+  time=100;
+
+  success=0;
+  tries=0;
+
+  busy=false;
+  gameRunning=true;
+
+  $('#start')
+    .classList.add(
+      'hidden'
+    );
+
+  $('#end')
+    .classList.add(
+      'hidden'
+    );
+
+  update();
+
+  nextQuestion();
+
+  timer =
+    setInterval(()=>{
+
+      if(
+        !gameRunning
+      ){
+        return;
+      }
+
+      time--;
+
+      if(time<0){
+        time=0;
+      }
+
+      update();
+
+      if(time<=0){
+        finish();
+      }
+
+    },1000);
+}
+
+
+/* ============================
+   종료
+============================ */
+
+function finish(){
+
+  if(!gameRunning){
+    return;
+  }
+
+  gameRunning=false;
+  busy=true;
+
+  clearInterval(timer);
+  clearTimeout(nextTimer);
+
+  timer=null;
+  nextTimer=null;
+
+  const accuracy =
+    tries
+      ?Math.round(
+        success/tries*100
+      )
+      :0;
+
+  const best =
+    Math.max(
+      score,
+      getBest()
+    );
+
+  saveBest(best);
+
+  let rank='C';
+
+  if(
+    accuracy>=95 &&
+    success>=18
+  ){
+    rank='S';
+  }
+  else if(
+    accuracy>=85
+  ){
+    rank='A';
+  }
+  else if(
+    accuracy>=70
+  ){
+    rank='B';
+  }
+
+  $('#result').innerHTML =
+
+    `<b style="
+      font-size:34px;
+      color:#f59e0b
+    ">
+      RANK ${rank}
+    </b>
+
+    <br><br>
+
+    최종 점수
+    <b>${score}</b>
+
+    <br>
+
+    성공
+    <b>${success}</b>회
+
+    <br>
+
+    최고 콤보
+    <b>${maxCombo}</b>
+
+    <br>
+
+    정확도
+    <b>${accuracy}%</b>
+
+    <br>
+
+    도달 레벨
+    <b>${level}</b>
+
+    <br>
+
+    최고기록
+    <b>${best}</b>
+
+    <br><br>
+
+    ${
+      level>=4
+      ?'🏆 IF · AND · ELSE까지 배웠어요!'
+      :level>=3
+      ?'🧠 AND 조건까지 배웠어요!'
+      :level>=2
+      ?'🚦 여러 조건을 잘 판단했어요!'
+      :'🌱 IF 조건을 익히기 시작했어요!'
+    }`;
+
+  $('#end')
+    .classList.remove(
+      'hidden'
+    );
+}
+
+
+/* ============================
+   버튼
+============================ */
+
+$('#startBtn')
+  .addEventListener(
+    'click',
+    startGame
+  );
+
+$('#again')
+  .addEventListener(
+    'click',
+    startGame
+  );
+
+
+/* ============================
+   초기 HUD
+============================ */
+
+update();
+
+</script>
+
+</body>
+</html>

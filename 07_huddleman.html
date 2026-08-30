@@ -1264,6 +1264,26 @@ function getObstacleHitbox(o){
   }
 
 
+  /*
+     높은 허들은 위쪽 가로대 아래를
+     DUCK으로 통과하는 장애물이다.
+
+     기존에는 바닥부터 가로대까지 전부
+     하나의 충돌 영역이라 숙여도 부딪혔다.
+     실제로 피해야 하는 가로대 부분만 판정한다.
+  */
+  if(o.type === "high"){
+
+    return {
+
+      x:o.x + 2,
+      y:o.y - o.height,
+      width:o.width - 4,
+      height:14
+    };
+  }
+
+
   return {
 
     x:o.x + 4,
