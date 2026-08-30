@@ -307,10 +307,8 @@ main {
 .genre-heading h2 { margin-bottom:5px; font-size:clamp(23px,3.3vw,32px); }
 .genre-heading p { color:#707587; font-size:14px; }
 .genre-total { flex:0 0 auto; padding:7px 12px; border-radius:999px; color:white; background:var(--genre-color); font-size:13px; font-weight:900; }
-.genre-action { --genre-color:#ff4d6d; }
 .genre-puzzle { --genre-color:#7657ff; }
 .genre-strategy { --genre-color:#2878d0; }
-.genre-skill { --genre-color:#f59e0b; }
 .genre-casual { --genre-color:#13a88b; }
 .genre-coding { --genre-color:#7c3aed; }
 .genre-math { --genre-color:#f97316; }
@@ -1087,12 +1085,11 @@ footer strong {
 
 
     <nav class="genre-nav" id="genres" aria-label="게임 장르 바로가기">
-        <a href="#strategy">♟ 전략 · 보드</a>
         <a href="#coding">💻 코딩 · 로봇</a>
-        <a href="#math">🧮 수학 놀이터</a>
-        <a href="#english">🔤 영어 놀이터</a>
+        <a href="#math">🧮 수학</a>
+        <a href="#english">🔤 영어</a>
+        <a href="#strategy">♟ 보드 · 전략</a>
         <a href="#puzzle">🧩 퍼즐</a>
-        <a href="#skill">🎯 반응</a>
         <a href="#casual">🎨 창의</a>
     </nav>
 
@@ -2020,24 +2017,24 @@ footer strong {
     </div>
 
     <div id="genreSections">
-        <section class="genre-section genre-strategy" id="strategy">
-            <div class="genre-heading"><div><h2>♟️ 전략 · 보드</h2><p>상대의 수를 읽고 계획을 세우는 게임</p></div><span class="genre-total">0개 게임</span></div>
-            <div class="game-grid" data-genre-grid="strategy"></div>
-            <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
-        </section>
         <section class="genre-section genre-coding" id="coding">
             <div class="genre-heading"><div><h2>💻 코딩 · 로봇</h2><p>명령하고, 생각하고, 직접 실행하며 배우는 코딩 게임</p></div><span class="genre-total">0개 게임</span></div>
             <div class="game-grid" data-genre-grid="coding"></div>
             <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
         </section>
         <section class="genre-section genre-math" id="math">
-            <div class="genre-heading"><div><h2>🧮 수학 놀이터</h2><p>숫자를 찾고 계산하며 신나게 배우는 수학 게임</p></div><span class="genre-total">0개 게임</span></div>
+            <div class="genre-heading"><div><h2>🧮 수학</h2><p>숫자를 찾고 계산하며 신나게 배우는 수학 게임</p></div><span class="genre-total">0개 게임</span></div>
             <div class="game-grid" data-genre-grid="math"></div>
             <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
         </section>
         <section class="genre-section genre-english" id="english">
-            <div class="genre-heading"><div><h2>🔤 영어 놀이터</h2><p>알파벳과 쉬운 단어를 놀이로 익히는 영어 게임</p></div><span class="genre-total">0개 게임</span></div>
+            <div class="genre-heading"><div><h2>🔤 영어</h2><p>알파벳과 쉬운 단어를 놀이로 익히는 영어 게임</p></div><span class="genre-total">0개 게임</span></div>
             <div class="game-grid" data-genre-grid="english"></div>
+            <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
+        </section>
+        <section class="genre-section genre-strategy" id="strategy">
+            <div class="genre-heading"><div><h2>♟️ 보드 · 전략</h2><p>상대의 수를 읽고 계획을 세우는 게임</p></div><span class="genre-total">0개 게임</span></div>
+            <div class="game-grid" data-genre-grid="strategy"></div>
             <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
         </section>
         <section class="genre-section genre-puzzle" id="puzzle">
@@ -2045,19 +2042,9 @@ footer strong {
             <div class="game-grid" data-genre-grid="puzzle"></div>
             <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
         </section>
-        <section class="genre-section genre-skill" id="skill">
-            <div class="genre-heading"><div><h2>🎯 반응 · 스킬</h2><p>빠른 판단과 정확한 타이밍이 중요한 게임</p></div><span class="genre-total">0개 게임</span></div>
-            <div class="game-grid" data-genre-grid="skill"></div>
-            <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
-        </section>
         <section class="genre-section genre-casual" id="casual">
-            <div class="genre-heading"><div><h2>🎨 창의 · 캐주얼</h2><p>만들고 키우며 편하게 즐기는 색다른 게임</p></div><span class="genre-total">0개 게임</span></div>
+            <div class="genre-heading"><div><h2>🎨 창의</h2><p>움직이고 만들며 자유롭게 즐기는 색다른 게임</p></div><span class="genre-total">0개 게임</span></div>
             <div class="game-grid" data-genre-grid="casual"></div>
-            <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
-        </section>
-        <section class="genre-section genre-action" id="action">
-            <div class="genre-heading"><div><h2>⚡ 액션 · 아케이드</h2><p>움직이고 피하며 신나게 도전하는 게임</p></div><span class="genre-total">0개 게임</span></div>
-            <div class="game-grid" data-genre-grid="action"></div>
             <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
         </section>
     </div>
@@ -2144,14 +2131,12 @@ footer strong {
 
 /* 게임을 대표 장르 한 곳에만 번호순으로 배치 */
 const genreGames = {
-    action:   [3,7,12,27,28,36,37,39,40,43,45],
-    puzzle:   [2,9,10,18,20,24,33,34,35,41,42,50,52,55,56],
-    strategy: [0,16,22,47,48,51,54,58,60],
-    skill:    [1,4,6,13,15,17,21,23,25,26,29,31,32,38,67],
-    casual:   [5,8,11,14,19,30,44,46,49,57,59],
     coding:   [53,62,63,64,65,66],
     math:     [68,69,70,71,72,73,80,81,82,83],
-    english:  [74,75,76,77,78,79,84,85,86,87]
+    english:  [74,75,76,77,78,79,84,85,86,87],
+    strategy: [0,16,22,47,48,51,54,57,58,59,60],
+    puzzle:   [2,9,10,18,19,20,24,32,33,34,35,41,42,44,46,49,50,52,55,56],
+    casual:   [1,3,4,5,6,7,8,11,12,13,14,15,17,21,23,25,26,27,28,29,30,31,36,37,38,39,40,43,45,67]
 };
 
 const sourceCards = Array.from(document.querySelectorAll("#gameSource .game-card"));
