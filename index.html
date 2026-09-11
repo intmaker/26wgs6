@@ -313,6 +313,7 @@ main {
 .genre-coding { --genre-color:#7c3aed; }
 .genre-math { --genre-color:#f97316; }
 .genre-english { --genre-color:#2563eb; }
+.genre-hangul { --genre-color:#db2777; }
 .back-to-genres { min-height:44px; display:flex; align-items:center; justify-content:center; width:max-content; margin:24px 0 0 auto; padding:10px 15px; border-radius:12px; color:#6548df; background:white; box-shadow:0 5px 16px rgba(39,44,80,.08); font-size:13px; font-weight:800; text-decoration:none; }
 
 
@@ -679,6 +680,12 @@ main {
 .game85 .game-icon { background: linear-gradient(135deg, #f472b6, #fde047); }
 .game86 .game-icon { background: linear-gradient(135deg, #38bdf8, #a78bfa); }
 .game87 .game-icon { background: linear-gradient(135deg, #334155, #facc15); }
+.learning-card.theme1 .game-icon { background:linear-gradient(135deg,#0ea5e9,#6366f1); }
+.learning-card.theme2 .game-icon { background:linear-gradient(135deg,#7c3aed,#ec4899); }
+.learning-card.theme3 .game-icon { background:linear-gradient(135deg,#14b8a6,#84cc16); }
+.learning-card.theme4 .game-icon { background:linear-gradient(135deg,#f97316,#facc15); }
+.learning-card.theme5 .game-icon { background:linear-gradient(135deg,#db2777,#8b5cf6); }
+.level-badge { position:absolute; z-index:3; top:9px; right:9px; padding:5px 8px; border-radius:999px; color:#7c2d12; background:#fef3c7; font-size:10px; font-weight:1000; box-shadow:0 3px 9px #0002; }
 
 /* ========================================
    게임 정보
@@ -1092,6 +1099,7 @@ footer strong {
         <a href="#coding">💻 코딩 · 로봇</a>
         <a href="#math">🧮 수학</a>
         <a href="#english">🔤 영어</a>
+        <a href="#hangul">🌱 한글</a>
         <a href="#strategy">♟ 보드 · 전략</a>
         <a href="#puzzle">🧩 퍼즐</a>
         <a href="#casual">🎨 창의</a>
@@ -1115,7 +1123,7 @@ footer strong {
         </h2>
 
         <span class="game-count" id="gameCount">
-            87 GAMES
+            110 GAMES
         </span>
 
     </div>
@@ -1989,7 +1997,6 @@ footer strong {
         <article class="game-card game57" data-link="57_우주광산경영.html"><div class="game-icon"><div class="icon">🛰️</div></div><div class="game-info"><h3 class="game-title">🛰️ 우주 광산 경영</h3><p class="game-description">드론을 배치해 우주 광산을 성장시키세요!</p><button class="play-button">▶ PLAY</button></div></article>
         <article class="game-card game58" data-link="58_카드전술.html"><div class="game-icon"><div class="icon">🃏</div></div><div class="game-info"><h3 class="game-title">🃏 카드 전술</h3><p class="game-description">세 전선에 유닛을 배치해 AI 기지를 공략하세요!</p><button class="play-button">▶ PLAY</button></div></article>
         <article class="game-card game59" data-link="59_기상관제소.html"><div class="game-icon"><div class="icon">🌦️</div></div><div class="game-info"><h3 class="game-title">🌦️ 기상 관제소</h3><p class="game-description">관측 장비를 조절해 예보 목표를 맞추세요!</p><button class="play-button">▶ PLAY</button></div></article>
-        <article class="game-card game60" data-link="60_턴제던전.html"><div class="game-icon"><div class="icon">🧙</div></div><div class="game-info"><h3 class="game-title">🧙 턴제 던전</h3><p class="game-description">한 수씩 판단하며 다섯 층 던전을 돌파하세요!</p><button class="play-button">▶ PLAY</button></div></article>
         <article class="game-card game62" data-link="62_알고리즘셰프.html"><div class="game-icon"><div class="icon">👨‍🍳</div></div><div class="game-info"><h3 class="game-title">👨‍🍳 알고리즘 셰프</h3><p class="game-description">요리 블록을 순서대로 조립해 주문을 완성하세요!</p><button class="play-button">▶ PLAY</button></div></article>
         <article class="game-card game63" data-link="63_루프비트.html"><div class="game-icon"><div class="icon">🎵</div></div><div class="game-info"><h3 class="game-title">🎵 루프 비트</h3><p class="game-description">반복 블록으로 신나는 리듬 코드를 만드세요!</p><button class="play-button">▶ PLAY</button></div></article>
         <article class="game-card game64" data-link="64_IF택배센터.html"><div class="game-icon"><div class="icon">📦</div></div><div class="game-info"><h3 class="game-title">📦 IF 택배 센터</h3><p class="game-description">조건을 만들고 택배를 알맞은 통로로 분류하세요!</p><button class="play-button">▶ PLAY</button></div></article>
@@ -2020,6 +2027,26 @@ footer strong {
         <article class="game-card game89" data-link="coding/loop_factory.html"><div class="game-icon"><div class="icon">🔁</div></div><div class="game-info"><h3 class="game-title">🔁 반복문 공장</h3><p class="game-description">반복 명령으로 더 짧고 똑똑한 코드를 만들어요!</p><button class="play-button">▶ PLAY</button></div></article>
         <article class="game-card game90" data-link="coding/if_city.html"><div class="game-icon"><div class="icon">🚦</div></div><div class="game-info"><h3 class="game-title">🚦 조건문 신호등 도시</h3><p class="game-description">상황에 맞는 조건을 골라 자동차를 움직여요!</p><button class="play-button">▶ PLAY</button></div></article>
         <article class="game-card game91" data-link="coding/variable_magic_lab.html"><div class="game-icon"><div class="icon">🧪</div></div><div class="game-info"><h3 class="game-title">🧪 변수 마법 연구소</h3><p class="game-description">변수의 값을 바꿔 신기한 마법구를 만들어요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game92 learning-card theme1" data-link="learning_game.html?game=math_fraction_bridge"><div class="game-icon"><span class="level-badge">도전</span><div class="icon">🌉</div></div><div class="game-info"><h3 class="game-title">🌉 분수 구름다리</h3><p class="game-description">분수의 크기를 비교해 구름다리를 이어요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game93 learning-card theme2" data-link="learning_game.html?game=math_pattern_mine"><div class="game-icon"><span class="level-badge">도전</span><div class="icon">💎</div></div><div class="game-info"><h3 class="game-title">💎 규칙 수정 광산</h3><p class="game-description">숫자 규칙을 찾아 다음 보석을 캐요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game94 learning-card theme3" data-link="learning_game.html?game=math_shape_architect"><div class="game-icon"><span class="level-badge">도전</span><div class="icon">📐</div></div><div class="game-info"><h3 class="game-title">📐 도형 건축 연구소</h3><p class="game-description">둘레와 넓이를 계산해 미래 도시를 지어요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game95 learning-card theme4" data-link="learning_game.html?game=math_code_vault"><div class="game-icon"><span class="level-badge">도전</span><div class="icon">🔐</div></div><div class="game-info"><h3 class="game-title">🔐 연산 암호 금고</h3><p class="game-description">두 단계 계산 암호로 보물 금고를 열어요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game96 learning-card theme5" data-link="learning_game.html?game=math_probability_carnival"><div class="game-icon"><span class="level-badge">도전</span><div class="icon">🎡</div></div><div class="game-info"><h3 class="game-title">🎡 확률 놀이공원</h3><p class="game-description">가능성을 판단해 놀이기구를 움직여요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game97 learning-card theme1" data-link="learning_game.html?game=eng_tense_machine"><div class="game-icon"><span class="level-badge">도전</span><div class="icon">⏳</div></div><div class="game-info"><h3 class="game-title">⏳ 시제 타임머신</h3><p class="game-description">시간 단서에 맞는 동사를 찾아 시간여행해요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game98 learning-card theme2" data-link="learning_game.html?game=eng_sentence_builder"><div class="game-icon"><span class="level-badge">도전</span><div class="icon">🎬</div></div><div class="game-info"><h3 class="game-title">🎬 문장 블록 스튜디오</h3><p class="game-description">영어 블록을 조립해 영화 대사를 완성해요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game99 learning-card theme3" data-link="learning_game.html?game=eng_preposition_maze"><div class="game-icon"><span class="level-badge">도전</span><div class="icon">🧭</div></div><div class="game-info"><h3 class="game-title">🧭 전치사 미로</h3><p class="game-description">위치 단서를 해석해 미로를 탈출해요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game100 learning-card theme4" data-link="learning_game.html?game=eng_reading_rescue"><div class="game-icon"><span class="level-badge">도전</span><div class="icon">🚁</div></div><div class="game-info"><h3 class="game-title">🚁 리딩 구조대</h3><p class="game-description">짧은 글의 결정적 단서를 찾아 구조해요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game101 learning-card theme5" data-link="learning_game.html?game=eng_synonym_lab"><div class="game-icon"><span class="level-badge">도전</span><div class="icon">⚗️</div></div><div class="game-info"><h3 class="game-title">⚗️ 뜻빛깔 연금술</h3><p class="game-description">비슷한 뜻의 영어 단어로 물약을 만들어요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game102 learning-card theme1" data-link="learning_game.html?game=ko_jamo_spaceship"><div class="game-icon"><div class="icon">🚀</div></div><div class="game-info"><h3 class="game-title">🚀 자모 합체 우주선</h3><p class="game-description">자음과 모음을 합쳐 글자 행성을 발견해요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game103 learning-card theme2" data-link="learning_game.html?game=ko_batchim_fishing"><div class="game-icon"><div class="icon">🎣</div></div><div class="game-info"><h3 class="game-title">🎣 받침 낚시왕</h3><p class="game-description">낱말의 끝소리에 숨은 받침을 낚아요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game104 learning-card theme3" data-link="learning_game.html?game=ko_word_shadow"><div class="game-icon"><div class="icon">🔦</div></div><div class="game-info"><h3 class="game-title">🔦 낱말 그림자 탐정</h3><p class="game-description">설명 속 단서를 연결해 숨은 낱말을 찾아요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game105 learning-card theme4" data-link="learning_game.html?game=ko_spacing_laser"><div class="game-icon"><div class="icon">🛰️</div></div><div class="game-info"><h3 class="game-title">🛰️ 띄어쓰기 레이저</h3><p class="game-description">붙어 버린 문장을 정확하게 분리해요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game106 learning-card theme5" data-link="learning_game.html?game=ko_antonym_magnet"><div class="game-icon"><div class="icon">🧲</div></div><div class="game-info"><h3 class="game-title">🧲 반대말 자석 공방</h3><p class="game-description">반대되는 낱말을 끌어당겨 에너지를 만들어요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game107 learning-card theme1" data-link="learning_game.html?game=ko_sound_rhythm"><div class="game-icon"><div class="icon">🎧</div></div><div class="game-info"><h3 class="game-title">🎧 소리말 리듬 DJ</h3><p class="game-description">장면에 맞는 소리말로 리듬을 완성해요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game108 learning-card theme2" data-link="learning_game.html?game=ko_sentence_train"><div class="game-icon"><div class="icon">🚂</div></div><div class="game-info"><h3 class="game-title">🚂 문장 기차역</h3><p class="game-description">흩어진 어절 객차로 자연스러운 문장을 만들어요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game109 learning-card theme3" data-link="learning_game.html?game=ko_spelling_clinic"><div class="game-icon"><div class="icon">🔧</div></div><div class="game-info"><h3 class="game-title">🔧 맞춤법 수리소</h3><p class="game-description">고장 난 낱말을 올바른 맞춤법으로 고쳐요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game110 learning-card theme4" data-link="learning_game.html?game=ko_proverb_map"><div class="game-icon"><div class="icon">🗺️</div></div><div class="game-info"><h3 class="game-title">🗺️ 속담 보물지도</h3><p class="game-description">속담의 빈칸과 뜻을 풀어 지혜를 찾아요!</p><button class="play-button">▶ PLAY</button></div></article>
+        <article class="game-card game111 learning-card theme5" data-link="learning_game.html?game=ko_story_expedition"><div class="game-icon"><div class="icon">⌛</div></div><div class="game-info"><h3 class="game-title">⌛ 이야기 시간 탐험대</h3><p class="game-description">뒤섞인 사건을 시간 순서대로 복원해요!</p><button class="play-button">▶ PLAY</button></div></article>
 
 
     </div>
@@ -2031,13 +2058,18 @@ footer strong {
             <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
         </section>
         <section class="genre-section genre-math" id="math">
-            <div class="genre-heading"><div><h2>🧮 수학</h2><p>숫자를 찾고 계산하며 신나게 배우는 수학 게임</p></div><span class="genre-total">0개 게임</span></div>
+            <div class="genre-heading"><div><h2>🧮 수학</h2><p>기초 숫자부터 분수·도형·규칙·확률까지 단계적으로 도전하는 수학 게임</p></div><span class="genre-total">0개 게임</span></div>
             <div class="game-grid" data-genre-grid="math"></div>
             <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
         </section>
         <section class="genre-section genre-english" id="english">
-            <div class="genre-heading"><div><h2>🔤 영어</h2><p>알파벳과 쉬운 단어를 놀이로 익히는 영어 게임</p></div><span class="genre-total">0개 게임</span></div>
+            <div class="genre-heading"><div><h2>🔤 영어</h2><p>알파벳부터 문장 만들기·시제·독해까지 재미있게 성장하는 영어 게임</p></div><span class="genre-total">0개 게임</span></div>
             <div class="game-grid" data-genre-grid="english"></div>
+            <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
+        </section>
+        <section class="genre-section genre-hangul" id="hangul">
+            <div class="genre-heading"><div><h2>🌱 한글</h2><p>자모와 받침부터 문장·맞춤법·속담까지 놀이로 익히는 한글 게임</p></div><span class="genre-total">0개 게임</span></div>
+            <div class="game-grid" data-genre-grid="hangul"></div>
             <a class="back-to-genres" href="#gameCollection">↑ 장르 메뉴로</a>
         </section>
         <section class="genre-section genre-strategy" id="strategy">
@@ -2140,9 +2172,10 @@ footer strong {
 /* 게임을 대표 장르 한 곳에만 번호순으로 배치 */
 const genreGames = {
     coding:   [53,62,63,64,65,66,88,89,90,91],
-    math:     [68,69,70,71,72,73,80,81,82,83],
-    english:  [74,75,76,77,78,79,84,85,86,87],
-    strategy: [0,16,22,47,48,51,54,57,58,59,60],
+    math:     [68,69,70,71,72,73,80,81,82,83,92,93,94,95,96],
+    english:  [74,75,76,77,78,79,84,85,86,87,97,98,99,100,101],
+    hangul:   [102,103,104,105,106,107,108,109,110,111],
+    strategy: [0,16,22,47,48,51,54,57,58,59],
     puzzle:   [2,9,10,18,19,20,24,32,33,34,35,41,42,44,46,49,50,52,55,56],
     casual:   [1,3,4,5,6,7,8,11,12,13,14,15,17,21,23,25,26,27,28,29,30,31,36,37,38,39,40,43,45,67]
 };
